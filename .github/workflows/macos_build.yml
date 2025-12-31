@@ -1,4 +1,4 @@
-name: Build MacOS
+name: Build MacOS PKG
 on: [push]
 jobs:
   build:
@@ -6,14 +6,17 @@ jobs:
     steps:
       - name: Récupérer le code
         uses: actions/checkout@v4
+
       - name: Configurer Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.13'
+
       - name: Installer les dépendances
         run: |
-          pip install customtkinter darkdetect opencv-python matplotlib pyinstaller
-      - name: Compilation
+          pip install customtkinter darkdetect opencv-python matplotlib pyinstaller fpdf
+
+      - name: Compilation de l'App
         run: |
           pyinstaller --noconfirm --onedir --windowed \
           --add-data "database:database" \
@@ -23,9 +26,22 @@ jobs:
           --add-data "utils:utils" \
           --collect-all "customtkinter" \
           --collect-all "darkdetect" \
-          --name "PERIMONT_ERP_MAC" "main.py"
-      - name: Téléverser
+          --name "PERIMONT_ERP" "main.py"
+
+      - name: Création du paquet .pkg (L'installeur)
+        run: |
+          # On crée un dossier pour l'installation
+          mkdir -p pkg_root/Applications
+          cp -r dist/PERIMONT_ERP.app pkg_root/Applications/
+          
+          # Commande Apple pour générer le package
+          pkgbuild --identifier "com.perimont.erp" \
+                   --install-location "/" \
+                   --root pkg_root \
+                   PERIMONT_ERP_Installer.pkg
+
+      - name: Téléverser l'installeur
         uses: actions/upload-artifact@v4
         with:
-          name: PERIMONT_ERP_MAC
-          path: dist/PERIMONT_ERP_MAC.app
+          name: PERIMONT_INSTALLER_MAC
+          path: PERIMONT_ERP_Installer.pkg

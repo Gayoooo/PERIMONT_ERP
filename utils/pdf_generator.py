@@ -2,6 +2,7 @@ from fpdf import FPDF
 from config.settings import *
 import os
 from datetime import datetime
+from tkinter import messagebox
 
 class PerimontPDF(FPDF):
     def header(self):
@@ -20,7 +21,19 @@ class PerimontPDF(FPDF):
         self.set_text_color(150)
         self.cell(0, 10, f"{COMPANY_NAME} - {COMPANY_STATUT} - Page {self.page_no()}", align="C")
 
-# --- MODULE FINANCES (Filtrage Journalier / Mensuel) ---
+# --- FONCTION UTILITAIRE POUR LE CHEMIN UNIQUE ---
+def get_unique_path(prefix, identifier, extension="pdf"):
+    """Génère un chemin unique avec dossier exports et horodatage."""
+    if not os.path.exists("exports"): 
+        os.makedirs("exports")
+    
+    # Horodatage précis (HeureMinuteSeconde) pour éviter les doublons
+    timestamp = datetime.now().strftime("%H%M%S")
+    clean_id = str(identifier).replace(' ', '_').replace('/', '-')
+    filename = f"{prefix}_{clean_id}_{timestamp}.{extension}"
+    return os.path.join("exports", filename)
+
+# --- MODULE FINANCES ---
 def generer_journal_caisse_pdf(data_list, periode, titre="JOURNAL DE CAISSE"):
     pdf = PerimontPDF()
     pdf.add_page()
@@ -60,10 +73,13 @@ def generer_journal_caisse_pdf(data_list, periode, titre="JOURNAL DE CAISSE"):
     pdf.cell(50, 10, "SOLDE NET", 1, 0, "L", True)
     pdf.cell(40, 10, f"{(t_in - t_out):,.0f} FCFA", 1, 1, "R", True)
 
-    if not os.path.exists("exports"): os.makedirs("exports")
-    filename = os.path.join("exports", f"Bilan_{titre.replace(' ', '_')}_{periode}.pdf")
-    pdf.output(filename)
-    return filename
+    path = get_unique_path("Bilan", f"{titre}_{periode}")
+    try:
+        pdf.output(path)
+        return path
+    except PermissionError:
+        messagebox.showerror("Fichier ouvert", "Veuillez fermer le PDF du journal précédent avant de réimprimer.")
+        return None
 
 # --- MODULE LOGISTIQUE ---
 def generer_bon_location_pdf(loc_data):
@@ -85,10 +101,13 @@ def generer_bon_location_pdf(loc_data):
     pdf.cell(70, 12, f"{loc_data.get('total', 0):,.0f} FCFA", 1, 1, "C", True)
     pdf.ln(20); pdf.cell(95, 10, "Le Responsable (Signature)", 0, 0, "L"); pdf.cell(95, 10, "Le Client (Signature)", 0, 1, "R")
     
-    if not os.path.exists("exports"): os.makedirs("exports")
-    path = os.path.join("exports", f"Bon_Loc_{str(loc_data.get('client', 'Client')).replace(' ', '_')}.pdf")
-    pdf.output(path)
-    return path
+    path = get_unique_path("Bon_Loc", loc_data.get('client', 'Client'))
+    try:
+        pdf.output(path)
+        return path
+    except PermissionError:
+        messagebox.showerror("Fichier ouvert", "Veuillez fermer le bon de location précédent.")
+        return None
 
 # --- MODULE PAIE ---
 def generer_bulletin(emp_data, mois, annee, details):
@@ -123,10 +142,14 @@ def generer_bulletin(emp_data, mois, annee, details):
     pdf.cell(90, 12, f"{max(0, net):,.0f} FCFA", 1, 1, "C", True)
     pdf.ln(15); pdf.set_font("helvetica", "B", 10)
     pdf.cell(95, 10, "Signature Employeur", 0, 0, "C"); pdf.cell(95, 10, "Signature Salarié", 0, 1, "C")
-    if not os.path.exists("exports"): os.makedirs("exports")
-    path = os.path.join("exports", f"bulletin_{emp_data['matricule']}_{mois}.pdf")
-    pdf.output(path)
-    return path
+    
+    path = get_unique_path("Bulletin", f"{emp_data['matricule']}_{mois}")
+    try:
+        pdf.output(path)
+        return path
+    except PermissionError:
+        messagebox.showerror("Fichier ouvert", f"Fermez le bulletin de {emp_data['nom']} avant de réimprimer.")
+        return None
 
 def generer_recap_mensuel_pdf(data_list, mois, annee, total_general):
     pdf = PerimontPDF(orientation='L')
@@ -142,7 +165,6 @@ def generer_recap_mensuel_pdf(data_list, mois, annee, total_general):
         pdf.cell(38, 8, f"{r['S. Base']:,.0f}", 1, 0, 'R'); pdf.cell(38, 8, f"{r['Primes']:,.0f}", 1, 0, 'R')
         pdf.cell(38, 8, f"{r['Retenues']:,.0f}", 1, 0, 'R'); pdf.cell(43, 8, f"{r['NET']:,.0f}", 1, 1, 'R')
     
-    # --- CORRECTION COULEURS TOTAL GÉNÉRAL ---
     pdf.ln(5); pdf.set_font("helvetica", "B", 11)
     pdf.set_fill_color(230, 230, 230); pdf.set_text_color(0)
     pdf.set_x(180)
@@ -151,7 +173,11 @@ def generer_recap_mensuel_pdf(data_list, mois, annee, total_general):
     
     pdf.set_text_color(0); pdf.ln(10)
     pdf.cell(140, 10, "Visa Direction", 0, 0, "L"); pdf.cell(140, 10, "Visa Comptabilité", 0, 1, "R")
-    if not os.path.exists("exports"): os.makedirs("exports")
-    path = os.path.join("exports", f"Recap_Paie_{mois}_{annee}.pdf")
-    pdf.output(path)
-    return path
+    
+    path = get_unique_path("Recap_Paie", f"{mois}_{annee}")
+    try:
+        pdf.output(path)
+        return path
+    except PermissionError:
+        messagebox.showerror("Fichier ouvert", "Veuillez fermer le récapitulatif PDF précédent.")
+        return None
