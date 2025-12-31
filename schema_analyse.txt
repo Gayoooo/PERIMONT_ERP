@@ -1,0 +1,3417 @@
+🔍 ANALYSE DU PROJET PERIMONT_ERP
+Généré le: 2025-12-29 14:47:19
+Aucun fichier n'a été modifié ou supprimé
+📁 STRUCTURE DES FICHIERS PYTHON
+==================================================
+
+📂 _backends
+  📄 venv\Lib\site-packages\numpy\f2py\_backends\__init__.py
+  📄 venv\Lib\site-packages\numpy\f2py\_backends\_backend.py
+  📄 venv\Lib\site-packages\numpy\f2py\_backends\_distutils.py
+  📄 venv\Lib\site-packages\numpy\f2py\_backends\_meson.py
+
+📂 _config
+  📄 venv\Lib\site-packages\pandas\_config\__init__.py
+  📄 venv\Lib\site-packages\pandas\_config\config.py
+  📄 venv\Lib\site-packages\pandas\_config\dates.py
+  📄 venv\Lib\site-packages\pandas\_config\display.py
+  📄 venv\Lib\site-packages\pandas\_config\localization.py
+
+📂 _core
+  📄 venv\Lib\site-packages\numpy\_core\__init__.py
+  📄 venv\Lib\site-packages\numpy\_core\_add_newdocs_scalars.py
+  📄 venv\Lib\site-packages\numpy\_core\_add_newdocs.py
+  📄 venv\Lib\site-packages\numpy\_core\_asarray.py
+  📄 venv\Lib\site-packages\numpy\_core\_dtype_ctypes.py
+  📄 venv\Lib\site-packages\numpy\_core\_dtype.py
+  📄 venv\Lib\site-packages\numpy\_core\_exceptions.py
+  📄 venv\Lib\site-packages\numpy\_core\_internal.py
+  📄 venv\Lib\site-packages\numpy\_core\_methods.py
+  📄 venv\Lib\site-packages\numpy\_core\_string_helpers.py
+  📄 venv\Lib\site-packages\numpy\_core\_type_aliases.py
+  📄 venv\Lib\site-packages\numpy\_core\_ufunc_config.py
+  📄 venv\Lib\site-packages\numpy\_core\arrayprint.py
+  📄 venv\Lib\site-packages\numpy\_core\cversions.py
+  📄 venv\Lib\site-packages\numpy\_core\defchararray.py
+  📄 venv\Lib\site-packages\numpy\_core\einsumfunc.py
+  📄 venv\Lib\site-packages\numpy\_core\fromnumeric.py
+  📄 venv\Lib\site-packages\numpy\_core\function_base.py
+  📄 venv\Lib\site-packages\numpy\_core\getlimits.py
+  📄 venv\Lib\site-packages\numpy\_core\memmap.py
+  📄 venv\Lib\site-packages\numpy\_core\multiarray.py
+  📄 venv\Lib\site-packages\numpy\_core\numeric.py
+  📄 venv\Lib\site-packages\numpy\_core\numerictypes.py
+  📄 venv\Lib\site-packages\numpy\_core\overrides.py
+  📄 venv\Lib\site-packages\numpy\_core\printoptions.py
+  📄 venv\Lib\site-packages\numpy\_core\records.py
+  📄 venv\Lib\site-packages\numpy\_core\shape_base.py
+  📄 venv\Lib\site-packages\numpy\_core\strings.py
+  📄 venv\Lib\site-packages\numpy\_core\umath.py
+
+📂 _in_process
+  📄 venv\Lib\site-packages\pip\_vendor\pyproject_hooks\_in_process\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\pyproject_hooks\_in_process\_in_process.py
+
+📂 _internal
+  📄 venv\Lib\site-packages\pip\_internal\__init__.py
+  📄 venv\Lib\site-packages\pip\_internal\build_env.py
+  📄 venv\Lib\site-packages\pip\_internal\cache.py
+  📄 venv\Lib\site-packages\pip\_internal\configuration.py
+  📄 venv\Lib\site-packages\pip\_internal\exceptions.py
+  📄 venv\Lib\site-packages\pip\_internal\main.py
+  📄 venv\Lib\site-packages\pip\_internal\pyproject.py
+  📄 venv\Lib\site-packages\pip\_internal\self_outdated_check.py
+  📄 venv\Lib\site-packages\pip\_internal\wheel_builder.py
+
+📂 _libs
+  📄 venv\Lib\site-packages\pandas\_libs\__init__.py
+
+📂 _matplotlib
+  📄 venv\Lib\site-packages\pandas\plotting\_matplotlib\__init__.py
+  📄 venv\Lib\site-packages\pandas\plotting\_matplotlib\boxplot.py
+  📄 venv\Lib\site-packages\pandas\plotting\_matplotlib\converter.py
+  📄 venv\Lib\site-packages\pandas\plotting\_matplotlib\core.py
+  📄 venv\Lib\site-packages\pandas\plotting\_matplotlib\groupby.py
+  📄 venv\Lib\site-packages\pandas\plotting\_matplotlib\hist.py
+  📄 venv\Lib\site-packages\pandas\plotting\_matplotlib\misc.py
+  📄 venv\Lib\site-packages\pandas\plotting\_matplotlib\style.py
+  📄 venv\Lib\site-packages\pandas\plotting\_matplotlib\timeseries.py
+  📄 venv\Lib\site-packages\pandas\plotting\_matplotlib\tools.py
+
+📂 _numba
+  📄 venv\Lib\site-packages\pandas\core\_numba\__init__.py
+  📄 venv\Lib\site-packages\pandas\core\_numba\executor.py
+  📄 venv\Lib\site-packages\pandas\core\_numba\extensions.py
+
+📂 _private
+  📄 venv\Lib\site-packages\numpy\testing\_private\__init__.py
+  📄 venv\Lib\site-packages\numpy\testing\_private\extbuild.py
+  📄 venv\Lib\site-packages\numpy\testing\_private\utils.py
+
+📂 _pyinstaller
+  📄 venv\Lib\site-packages\numpy\_pyinstaller\__init__.py
+  📄 venv\Lib\site-packages\numpy\_pyinstaller\hook-numpy.py
+
+📂 _securetransport
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\contrib\_securetransport\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\contrib\_securetransport\bindings.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\contrib\_securetransport\low_level.py
+
+📂 _testing
+  📄 venv\Lib\site-packages\pandas\_testing\__init__.py
+  📄 venv\Lib\site-packages\pandas\_testing\_hypothesis.py
+  📄 venv\Lib\site-packages\pandas\_testing\_io.py
+  📄 venv\Lib\site-packages\pandas\_testing\_warnings.py
+  📄 venv\Lib\site-packages\pandas\_testing\asserters.py
+  📄 venv\Lib\site-packages\pandas\_testing\compat.py
+  📄 venv\Lib\site-packages\pandas\_testing\contexts.py
+
+📂 _typing
+  📄 venv\Lib\site-packages\numpy\_typing\__init__.py
+  📄 venv\Lib\site-packages\numpy\_typing\_add_docstring.py
+  📄 venv\Lib\site-packages\numpy\_typing\_array_like.py
+  📄 venv\Lib\site-packages\numpy\_typing\_char_codes.py
+  📄 venv\Lib\site-packages\numpy\_typing\_dtype_like.py
+  📄 venv\Lib\site-packages\numpy\_typing\_extended_precision.py
+  📄 venv\Lib\site-packages\numpy\_typing\_nbit_base.py
+  📄 venv\Lib\site-packages\numpy\_typing\_nbit.py
+  📄 venv\Lib\site-packages\numpy\_typing\_nested_sequence.py
+  📄 venv\Lib\site-packages\numpy\_typing\_scalars.py
+  📄 venv\Lib\site-packages\numpy\_typing\_shape.py
+  📄 venv\Lib\site-packages\numpy\_typing\_ufunc.py
+
+📂 _utils
+  📄 venv\Lib\site-packages\numpy\_utils\__init__.py
+  📄 venv\Lib\site-packages\numpy\_utils\_convertions.py
+  📄 venv\Lib\site-packages\numpy\_utils\_inspect.py
+  📄 venv\Lib\site-packages\numpy\_utils\_pep440.py
+
+📂 _vendor
+  📄 venv\Lib\site-packages\pip\_vendor\__init__.py
+
+📂 accessors
+  📄 venv\Lib\site-packages\pandas\tests\series\accessors\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\series\accessors\test_cat_accessor.py
+  📄 venv\Lib\site-packages\pandas\tests\series\accessors\test_dt_accessor.py
+  📄 venv\Lib\site-packages\pandas\tests\series\accessors\test_list_accessor.py
+  📄 venv\Lib\site-packages\pandas\tests\series\accessors\test_sparse_accessor.py
+  📄 venv\Lib\site-packages\pandas\tests\series\accessors\test_str_accessor.py
+  📄 venv\Lib\site-packages\pandas\tests\series\accessors\test_struct_accessor.py
+
+📂 Africa
+  📄 venv\Lib\site-packages\tzdata\zoneinfo\Africa\__init__.py
+
+📂 agenda
+  📄 modules\agenda\__init__.py
+
+📂 aggregate
+  📄 venv\Lib\site-packages\pandas\tests\groupby\aggregate\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\aggregate\test_aggregate.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\aggregate\test_cython.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\aggregate\test_numba.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\aggregate\test_other.py
+
+📂 America
+  📄 venv\Lib\site-packages\tzdata\zoneinfo\America\__init__.py
+
+📂 analyses
+  📄 analyses\__init__.py
+
+📂 Antarctica
+  📄 venv\Lib\site-packages\tzdata\zoneinfo\Antarctica\__init__.py
+
+📂 api
+  📄 venv\Lib\site-packages\pandas\api\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\api\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\api\test_api.py
+  📄 venv\Lib\site-packages\pandas\tests\api\test_types.py
+
+📂 appearance_mode
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\appearance_mode\__init__.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\appearance_mode\appearance_mode_base_class.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\appearance_mode\appearance_mode_tracker.py
+
+📂 apply
+  📄 venv\Lib\site-packages\pandas\tests\apply\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\apply\common.py
+  📄 venv\Lib\site-packages\pandas\tests\apply\test_frame_apply_relabeling.py
+  📄 venv\Lib\site-packages\pandas\tests\apply\test_frame_apply.py
+  📄 venv\Lib\site-packages\pandas\tests\apply\test_frame_transform.py
+  📄 venv\Lib\site-packages\pandas\tests\apply\test_invalid_arg.py
+  📄 venv\Lib\site-packages\pandas\tests\apply\test_numba.py
+  📄 venv\Lib\site-packages\pandas\tests\apply\test_series_apply_relabeling.py
+  📄 venv\Lib\site-packages\pandas\tests\apply\test_series_apply.py
+  📄 venv\Lib\site-packages\pandas\tests\apply\test_series_transform.py
+  📄 venv\Lib\site-packages\pandas\tests\apply\test_str.py
+
+📂 Arctic
+  📄 venv\Lib\site-packages\tzdata\zoneinfo\Arctic\__init__.py
+
+📂 Argentina
+  📄 venv\Lib\site-packages\tzdata\zoneinfo\America\Argentina\__init__.py
+
+📂 arithmetic
+  📄 venv\Lib\site-packages\pandas\tests\arithmetic\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\arithmetic\common.py
+  📄 venv\Lib\site-packages\pandas\tests\arithmetic\conftest.py
+  📄 venv\Lib\site-packages\pandas\tests\arithmetic\test_array_ops.py
+  📄 venv\Lib\site-packages\pandas\tests\arithmetic\test_categorical.py
+  📄 venv\Lib\site-packages\pandas\tests\arithmetic\test_datetime64.py
+  📄 venv\Lib\site-packages\pandas\tests\arithmetic\test_interval.py
+  📄 venv\Lib\site-packages\pandas\tests\arithmetic\test_numeric.py
+  📄 venv\Lib\site-packages\pandas\tests\arithmetic\test_object.py
+  📄 venv\Lib\site-packages\pandas\tests\arithmetic\test_period.py
+  📄 venv\Lib\site-packages\pandas\tests\arithmetic\test_timedelta64.py
+
+📂 array_algos
+  📄 venv\Lib\site-packages\pandas\core\array_algos\__init__.py
+  📄 venv\Lib\site-packages\pandas\core\array_algos\datetimelike_accumulations.py
+  📄 venv\Lib\site-packages\pandas\core\array_algos\masked_accumulations.py
+  📄 venv\Lib\site-packages\pandas\core\array_algos\masked_reductions.py
+  📄 venv\Lib\site-packages\pandas\core\array_algos\putmask.py
+  📄 venv\Lib\site-packages\pandas\core\array_algos\quantile.py
+  📄 venv\Lib\site-packages\pandas\core\array_algos\replace.py
+  📄 venv\Lib\site-packages\pandas\core\array_algos\take.py
+  📄 venv\Lib\site-packages\pandas\core\array_algos\transforms.py
+
+📂 array_with_attr
+  📄 venv\Lib\site-packages\pandas\tests\extension\array_with_attr\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\array_with_attr\array.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\array_with_attr\test_array_with_attr.py
+
+📂 arrays
+  📄 venv\Lib\site-packages\pandas\arrays\__init__.py
+  📄 venv\Lib\site-packages\pandas\core\arrays\__init__.py
+  📄 venv\Lib\site-packages\pandas\core\arrays\_arrow_string_mixins.py
+  📄 venv\Lib\site-packages\pandas\core\arrays\_mixins.py
+  📄 venv\Lib\site-packages\pandas\core\arrays\_ranges.py
+  📄 venv\Lib\site-packages\pandas\core\arrays\_utils.py
+  📄 venv\Lib\site-packages\pandas\core\arrays\base.py
+  📄 venv\Lib\site-packages\pandas\core\arrays\boolean.py
+  📄 venv\Lib\site-packages\pandas\core\arrays\categorical.py
+  📄 venv\Lib\site-packages\pandas\core\arrays\datetimelike.py
+  📄 venv\Lib\site-packages\pandas\core\arrays\datetimes.py
+  📄 venv\Lib\site-packages\pandas\core\arrays\floating.py
+  📄 venv\Lib\site-packages\pandas\core\arrays\integer.py
+  📄 venv\Lib\site-packages\pandas\core\arrays\interval.py
+  📄 venv\Lib\site-packages\pandas\core\arrays\masked.py
+  📄 venv\Lib\site-packages\pandas\core\arrays\numeric.py
+  📄 venv\Lib\site-packages\pandas\core\arrays\numpy_.py
+  📄 venv\Lib\site-packages\pandas\core\arrays\period.py
+  📄 venv\Lib\site-packages\pandas\core\arrays\string_.py
+  📄 venv\Lib\site-packages\pandas\core\arrays\string_arrow.py
+  📄 venv\Lib\site-packages\pandas\core\arrays\timedeltas.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\masked_shared.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\test_array.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\test_datetimelike.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\test_datetimes.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\test_ndarray_backed.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\test_period.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\test_timedeltas.py
+
+📂 arrow
+  📄 venv\Lib\site-packages\pandas\core\arrays\arrow\__init__.py
+  📄 venv\Lib\site-packages\pandas\core\arrays\arrow\_arrow_utils.py
+  📄 venv\Lib\site-packages\pandas\core\arrays\arrow\accessors.py
+  📄 venv\Lib\site-packages\pandas\core\arrays\arrow\array.py
+  📄 venv\Lib\site-packages\pandas\core\arrays\arrow\extension_types.py
+
+📂 Asia
+  📄 venv\Lib\site-packages\tzdata\zoneinfo\Asia\__init__.py
+
+📂 assets
+  📄 assets\__init__.py
+  📄 dist\assets\__init__.py
+
+📂 Atlantic
+  📄 venv\Lib\site-packages\tzdata\zoneinfo\Atlantic\__init__.py
+
+📂 Australia
+  📄 venv\Lib\site-packages\tzdata\zoneinfo\Australia\__init__.py
+
+📂 auth
+  📄 modules\auth\__init__.py
+  📄 modules\auth\auth_handler.py
+
+📂 backports
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\packages\backports\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\packages\backports\makefile.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\packages\backports\weakref_finalize.py
+
+📂 backups
+  📄 backups\__init__.py
+
+📂 barcode
+  📄 venv\Lib\site-packages\reportlab\graphics\barcode\__init__.py
+  📄 venv\Lib\site-packages\reportlab\graphics\barcode\code128.py
+  📄 venv\Lib\site-packages\reportlab\graphics\barcode\code39.py
+  📄 venv\Lib\site-packages\reportlab\graphics\barcode\code93.py
+  📄 venv\Lib\site-packages\reportlab\graphics\barcode\common.py
+  📄 venv\Lib\site-packages\reportlab\graphics\barcode\dmtx.py
+  📄 venv\Lib\site-packages\reportlab\graphics\barcode\eanbc.py
+  📄 venv\Lib\site-packages\reportlab\graphics\barcode\ecc200datamatrix.py
+  📄 venv\Lib\site-packages\reportlab\graphics\barcode\fourstate.py
+  📄 venv\Lib\site-packages\reportlab\graphics\barcode\lto.py
+  📄 venv\Lib\site-packages\reportlab\graphics\barcode\qr.py
+  📄 venv\Lib\site-packages\reportlab\graphics\barcode\qrencoder.py
+  📄 venv\Lib\site-packages\reportlab\graphics\barcode\test.py
+  📄 venv\Lib\site-packages\reportlab\graphics\barcode\usps.py
+  📄 venv\Lib\site-packages\reportlab\graphics\barcode\usps4s.py
+  📄 venv\Lib\site-packages\reportlab\graphics\barcode\widgets.py
+
+📂 base
+  📄 venv\Lib\site-packages\pandas\tests\base\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\base\common.py
+  📄 venv\Lib\site-packages\pandas\tests\base\test_constructors.py
+  📄 venv\Lib\site-packages\pandas\tests\base\test_conversion.py
+  📄 venv\Lib\site-packages\pandas\tests\base\test_fillna.py
+  📄 venv\Lib\site-packages\pandas\tests\base\test_misc.py
+  📄 venv\Lib\site-packages\pandas\tests\base\test_transpose.py
+  📄 venv\Lib\site-packages\pandas\tests\base\test_unique.py
+  📄 venv\Lib\site-packages\pandas\tests\base\test_value_counts.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\base\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\base\accumulate.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\base\base.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\base\casting.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\base\constructors.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\base\dim2.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\base\dtype.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\base\getitem.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\base\groupby.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\base\index.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\base\interface.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\base\io.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\base\methods.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\base\missing.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\base\ops.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\base\printing.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\base\reduce.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\base\reshaping.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\base\setitem.py
+
+📂 base_class
+  📄 venv\Lib\site-packages\pandas\tests\indexes\base_class\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\base_class\test_constructors.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\base_class\test_formats.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\base_class\test_indexing.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\base_class\test_pickle.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\base_class\test_reshape.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\base_class\test_setops.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\base_class\test_where.py
+
+📂 boolean
+  📄 venv\Lib\site-packages\pandas\tests\arrays\boolean\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\boolean\test_arithmetic.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\boolean\test_astype.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\boolean\test_comparison.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\boolean\test_construction.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\boolean\test_function.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\boolean\test_indexing.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\boolean\test_logical.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\boolean\test_ops.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\boolean\test_reduction.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\boolean\test_repr.py
+
+📂 Brazil
+  📄 venv\Lib\site-packages\tzdata\zoneinfo\Brazil\__init__.py
+
+📂 build
+  📄 build\__init__.py
+  📄 venv\Lib\site-packages\pip\_internal\operations\build\__init__.py
+  📄 venv\Lib\site-packages\pip\_internal\operations\build\build_tracker.py
+  📄 venv\Lib\site-packages\pip\_internal\operations\build\metadata_editable.py
+  📄 venv\Lib\site-packages\pip\_internal\operations\build\metadata.py
+  📄 venv\Lib\site-packages\pip\_internal\operations\build\wheel_editable.py
+  📄 venv\Lib\site-packages\pip\_internal\operations\build\wheel.py
+
+📂 cachecontrol
+  📄 venv\Lib\site-packages\pip\_vendor\cachecontrol\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\cachecontrol\_cmd.py
+  📄 venv\Lib\site-packages\pip\_vendor\cachecontrol\adapter.py
+  📄 venv\Lib\site-packages\pip\_vendor\cachecontrol\cache.py
+  📄 venv\Lib\site-packages\pip\_vendor\cachecontrol\controller.py
+  📄 venv\Lib\site-packages\pip\_vendor\cachecontrol\filewrapper.py
+  📄 venv\Lib\site-packages\pip\_vendor\cachecontrol\heuristics.py
+  📄 venv\Lib\site-packages\pip\_vendor\cachecontrol\serialize.py
+  📄 venv\Lib\site-packages\pip\_vendor\cachecontrol\wrapper.py
+
+📂 caches
+  📄 venv\Lib\site-packages\pip\_vendor\cachecontrol\caches\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\cachecontrol\caches\file_cache.py
+  📄 venv\Lib\site-packages\pip\_vendor\cachecontrol\caches\redis_cache.py
+
+📂 Canada
+  📄 venv\Lib\site-packages\tzdata\zoneinfo\Canada\__init__.py
+
+📂 carburant
+  📄 modules\carburant\__init__.py
+
+📂 cast
+  📄 venv\Lib\site-packages\pandas\tests\dtypes\cast\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\dtypes\cast\test_can_hold_element.py
+  📄 venv\Lib\site-packages\pandas\tests\dtypes\cast\test_construct_from_scalar.py
+  📄 venv\Lib\site-packages\pandas\tests\dtypes\cast\test_construct_ndarray.py
+  📄 venv\Lib\site-packages\pandas\tests\dtypes\cast\test_construct_object_arr.py
+  📄 venv\Lib\site-packages\pandas\tests\dtypes\cast\test_dict_compat.py
+  📄 venv\Lib\site-packages\pandas\tests\dtypes\cast\test_downcast.py
+  📄 venv\Lib\site-packages\pandas\tests\dtypes\cast\test_find_common_type.py
+  📄 venv\Lib\site-packages\pandas\tests\dtypes\cast\test_infer_datetimelike.py
+  📄 venv\Lib\site-packages\pandas\tests\dtypes\cast\test_infer_dtype.py
+  📄 venv\Lib\site-packages\pandas\tests\dtypes\cast\test_maybe_box_native.py
+  📄 venv\Lib\site-packages\pandas\tests\dtypes\cast\test_promote.py
+
+📂 categorical
+  📄 venv\Lib\site-packages\pandas\tests\arrays\categorical\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\categorical\test_algos.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\categorical\test_analytics.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\categorical\test_api.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\categorical\test_astype.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\categorical\test_constructors.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\categorical\test_dtypes.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\categorical\test_indexing.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\categorical\test_map.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\categorical\test_missing.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\categorical\test_operators.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\categorical\test_replace.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\categorical\test_repr.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\categorical\test_sorting.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\categorical\test_subclass.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\categorical\test_take.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\categorical\test_warnings.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\categorical\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\categorical\test_append.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\categorical\test_astype.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\categorical\test_category.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\categorical\test_constructors.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\categorical\test_equals.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\categorical\test_fillna.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\categorical\test_formats.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\categorical\test_indexing.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\categorical\test_map.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\categorical\test_reindex.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\categorical\test_setops.py
+
+📂 cell
+  📄 venv\Lib\site-packages\openpyxl\cell\__init__.py
+  📄 venv\Lib\site-packages\openpyxl\cell\_writer.py
+  📄 venv\Lib\site-packages\openpyxl\cell\cell.py
+  📄 venv\Lib\site-packages\openpyxl\cell\read_only.py
+  📄 venv\Lib\site-packages\openpyxl\cell\rich_text.py
+  📄 venv\Lib\site-packages\openpyxl\cell\text.py
+
+📂 certifi
+  📄 venv\Lib\site-packages\pip\_vendor\certifi\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\certifi\__main__.py
+  📄 venv\Lib\site-packages\pip\_vendor\certifi\core.py
+
+📂 cffi
+  📄 venv\Lib\site-packages\numpy\random\_examples\cffi\extending.py
+  📄 venv\Lib\site-packages\numpy\random\_examples\cffi\parse.py
+
+📂 char
+  📄 venv\Lib\site-packages\numpy\char\__init__.py
+
+📂 charset_normalizer
+  📄 venv\Lib\site-packages\charset_normalizer\__init__.py
+  📄 venv\Lib\site-packages\charset_normalizer\__main__.py
+  📄 venv\Lib\site-packages\charset_normalizer\api.py
+  📄 venv\Lib\site-packages\charset_normalizer\cd.py
+  📄 venv\Lib\site-packages\charset_normalizer\constant.py
+  📄 venv\Lib\site-packages\charset_normalizer\legacy.py
+  📄 venv\Lib\site-packages\charset_normalizer\md.py
+  📄 venv\Lib\site-packages\charset_normalizer\models.py
+  📄 venv\Lib\site-packages\charset_normalizer\utils.py
+  📄 venv\Lib\site-packages\charset_normalizer\version.py
+
+📂 chart
+  📄 venv\Lib\site-packages\openpyxl\chart\__init__.py
+  📄 venv\Lib\site-packages\openpyxl\chart\_3d.py
+  📄 venv\Lib\site-packages\openpyxl\chart\_chart.py
+  📄 venv\Lib\site-packages\openpyxl\chart\area_chart.py
+  📄 venv\Lib\site-packages\openpyxl\chart\axis.py
+  📄 venv\Lib\site-packages\openpyxl\chart\bar_chart.py
+  📄 venv\Lib\site-packages\openpyxl\chart\bubble_chart.py
+  📄 venv\Lib\site-packages\openpyxl\chart\chartspace.py
+  📄 venv\Lib\site-packages\openpyxl\chart\data_source.py
+  📄 venv\Lib\site-packages\openpyxl\chart\descriptors.py
+  📄 venv\Lib\site-packages\openpyxl\chart\error_bar.py
+  📄 venv\Lib\site-packages\openpyxl\chart\label.py
+  📄 venv\Lib\site-packages\openpyxl\chart\layout.py
+  📄 venv\Lib\site-packages\openpyxl\chart\legend.py
+  📄 venv\Lib\site-packages\openpyxl\chart\line_chart.py
+  📄 venv\Lib\site-packages\openpyxl\chart\marker.py
+  📄 venv\Lib\site-packages\openpyxl\chart\picture.py
+  📄 venv\Lib\site-packages\openpyxl\chart\pie_chart.py
+  📄 venv\Lib\site-packages\openpyxl\chart\pivot.py
+  📄 venv\Lib\site-packages\openpyxl\chart\plotarea.py
+  📄 venv\Lib\site-packages\openpyxl\chart\print_settings.py
+  📄 venv\Lib\site-packages\openpyxl\chart\radar_chart.py
+  📄 venv\Lib\site-packages\openpyxl\chart\reader.py
+  📄 venv\Lib\site-packages\openpyxl\chart\reference.py
+  📄 venv\Lib\site-packages\openpyxl\chart\scatter_chart.py
+  📄 venv\Lib\site-packages\openpyxl\chart\series_factory.py
+  📄 venv\Lib\site-packages\openpyxl\chart\series.py
+  📄 venv\Lib\site-packages\openpyxl\chart\shapes.py
+  📄 venv\Lib\site-packages\openpyxl\chart\stock_chart.py
+  📄 venv\Lib\site-packages\openpyxl\chart\surface_chart.py
+  📄 venv\Lib\site-packages\openpyxl\chart\text.py
+  📄 venv\Lib\site-packages\openpyxl\chart\title.py
+  📄 venv\Lib\site-packages\openpyxl\chart\trendline.py
+  📄 venv\Lib\site-packages\openpyxl\chart\updown_bars.py
+
+📂 charts
+  📄 venv\Lib\site-packages\reportlab\graphics\charts\__init__.py
+  📄 venv\Lib\site-packages\reportlab\graphics\charts\areas.py
+  📄 venv\Lib\site-packages\reportlab\graphics\charts\axes.py
+  📄 venv\Lib\site-packages\reportlab\graphics\charts\barcharts.py
+  📄 venv\Lib\site-packages\reportlab\graphics\charts\dotbox.py
+  📄 venv\Lib\site-packages\reportlab\graphics\charts\doughnut.py
+  📄 venv\Lib\site-packages\reportlab\graphics\charts\legends.py
+  📄 venv\Lib\site-packages\reportlab\graphics\charts\linecharts.py
+  📄 venv\Lib\site-packages\reportlab\graphics\charts\lineplots.py
+  📄 venv\Lib\site-packages\reportlab\graphics\charts\markers.py
+  📄 venv\Lib\site-packages\reportlab\graphics\charts\piecharts.py
+  📄 venv\Lib\site-packages\reportlab\graphics\charts\slidebox.py
+  📄 venv\Lib\site-packages\reportlab\graphics\charts\spider.py
+  📄 venv\Lib\site-packages\reportlab\graphics\charts\textlabels.py
+  📄 venv\Lib\site-packages\reportlab\graphics\charts\utils.py
+  📄 venv\Lib\site-packages\reportlab\graphics\charts\utils3d.py
+
+📂 chartsheet
+  📄 venv\Lib\site-packages\openpyxl\chartsheet\__init__.py
+  📄 venv\Lib\site-packages\openpyxl\chartsheet\chartsheet.py
+  📄 venv\Lib\site-packages\openpyxl\chartsheet\custom.py
+  📄 venv\Lib\site-packages\openpyxl\chartsheet\properties.py
+  📄 venv\Lib\site-packages\openpyxl\chartsheet\protection.py
+  📄 venv\Lib\site-packages\openpyxl\chartsheet\publish.py
+  📄 venv\Lib\site-packages\openpyxl\chartsheet\relation.py
+  📄 venv\Lib\site-packages\openpyxl\chartsheet\views.py
+
+📂 Chile
+  📄 venv\Lib\site-packages\tzdata\zoneinfo\Chile\__init__.py
+
+📂 cli
+  📄 venv\Lib\site-packages\charset_normalizer\cli\__init__.py
+  📄 venv\Lib\site-packages\charset_normalizer\cli\__main__.py
+  📄 venv\Lib\site-packages\pip\_internal\cli\__init__.py
+  📄 venv\Lib\site-packages\pip\_internal\cli\autocompletion.py
+  📄 venv\Lib\site-packages\pip\_internal\cli\base_command.py
+  📄 venv\Lib\site-packages\pip\_internal\cli\cmdoptions.py
+  📄 venv\Lib\site-packages\pip\_internal\cli\command_context.py
+  📄 venv\Lib\site-packages\pip\_internal\cli\index_command.py
+  📄 venv\Lib\site-packages\pip\_internal\cli\main_parser.py
+  📄 venv\Lib\site-packages\pip\_internal\cli\main.py
+  📄 venv\Lib\site-packages\pip\_internal\cli\parser.py
+  📄 venv\Lib\site-packages\pip\_internal\cli\progress_bars.py
+  📄 venv\Lib\site-packages\pip\_internal\cli\req_command.py
+  📄 venv\Lib\site-packages\pip\_internal\cli\spinners.py
+  📄 venv\Lib\site-packages\pip\_internal\cli\status_codes.py
+
+📂 clipboard
+  📄 venv\Lib\site-packages\pandas\io\clipboard\__init__.py
+
+📂 commands
+  📄 venv\Lib\site-packages\pip\_internal\commands\__init__.py
+  📄 venv\Lib\site-packages\pip\_internal\commands\cache.py
+  📄 venv\Lib\site-packages\pip\_internal\commands\check.py
+  📄 venv\Lib\site-packages\pip\_internal\commands\completion.py
+  📄 venv\Lib\site-packages\pip\_internal\commands\configuration.py
+  📄 venv\Lib\site-packages\pip\_internal\commands\debug.py
+  📄 venv\Lib\site-packages\pip\_internal\commands\download.py
+  📄 venv\Lib\site-packages\pip\_internal\commands\freeze.py
+  📄 venv\Lib\site-packages\pip\_internal\commands\hash.py
+  📄 venv\Lib\site-packages\pip\_internal\commands\help.py
+  📄 venv\Lib\site-packages\pip\_internal\commands\index.py
+  📄 venv\Lib\site-packages\pip\_internal\commands\inspect.py
+  📄 venv\Lib\site-packages\pip\_internal\commands\install.py
+  📄 venv\Lib\site-packages\pip\_internal\commands\list.py
+  📄 venv\Lib\site-packages\pip\_internal\commands\lock.py
+  📄 venv\Lib\site-packages\pip\_internal\commands\search.py
+  📄 venv\Lib\site-packages\pip\_internal\commands\show.py
+  📄 venv\Lib\site-packages\pip\_internal\commands\uninstall.py
+  📄 venv\Lib\site-packages\pip\_internal\commands\wheel.py
+
+📂 comments
+  📄 venv\Lib\site-packages\openpyxl\comments\__init__.py
+  📄 venv\Lib\site-packages\openpyxl\comments\author.py
+  📄 venv\Lib\site-packages\openpyxl\comments\comment_sheet.py
+  📄 venv\Lib\site-packages\openpyxl\comments\comments.py
+  📄 venv\Lib\site-packages\openpyxl\comments\shape_writer.py
+
+📂 common
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\common\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\common\test_chunksize.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\common\test_common_basic.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\common\test_data_list.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\common\test_decimal.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\common\test_file_buffer_url.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\common\test_float.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\common\test_index.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\common\test_inf.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\common\test_ints.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\common\test_iterator.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\common\test_read_errors.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\common\test_verbose.py
+
+📂 compat
+  📄 venv\Lib\site-packages\openpyxl\compat\__init__.py
+  📄 venv\Lib\site-packages\openpyxl\compat\abc.py
+  📄 venv\Lib\site-packages\openpyxl\compat\numbers.py
+  📄 venv\Lib\site-packages\openpyxl\compat\product.py
+  📄 venv\Lib\site-packages\openpyxl\compat\singleton.py
+  📄 venv\Lib\site-packages\openpyxl\compat\strings.py
+  📄 venv\Lib\site-packages\pandas\compat\__init__.py
+  📄 venv\Lib\site-packages\pandas\compat\_constants.py
+  📄 venv\Lib\site-packages\pandas\compat\_optional.py
+  📄 venv\Lib\site-packages\pandas\compat\compressors.py
+  📄 venv\Lib\site-packages\pandas\compat\pickle_compat.py
+  📄 venv\Lib\site-packages\pandas\compat\pyarrow.py
+
+📂 components
+  📄 ui\components\__init__.py
+
+📂 computation
+  📄 venv\Lib\site-packages\pandas\core\computation\__init__.py
+  📄 venv\Lib\site-packages\pandas\core\computation\align.py
+  📄 venv\Lib\site-packages\pandas\core\computation\api.py
+  📄 venv\Lib\site-packages\pandas\core\computation\check.py
+  📄 venv\Lib\site-packages\pandas\core\computation\common.py
+  📄 venv\Lib\site-packages\pandas\core\computation\engines.py
+  📄 venv\Lib\site-packages\pandas\core\computation\eval.py
+  📄 venv\Lib\site-packages\pandas\core\computation\expr.py
+  📄 venv\Lib\site-packages\pandas\core\computation\expressions.py
+  📄 venv\Lib\site-packages\pandas\core\computation\ops.py
+  📄 venv\Lib\site-packages\pandas\core\computation\parsing.py
+  📄 venv\Lib\site-packages\pandas\core\computation\pytables.py
+  📄 venv\Lib\site-packages\pandas\core\computation\scope.py
+  📄 venv\Lib\site-packages\pandas\tests\computation\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\computation\test_compat.py
+  📄 venv\Lib\site-packages\pandas\tests\computation\test_eval.py
+
+📂 concat
+  📄 venv\Lib\site-packages\pandas\tests\reshape\concat\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\concat\conftest.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\concat\test_append_common.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\concat\test_append.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\concat\test_categorical.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\concat\test_concat.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\concat\test_dataframe.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\concat\test_datetimes.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\concat\test_empty.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\concat\test_index.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\concat\test_invalid.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\concat\test_series.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\concat\test_sort.py
+
+📂 config
+  📄 config\__init__.py
+  📄 config\settings.py
+  📄 venv\Lib\site-packages\pandas\tests\config\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\config\test_config.py
+  📄 venv\Lib\site-packages\pandas\tests\config\test_localization.py
+
+📂 construction
+  📄 venv\Lib\site-packages\pandas\tests\construction\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\construction\test_extract_array.py
+
+📂 constructors
+  📄 venv\Lib\site-packages\pandas\tests\frame\constructors\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\constructors\test_from_dict.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\constructors\test_from_records.py
+
+📂 contrib
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\contrib\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\contrib\_appengine_environ.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\contrib\appengine.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\contrib\ntlmpool.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\contrib\pyopenssl.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\contrib\securetransport.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\contrib\socks.py
+
+📂 copy_view
+  📄 venv\Lib\site-packages\pandas\tests\copy_view\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\copy_view\test_array.py
+  📄 venv\Lib\site-packages\pandas\tests\copy_view\test_astype.py
+  📄 venv\Lib\site-packages\pandas\tests\copy_view\test_chained_assignment_deprecation.py
+  📄 venv\Lib\site-packages\pandas\tests\copy_view\test_clip.py
+  📄 venv\Lib\site-packages\pandas\tests\copy_view\test_constructors.py
+  📄 venv\Lib\site-packages\pandas\tests\copy_view\test_core_functionalities.py
+  📄 venv\Lib\site-packages\pandas\tests\copy_view\test_functions.py
+  📄 venv\Lib\site-packages\pandas\tests\copy_view\test_indexing.py
+  📄 venv\Lib\site-packages\pandas\tests\copy_view\test_internals.py
+  📄 venv\Lib\site-packages\pandas\tests\copy_view\test_interp_fillna.py
+  📄 venv\Lib\site-packages\pandas\tests\copy_view\test_methods.py
+  📄 venv\Lib\site-packages\pandas\tests\copy_view\test_replace.py
+  📄 venv\Lib\site-packages\pandas\tests\copy_view\test_setitem.py
+  📄 venv\Lib\site-packages\pandas\tests\copy_view\test_util.py
+  📄 venv\Lib\site-packages\pandas\tests\copy_view\util.py
+
+📂 core
+  📄 venv\Lib\site-packages\numpy\core\__init__.py
+  📄 venv\Lib\site-packages\numpy\core\_dtype_ctypes.py
+  📄 venv\Lib\site-packages\numpy\core\_dtype.py
+  📄 venv\Lib\site-packages\numpy\core\_internal.py
+  📄 venv\Lib\site-packages\numpy\core\_multiarray_umath.py
+  📄 venv\Lib\site-packages\numpy\core\_utils.py
+  📄 venv\Lib\site-packages\numpy\core\arrayprint.py
+  📄 venv\Lib\site-packages\numpy\core\defchararray.py
+  📄 venv\Lib\site-packages\numpy\core\einsumfunc.py
+  📄 venv\Lib\site-packages\numpy\core\fromnumeric.py
+  📄 venv\Lib\site-packages\numpy\core\function_base.py
+  📄 venv\Lib\site-packages\numpy\core\getlimits.py
+  📄 venv\Lib\site-packages\numpy\core\multiarray.py
+  📄 venv\Lib\site-packages\numpy\core\numeric.py
+  📄 venv\Lib\site-packages\numpy\core\numerictypes.py
+  📄 venv\Lib\site-packages\numpy\core\overrides.py
+  📄 venv\Lib\site-packages\numpy\core\records.py
+  📄 venv\Lib\site-packages\numpy\core\shape_base.py
+  📄 venv\Lib\site-packages\numpy\core\umath.py
+  📄 venv\Lib\site-packages\pandas\core\__init__.py
+  📄 venv\Lib\site-packages\pandas\core\accessor.py
+  📄 venv\Lib\site-packages\pandas\core\algorithms.py
+  📄 venv\Lib\site-packages\pandas\core\api.py
+  📄 venv\Lib\site-packages\pandas\core\apply.py
+  📄 venv\Lib\site-packages\pandas\core\arraylike.py
+  📄 venv\Lib\site-packages\pandas\core\base.py
+  📄 venv\Lib\site-packages\pandas\core\common.py
+  📄 venv\Lib\site-packages\pandas\core\config_init.py
+  📄 venv\Lib\site-packages\pandas\core\construction.py
+  📄 venv\Lib\site-packages\pandas\core\flags.py
+  📄 venv\Lib\site-packages\pandas\core\frame.py
+  📄 venv\Lib\site-packages\pandas\core\generic.py
+  📄 venv\Lib\site-packages\pandas\core\indexing.py
+  📄 venv\Lib\site-packages\pandas\core\missing.py
+  📄 venv\Lib\site-packages\pandas\core\nanops.py
+  📄 venv\Lib\site-packages\pandas\core\resample.py
+  📄 venv\Lib\site-packages\pandas\core\roperator.py
+  📄 venv\Lib\site-packages\pandas\core\sample.py
+  📄 venv\Lib\site-packages\pandas\core\series.py
+  📄 venv\Lib\site-packages\pandas\core\shared_docs.py
+  📄 venv\Lib\site-packages\pandas\core\sorting.py
+
+📂 core_rendering
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\core_rendering\__init__.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\core_rendering\ctk_canvas.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\core_rendering\draw_engine.py
+
+📂 core_widget_classes
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\core_widget_classes\__init__.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\core_widget_classes\ctk_base_class.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\core_widget_classes\dropdown_menu.py
+
+📂 ctypeslib
+  📄 venv\Lib\site-packages\numpy\ctypeslib\__init__.py
+  📄 venv\Lib\site-packages\numpy\ctypeslib\_ctypeslib.py
+
+📂 customtkinter
+  📄 venv\Lib\site-packages\customtkinter\__init__.py
+
+📂 cython
+  📄 venv\Lib\site-packages\numpy\_core\tests\examples\cython\setup.py
+
+📂 darkdetect
+  📄 venv\Lib\site-packages\darkdetect\__init__.py
+  📄 venv\Lib\site-packages\darkdetect\__main__.py
+  📄 venv\Lib\site-packages\darkdetect\_dummy.py
+  📄 venv\Lib\site-packages\darkdetect\_linux_detect.py
+  📄 venv\Lib\site-packages\darkdetect\_mac_detect.py
+  📄 venv\Lib\site-packages\darkdetect\_windows_detect.py
+
+📂 dashboard
+  📄 modules\dashboard\__init__.py
+
+📂 data
+  📄 venv\Lib\site-packages\numpy\random\tests\data\__init__.py
+
+📂 database
+  📄 database\__init__.py
+  📄 database\db_manager.py
+
+📂 date
+  📄 venv\Lib\site-packages\pandas\tests\extension\date\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\date\array.py
+
+📂 datetimelike_
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimelike_\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimelike_\test_drop_duplicates.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimelike_\test_equals.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimelike_\test_indexing.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimelike_\test_is_monotonic.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimelike_\test_nat.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimelike_\test_sort_values.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimelike_\test_value_counts.py
+
+📂 datetimes
+  📄 venv\Lib\site-packages\pandas\tests\arrays\datetimes\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\datetimes\test_constructors.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\datetimes\test_cumulative.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\datetimes\test_reductions.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\test_arithmetic.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\test_constructors.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\test_date_range.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\test_datetime.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\test_formats.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\test_freq_attr.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\test_indexing.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\test_iter.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\test_join.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\test_npfuncs.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\test_ops.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\test_partial_slicing.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\test_pickle.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\test_reindex.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\test_scalar_compat.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\test_setops.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\test_timezones.py
+
+📂 dateutil
+  📄 venv\Lib\site-packages\dateutil\__init__.py
+  📄 venv\Lib\site-packages\dateutil\_common.py
+  📄 venv\Lib\site-packages\dateutil\_version.py
+  📄 venv\Lib\site-packages\dateutil\easter.py
+  📄 venv\Lib\site-packages\dateutil\relativedelta.py
+  📄 venv\Lib\site-packages\dateutil\rrule.py
+  📄 venv\Lib\site-packages\dateutil\tzwin.py
+  📄 venv\Lib\site-packages\dateutil\utils.py
+
+📂 decimal
+  📄 venv\Lib\site-packages\pandas\tests\extension\decimal\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\decimal\array.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\decimal\test_decimal.py
+
+📂 dependency_groups
+  📄 venv\Lib\site-packages\pip\_vendor\dependency_groups\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\dependency_groups\__main__.py
+  📄 venv\Lib\site-packages\pip\_vendor\dependency_groups\_implementation.py
+  📄 venv\Lib\site-packages\pip\_vendor\dependency_groups\_lint_dependency_groups.py
+  📄 venv\Lib\site-packages\pip\_vendor\dependency_groups\_pip_wrapper.py
+  📄 venv\Lib\site-packages\pip\_vendor\dependency_groups\_toml_compat.py
+
+📂 descriptors
+  📄 venv\Lib\site-packages\openpyxl\descriptors\__init__.py
+  📄 venv\Lib\site-packages\openpyxl\descriptors\base.py
+  📄 venv\Lib\site-packages\openpyxl\descriptors\container.py
+  📄 venv\Lib\site-packages\openpyxl\descriptors\excel.py
+  📄 venv\Lib\site-packages\openpyxl\descriptors\namespace.py
+  📄 venv\Lib\site-packages\openpyxl\descriptors\nested.py
+  📄 venv\Lib\site-packages\openpyxl\descriptors\sequence.py
+  📄 venv\Lib\site-packages\openpyxl\descriptors\serialisable.py
+  📄 venv\Lib\site-packages\openpyxl\descriptors\slots.py
+
+📂 dialogs
+  📄 ui\dialogs\__init__.py
+
+📂 dist
+  📄 dist\__init__.py
+
+📂 distlib
+  📄 venv\Lib\site-packages\pip\_vendor\distlib\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\distlib\compat.py
+  📄 venv\Lib\site-packages\pip\_vendor\distlib\resources.py
+  📄 venv\Lib\site-packages\pip\_vendor\distlib\scripts.py
+  📄 venv\Lib\site-packages\pip\_vendor\distlib\util.py
+
+📂 distributions
+  📄 venv\Lib\site-packages\pip\_internal\distributions\__init__.py
+  📄 venv\Lib\site-packages\pip\_internal\distributions\base.py
+  📄 venv\Lib\site-packages\pip\_internal\distributions\installed.py
+  📄 venv\Lib\site-packages\pip\_internal\distributions\sdist.py
+  📄 venv\Lib\site-packages\pip\_internal\distributions\wheel.py
+
+📂 distro
+  📄 venv\Lib\site-packages\pip\_vendor\distro\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\distro\__main__.py
+  📄 venv\Lib\site-packages\pip\_vendor\distro\distro.py
+
+📂 doc
+  📄 venv\Lib\site-packages\numpy\doc\ufuncs.py
+
+📂 drawing
+  📄 venv\Lib\site-packages\openpyxl\drawing\__init__.py
+  📄 venv\Lib\site-packages\openpyxl\drawing\colors.py
+  📄 venv\Lib\site-packages\openpyxl\drawing\connector.py
+  📄 venv\Lib\site-packages\openpyxl\drawing\drawing.py
+  📄 venv\Lib\site-packages\openpyxl\drawing\effect.py
+  📄 venv\Lib\site-packages\openpyxl\drawing\fill.py
+  📄 venv\Lib\site-packages\openpyxl\drawing\geometry.py
+  📄 venv\Lib\site-packages\openpyxl\drawing\graphic.py
+  📄 venv\Lib\site-packages\openpyxl\drawing\image.py
+  📄 venv\Lib\site-packages\openpyxl\drawing\line.py
+  📄 venv\Lib\site-packages\openpyxl\drawing\picture.py
+  📄 venv\Lib\site-packages\openpyxl\drawing\properties.py
+  📄 venv\Lib\site-packages\openpyxl\drawing\relation.py
+  📄 venv\Lib\site-packages\openpyxl\drawing\spreadsheet_drawing.py
+  📄 venv\Lib\site-packages\openpyxl\drawing\text.py
+  📄 venv\Lib\site-packages\openpyxl\drawing\xdr.py
+
+📂 dtypes
+  📄 venv\Lib\site-packages\pandas\core\dtypes\__init__.py
+  📄 venv\Lib\site-packages\pandas\core\dtypes\api.py
+  📄 venv\Lib\site-packages\pandas\core\dtypes\astype.py
+  📄 venv\Lib\site-packages\pandas\core\dtypes\base.py
+  📄 venv\Lib\site-packages\pandas\core\dtypes\cast.py
+  📄 venv\Lib\site-packages\pandas\core\dtypes\common.py
+  📄 venv\Lib\site-packages\pandas\core\dtypes\concat.py
+  📄 venv\Lib\site-packages\pandas\core\dtypes\dtypes.py
+  📄 venv\Lib\site-packages\pandas\core\dtypes\generic.py
+  📄 venv\Lib\site-packages\pandas\core\dtypes\inference.py
+  📄 venv\Lib\site-packages\pandas\core\dtypes\missing.py
+  📄 venv\Lib\site-packages\pandas\tests\dtypes\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\dtypes\test_common.py
+  📄 venv\Lib\site-packages\pandas\tests\dtypes\test_concat.py
+  📄 venv\Lib\site-packages\pandas\tests\dtypes\test_dtypes.py
+  📄 venv\Lib\site-packages\pandas\tests\dtypes\test_generic.py
+  📄 venv\Lib\site-packages\pandas\tests\dtypes\test_inference.py
+  📄 venv\Lib\site-packages\pandas\tests\dtypes\test_missing.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\dtypes\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\dtypes\test_categorical.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\dtypes\test_dtypes_basic.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\dtypes\test_empty.py
+
+📂 errors
+  📄 venv\Lib\site-packages\pandas\errors\__init__.py
+
+📂 et_xmlfile
+  📄 venv\Lib\site-packages\et_xmlfile\__init__.py
+  📄 venv\Lib\site-packages\et_xmlfile\incremental_tree.py
+  📄 venv\Lib\site-packages\et_xmlfile\xmlfile.py
+
+📂 Etc
+  📄 venv\Lib\site-packages\tzdata\zoneinfo\Etc\__init__.py
+
+📂 Europe
+  📄 venv\Lib\site-packages\tzdata\zoneinfo\Europe\__init__.py
+
+📂 excel
+  📄 venv\Lib\site-packages\pandas\io\excel\__init__.py
+  📄 venv\Lib\site-packages\pandas\io\excel\_base.py
+  📄 venv\Lib\site-packages\pandas\io\excel\_calamine.py
+  📄 venv\Lib\site-packages\pandas\io\excel\_odfreader.py
+  📄 venv\Lib\site-packages\pandas\io\excel\_odswriter.py
+  📄 venv\Lib\site-packages\pandas\io\excel\_openpyxl.py
+  📄 venv\Lib\site-packages\pandas\io\excel\_pyxlsb.py
+  📄 venv\Lib\site-packages\pandas\io\excel\_util.py
+  📄 venv\Lib\site-packages\pandas\io\excel\_xlrd.py
+  📄 venv\Lib\site-packages\pandas\io\excel\_xlsxwriter.py
+  📄 venv\Lib\site-packages\pandas\tests\io\excel\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\io\excel\test_odf.py
+  📄 venv\Lib\site-packages\pandas\tests\io\excel\test_odswriter.py
+  📄 venv\Lib\site-packages\pandas\tests\io\excel\test_openpyxl.py
+  📄 venv\Lib\site-packages\pandas\tests\io\excel\test_readers.py
+  📄 venv\Lib\site-packages\pandas\tests\io\excel\test_style.py
+  📄 venv\Lib\site-packages\pandas\tests\io\excel\test_writers.py
+  📄 venv\Lib\site-packages\pandas\tests\io\excel\test_xlrd.py
+  📄 venv\Lib\site-packages\pandas\tests\io\excel\test_xlsxwriter.py
+
+📂 exports
+  📄 exports\__init__.py
+
+📂 extension
+  📄 venv\Lib\site-packages\pandas\tests\extension\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\conftest.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\test_arrow.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\test_categorical.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\test_common.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\test_datetime.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\test_extension.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\test_interval.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\test_masked.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\test_numpy.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\test_period.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\test_sparse.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\test_string.py
+
+📂 extensions
+  📄 venv\Lib\site-packages\pandas\api\extensions\__init__.py
+
+📂 external_link
+  📄 venv\Lib\site-packages\openpyxl\workbook\external_link\__init__.py
+  📄 venv\Lib\site-packages\openpyxl\workbook\external_link\external.py
+
+📂 f2py
+  📄 venv\Lib\site-packages\numpy\f2py\__init__.py
+  📄 venv\Lib\site-packages\numpy\f2py\__main__.py
+  📄 venv\Lib\site-packages\numpy\f2py\__version__.py
+  📄 venv\Lib\site-packages\numpy\f2py\_isocbind.py
+  📄 venv\Lib\site-packages\numpy\f2py\_src_pyf.py
+  📄 venv\Lib\site-packages\numpy\f2py\auxfuncs.py
+  📄 venv\Lib\site-packages\numpy\f2py\capi_maps.py
+  📄 venv\Lib\site-packages\numpy\f2py\cb_rules.py
+  📄 venv\Lib\site-packages\numpy\f2py\cfuncs.py
+  📄 venv\Lib\site-packages\numpy\f2py\common_rules.py
+  📄 venv\Lib\site-packages\numpy\f2py\crackfortran.py
+  📄 venv\Lib\site-packages\numpy\f2py\diagnose.py
+  📄 venv\Lib\site-packages\numpy\f2py\f2py2e.py
+  📄 venv\Lib\site-packages\numpy\f2py\f90mod_rules.py
+  📄 venv\Lib\site-packages\numpy\f2py\func2subr.py
+  📄 venv\Lib\site-packages\numpy\f2py\rules.py
+  📄 venv\Lib\site-packages\numpy\f2py\symbolic.py
+  📄 venv\Lib\site-packages\numpy\f2py\use_rules.py
+
+📂 fft
+  📄 venv\Lib\site-packages\numpy\fft\__init__.py
+  📄 venv\Lib\site-packages\numpy\fft\_helper.py
+  📄 venv\Lib\site-packages\numpy\fft\_pocketfft.py
+
+📂 filters
+  📄 venv\Lib\site-packages\pip\_vendor\pygments\filters\__init__.py
+
+📂 finances
+  📄 modules\finances\__init__.py
+
+📂 floating
+  📄 venv\Lib\site-packages\pandas\tests\arrays\floating\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\floating\conftest.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\floating\test_arithmetic.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\floating\test_astype.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\floating\test_comparison.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\floating\test_concat.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\floating\test_construction.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\floating\test_contains.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\floating\test_function.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\floating\test_repr.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\floating\test_to_numpy.py
+
+📂 font
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\font\__init__.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\font\ctk_font.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\font\font_manager.py
+
+📂 formats
+  📄 venv\Lib\site-packages\pandas\io\formats\__init__.py
+  📄 venv\Lib\site-packages\pandas\io\formats\_color_data.py
+  📄 venv\Lib\site-packages\pandas\io\formats\console.py
+  📄 venv\Lib\site-packages\pandas\io\formats\css.py
+  📄 venv\Lib\site-packages\pandas\io\formats\csvs.py
+  📄 venv\Lib\site-packages\pandas\io\formats\excel.py
+  📄 venv\Lib\site-packages\pandas\io\formats\format.py
+  📄 venv\Lib\site-packages\pandas\io\formats\html.py
+  📄 venv\Lib\site-packages\pandas\io\formats\info.py
+  📄 venv\Lib\site-packages\pandas\io\formats\printing.py
+  📄 venv\Lib\site-packages\pandas\io\formats\string.py
+  📄 venv\Lib\site-packages\pandas\io\formats\style_render.py
+  📄 venv\Lib\site-packages\pandas\io\formats\style.py
+  📄 venv\Lib\site-packages\pandas\io\formats\xml.py
+  📄 venv\Lib\site-packages\pandas\tests\io\formats\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\io\formats\test_console.py
+  📄 venv\Lib\site-packages\pandas\tests\io\formats\test_css.py
+  📄 venv\Lib\site-packages\pandas\tests\io\formats\test_eng_formatting.py
+  📄 venv\Lib\site-packages\pandas\tests\io\formats\test_format.py
+  📄 venv\Lib\site-packages\pandas\tests\io\formats\test_ipython_compat.py
+  📄 venv\Lib\site-packages\pandas\tests\io\formats\test_printing.py
+  📄 venv\Lib\site-packages\pandas\tests\io\formats\test_to_csv.py
+  📄 venv\Lib\site-packages\pandas\tests\io\formats\test_to_excel.py
+  📄 venv\Lib\site-packages\pandas\tests\io\formats\test_to_html.py
+  📄 venv\Lib\site-packages\pandas\tests\io\formats\test_to_latex.py
+  📄 venv\Lib\site-packages\pandas\tests\io\formats\test_to_markdown.py
+  📄 venv\Lib\site-packages\pandas\tests\io\formats\test_to_string.py
+
+📂 formatters
+  📄 venv\Lib\site-packages\pip\_vendor\pygments\formatters\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\pygments\formatters\_mapping.py
+
+📂 formatting
+  📄 venv\Lib\site-packages\openpyxl\formatting\__init__.py
+  📄 venv\Lib\site-packages\openpyxl\formatting\formatting.py
+  📄 venv\Lib\site-packages\openpyxl\formatting\rule.py
+
+📂 formula
+  📄 venv\Lib\site-packages\openpyxl\formula\__init__.py
+  📄 venv\Lib\site-packages\openpyxl\formula\tokenizer.py
+  📄 venv\Lib\site-packages\openpyxl\formula\translate.py
+
+📂 frame
+  📄 venv\Lib\site-packages\pandas\tests\frame\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\common.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\conftest.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\test_alter_axes.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\test_api.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\test_arithmetic.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\test_arrow_interface.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\test_block_internals.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\test_constructors.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\test_cumulative.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\test_iteration.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\test_logical_ops.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\test_nonunique_indexes.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\test_npfuncs.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\test_query_eval.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\test_reductions.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\test_repr.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\test_stack_unstack.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\test_subclass.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\test_ufunc.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\test_unary.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\test_validate.py
+  📄 venv\Lib\site-packages\pandas\tests\plotting\frame\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\plotting\frame\test_frame_color.py
+  📄 venv\Lib\site-packages\pandas\tests\plotting\frame\test_frame_groupby.py
+  📄 venv\Lib\site-packages\pandas\tests\plotting\frame\test_frame_legend.py
+  📄 venv\Lib\site-packages\pandas\tests\plotting\frame\test_frame_subplots.py
+  📄 venv\Lib\site-packages\pandas\tests\plotting\frame\test_frame.py
+  📄 venv\Lib\site-packages\pandas\tests\plotting\frame\test_hist_box_by.py
+
+📂 frequencies
+  📄 venv\Lib\site-packages\pandas\tests\tseries\frequencies\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\tseries\frequencies\test_freq_code.py
+  📄 venv\Lib\site-packages\pandas\tests\tseries\frequencies\test_frequencies.py
+  📄 venv\Lib\site-packages\pandas\tests\tseries\frequencies\test_inference.py
+
+📂 generators
+  📄 reports\generators\__init__.py
+  📄 reports\generators\pdf_generator.py
+
+📂 generic
+  📄 venv\Lib\site-packages\pandas\tests\generic\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\generic\test_duplicate_labels.py
+  📄 venv\Lib\site-packages\pandas\tests\generic\test_finalize.py
+  📄 venv\Lib\site-packages\pandas\tests\generic\test_frame.py
+  📄 venv\Lib\site-packages\pandas\tests\generic\test_generic.py
+  📄 venv\Lib\site-packages\pandas\tests\generic\test_label_or_level_utils.py
+  📄 venv\Lib\site-packages\pandas\tests\generic\test_series.py
+  📄 venv\Lib\site-packages\pandas\tests\generic\test_to_xarray.py
+
+📂 graphics
+  📄 venv\Lib\site-packages\reportlab\graphics\__init__.py
+  📄 venv\Lib\site-packages\reportlab\graphics\renderbase.py
+  📄 venv\Lib\site-packages\reportlab\graphics\renderPDF.py
+  📄 venv\Lib\site-packages\reportlab\graphics\renderPM.py
+  📄 venv\Lib\site-packages\reportlab\graphics\renderPS.py
+  📄 venv\Lib\site-packages\reportlab\graphics\renderSVG.py
+  📄 venv\Lib\site-packages\reportlab\graphics\shapes.py
+  📄 venv\Lib\site-packages\reportlab\graphics\svgpath.py
+  📄 venv\Lib\site-packages\reportlab\graphics\testdrawings.py
+  📄 venv\Lib\site-packages\reportlab\graphics\testshapes.py
+  📄 venv\Lib\site-packages\reportlab\graphics\transform.py
+  📄 venv\Lib\site-packages\reportlab\graphics\utils.py
+  📄 venv\Lib\site-packages\reportlab\graphics\widgetbase.py
+
+📂 groupby
+  📄 venv\Lib\site-packages\pandas\core\groupby\__init__.py
+  📄 venv\Lib\site-packages\pandas\core\groupby\base.py
+  📄 venv\Lib\site-packages\pandas\core\groupby\categorical.py
+  📄 venv\Lib\site-packages\pandas\core\groupby\generic.py
+  📄 venv\Lib\site-packages\pandas\core\groupby\groupby.py
+  📄 venv\Lib\site-packages\pandas\core\groupby\grouper.py
+  📄 venv\Lib\site-packages\pandas\core\groupby\indexing.py
+  📄 venv\Lib\site-packages\pandas\core\groupby\numba_.py
+  📄 venv\Lib\site-packages\pandas\core\groupby\ops.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\conftest.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\test_all_methods.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\test_api.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\test_apply_mutate.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\test_apply.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\test_bin_groupby.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\test_categorical.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\test_counting.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\test_cumulative.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\test_filters.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\test_groupby_dropna.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\test_groupby_subclass.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\test_groupby.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\test_grouping.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\test_index_as_string.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\test_indexing.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\test_libgroupby.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\test_missing.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\test_numba.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\test_numeric_only.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\test_pipe.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\test_raises.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\test_reductions.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\test_timegrouper.py
+
+📂 holiday
+  📄 venv\Lib\site-packages\pandas\tests\tseries\holiday\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\tseries\holiday\test_calendar.py
+  📄 venv\Lib\site-packages\pandas\tests\tseries\holiday\test_federal.py
+  📄 venv\Lib\site-packages\pandas\tests\tseries\holiday\test_holiday.py
+  📄 venv\Lib\site-packages\pandas\tests\tseries\holiday\test_observance.py
+
+📂 idna
+  📄 venv\Lib\site-packages\pip\_vendor\idna\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\idna\codec.py
+  📄 venv\Lib\site-packages\pip\_vendor\idna\compat.py
+  📄 venv\Lib\site-packages\pip\_vendor\idna\core.py
+  📄 venv\Lib\site-packages\pip\_vendor\idna\idnadata.py
+  📄 venv\Lib\site-packages\pip\_vendor\idna\intranges.py
+  📄 venv\Lib\site-packages\pip\_vendor\idna\package_data.py
+  📄 venv\Lib\site-packages\pip\_vendor\idna\uts46data.py
+
+📂 image
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\image\__init__.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\image\ctk_image.py
+
+📂 importlib
+  📄 venv\Lib\site-packages\pip\_internal\metadata\importlib\__init__.py
+  📄 venv\Lib\site-packages\pip\_internal\metadata\importlib\_compat.py
+  📄 venv\Lib\site-packages\pip\_internal\metadata\importlib\_dists.py
+  📄 venv\Lib\site-packages\pip\_internal\metadata\importlib\_envs.py
+
+📂 index
+  📄 venv\Lib\site-packages\pandas\tests\copy_view\index\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\copy_view\index\test_datetimeindex.py
+  📄 venv\Lib\site-packages\pandas\tests\copy_view\index\test_index.py
+  📄 venv\Lib\site-packages\pandas\tests\copy_view\index\test_periodindex.py
+  📄 venv\Lib\site-packages\pandas\tests\copy_view\index\test_timedeltaindex.py
+  📄 venv\Lib\site-packages\pip\_internal\index\__init__.py
+  📄 venv\Lib\site-packages\pip\_internal\index\collector.py
+  📄 venv\Lib\site-packages\pip\_internal\index\package_finder.py
+  📄 venv\Lib\site-packages\pip\_internal\index\sources.py
+
+📂 indexers
+  📄 venv\Lib\site-packages\pandas\api\indexers\__init__.py
+  📄 venv\Lib\site-packages\pandas\core\indexers\__init__.py
+  📄 venv\Lib\site-packages\pandas\core\indexers\objects.py
+  📄 venv\Lib\site-packages\pandas\core\indexers\utils.py
+
+📂 indexes
+  📄 venv\Lib\site-packages\pandas\core\indexes\__init__.py
+  📄 venv\Lib\site-packages\pandas\core\indexes\accessors.py
+  📄 venv\Lib\site-packages\pandas\core\indexes\api.py
+  📄 venv\Lib\site-packages\pandas\core\indexes\base.py
+  📄 venv\Lib\site-packages\pandas\core\indexes\category.py
+  📄 venv\Lib\site-packages\pandas\core\indexes\datetimelike.py
+  📄 venv\Lib\site-packages\pandas\core\indexes\datetimes.py
+  📄 venv\Lib\site-packages\pandas\core\indexes\extension.py
+  📄 venv\Lib\site-packages\pandas\core\indexes\frozen.py
+  📄 venv\Lib\site-packages\pandas\core\indexes\interval.py
+  📄 venv\Lib\site-packages\pandas\core\indexes\multi.py
+  📄 venv\Lib\site-packages\pandas\core\indexes\period.py
+  📄 venv\Lib\site-packages\pandas\core\indexes\range.py
+  📄 venv\Lib\site-packages\pandas\core\indexes\timedeltas.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\conftest.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\test_any_index.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\test_base.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\test_common.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\test_datetimelike.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\test_engines.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\test_frozen.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\test_index_new.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\test_indexing.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\test_numpy_compat.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\test_old_base.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\test_setops.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\test_subclass.py
+
+📂 indexing
+  📄 venv\Lib\site-packages\pandas\tests\frame\indexing\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\indexing\test_coercion.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\indexing\test_delitem.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\indexing\test_get_value.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\indexing\test_get.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\indexing\test_getitem.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\indexing\test_indexing.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\indexing\test_insert.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\indexing\test_mask.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\indexing\test_set_value.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\indexing\test_setitem.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\indexing\test_take.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\indexing\test_where.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\indexing\test_xs.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\common.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\conftest.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\test_at.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\test_categorical.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\test_chaining_and_caching.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\test_check_indexer.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\test_coercion.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\test_datetime.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\test_floats.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\test_iat.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\test_iloc.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\test_indexers.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\test_indexing.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\test_loc.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\test_na_indexing.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\test_partial.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\test_scalar.py
+  📄 venv\Lib\site-packages\pandas\tests\series\indexing\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\series\indexing\test_datetime.py
+  📄 venv\Lib\site-packages\pandas\tests\series\indexing\test_delitem.py
+  📄 venv\Lib\site-packages\pandas\tests\series\indexing\test_get.py
+  📄 venv\Lib\site-packages\pandas\tests\series\indexing\test_getitem.py
+  📄 venv\Lib\site-packages\pandas\tests\series\indexing\test_indexing.py
+  📄 venv\Lib\site-packages\pandas\tests\series\indexing\test_mask.py
+  📄 venv\Lib\site-packages\pandas\tests\series\indexing\test_set_value.py
+  📄 venv\Lib\site-packages\pandas\tests\series\indexing\test_setitem.py
+  📄 venv\Lib\site-packages\pandas\tests\series\indexing\test_take.py
+  📄 venv\Lib\site-packages\pandas\tests\series\indexing\test_where.py
+  📄 venv\Lib\site-packages\pandas\tests\series\indexing\test_xs.py
+
+📂 Indian
+  📄 venv\Lib\site-packages\tzdata\zoneinfo\Indian\__init__.py
+
+📂 Indiana
+  📄 venv\Lib\site-packages\tzdata\zoneinfo\America\Indiana\__init__.py
+
+📂 install
+  📄 venv\Lib\site-packages\pip\_internal\operations\install\__init__.py
+  📄 venv\Lib\site-packages\pip\_internal\operations\install\wheel.py
+
+📂 integer
+  📄 venv\Lib\site-packages\pandas\tests\arrays\integer\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\integer\conftest.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\integer\test_arithmetic.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\integer\test_comparison.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\integer\test_concat.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\integer\test_construction.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\integer\test_dtypes.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\integer\test_function.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\integer\test_indexing.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\integer\test_reduction.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\integer\test_repr.py
+
+📂 interchange
+  📄 venv\Lib\site-packages\pandas\api\interchange\__init__.py
+  📄 venv\Lib\site-packages\pandas\core\interchange\__init__.py
+  📄 venv\Lib\site-packages\pandas\core\interchange\buffer.py
+  📄 venv\Lib\site-packages\pandas\core\interchange\column.py
+  📄 venv\Lib\site-packages\pandas\core\interchange\dataframe_protocol.py
+  📄 venv\Lib\site-packages\pandas\core\interchange\dataframe.py
+  📄 venv\Lib\site-packages\pandas\core\interchange\from_dataframe.py
+  📄 venv\Lib\site-packages\pandas\core\interchange\utils.py
+  📄 venv\Lib\site-packages\pandas\tests\interchange\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\interchange\test_impl.py
+  📄 venv\Lib\site-packages\pandas\tests\interchange\test_spec_conformance.py
+  📄 venv\Lib\site-packages\pandas\tests\interchange\test_utils.py
+
+📂 internals
+  📄 venv\Lib\site-packages\pandas\core\internals\__init__.py
+  📄 venv\Lib\site-packages\pandas\core\internals\api.py
+  📄 venv\Lib\site-packages\pandas\core\internals\array_manager.py
+  📄 venv\Lib\site-packages\pandas\core\internals\base.py
+  📄 venv\Lib\site-packages\pandas\core\internals\blocks.py
+  📄 venv\Lib\site-packages\pandas\core\internals\concat.py
+  📄 venv\Lib\site-packages\pandas\core\internals\construction.py
+  📄 venv\Lib\site-packages\pandas\core\internals\managers.py
+  📄 venv\Lib\site-packages\pandas\core\internals\ops.py
+  📄 venv\Lib\site-packages\pandas\tests\internals\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\internals\test_api.py
+  📄 venv\Lib\site-packages\pandas\tests\internals\test_internals.py
+  📄 venv\Lib\site-packages\pandas\tests\internals\test_managers.py
+
+📂 interval
+  📄 venv\Lib\site-packages\pandas\tests\arrays\interval\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\interval\test_astype.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\interval\test_formats.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\interval\test_interval_pyarrow.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\interval\test_interval.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\interval\test_overlaps.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\interval\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\interval\test_astype.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\interval\test_constructors.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\interval\test_equals.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\interval\test_formats.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\interval\test_indexing.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\interval\test_interval_range.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\interval\test_interval_tree.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\interval\test_interval.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\interval\test_join.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\interval\test_pickle.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\interval\test_setops.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\interval\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\interval\test_interval_new.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\interval\test_interval.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\interval\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\interval\test_arithmetic.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\interval\test_constructors.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\interval\test_contains.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\interval\test_formats.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\interval\test_interval.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\interval\test_overlaps.py
+
+📂 io
+  📄 venv\Lib\site-packages\pandas\io\__init__.py
+  📄 venv\Lib\site-packages\pandas\io\_util.py
+  📄 venv\Lib\site-packages\pandas\io\api.py
+  📄 venv\Lib\site-packages\pandas\io\clipboards.py
+  📄 venv\Lib\site-packages\pandas\io\common.py
+  📄 venv\Lib\site-packages\pandas\io\feather_format.py
+  📄 venv\Lib\site-packages\pandas\io\gbq.py
+  📄 venv\Lib\site-packages\pandas\io\html.py
+  📄 venv\Lib\site-packages\pandas\io\orc.py
+  📄 venv\Lib\site-packages\pandas\io\parquet.py
+  📄 venv\Lib\site-packages\pandas\io\pickle.py
+  📄 venv\Lib\site-packages\pandas\io\pytables.py
+  📄 venv\Lib\site-packages\pandas\io\spss.py
+  📄 venv\Lib\site-packages\pandas\io\sql.py
+  📄 venv\Lib\site-packages\pandas\io\stata.py
+  📄 venv\Lib\site-packages\pandas\io\xml.py
+  📄 venv\Lib\site-packages\pandas\tests\io\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\io\conftest.py
+  📄 venv\Lib\site-packages\pandas\tests\io\generate_legacy_storage_files.py
+  📄 venv\Lib\site-packages\pandas\tests\io\test_clipboard.py
+  📄 venv\Lib\site-packages\pandas\tests\io\test_common.py
+  📄 venv\Lib\site-packages\pandas\tests\io\test_compression.py
+  📄 venv\Lib\site-packages\pandas\tests\io\test_feather.py
+  📄 venv\Lib\site-packages\pandas\tests\io\test_fsspec.py
+  📄 venv\Lib\site-packages\pandas\tests\io\test_gbq.py
+  📄 venv\Lib\site-packages\pandas\tests\io\test_gcs.py
+  📄 venv\Lib\site-packages\pandas\tests\io\test_html.py
+  📄 venv\Lib\site-packages\pandas\tests\io\test_http_headers.py
+  📄 venv\Lib\site-packages\pandas\tests\io\test_orc.py
+  📄 venv\Lib\site-packages\pandas\tests\io\test_parquet.py
+  📄 venv\Lib\site-packages\pandas\tests\io\test_pickle.py
+  📄 venv\Lib\site-packages\pandas\tests\io\test_s3.py
+  📄 venv\Lib\site-packages\pandas\tests\io\test_spss.py
+  📄 venv\Lib\site-packages\pandas\tests\io\test_sql.py
+  📄 venv\Lib\site-packages\pandas\tests\io\test_stata.py
+
+📂 json
+  📄 venv\Lib\site-packages\pandas\io\json\__init__.py
+  📄 venv\Lib\site-packages\pandas\io\json\_json.py
+  📄 venv\Lib\site-packages\pandas\io\json\_normalize.py
+  📄 venv\Lib\site-packages\pandas\io\json\_table_schema.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\json\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\json\array.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\json\test_json.py
+  📄 venv\Lib\site-packages\pandas\tests\io\json\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\io\json\conftest.py
+  📄 venv\Lib\site-packages\pandas\tests\io\json\test_compression.py
+  📄 venv\Lib\site-packages\pandas\tests\io\json\test_deprecated_kwargs.py
+  📄 venv\Lib\site-packages\pandas\tests\io\json\test_json_table_schema_ext_dtype.py
+  📄 venv\Lib\site-packages\pandas\tests\io\json\test_json_table_schema.py
+  📄 venv\Lib\site-packages\pandas\tests\io\json\test_normalize.py
+  📄 venv\Lib\site-packages\pandas\tests\io\json\test_pandas.py
+  📄 venv\Lib\site-packages\pandas\tests\io\json\test_readlines.py
+  📄 venv\Lib\site-packages\pandas\tests\io\json\test_ujson.py
+
+📂 Kentucky
+  📄 venv\Lib\site-packages\tzdata\zoneinfo\America\Kentucky\__init__.py
+
+📂 kernels
+  📄 venv\Lib\site-packages\pandas\core\_numba\kernels\__init__.py
+  📄 venv\Lib\site-packages\pandas\core\_numba\kernels\mean_.py
+  📄 venv\Lib\site-packages\pandas\core\_numba\kernels\min_max_.py
+  📄 venv\Lib\site-packages\pandas\core\_numba\kernels\shared.py
+  📄 venv\Lib\site-packages\pandas\core\_numba\kernels\sum_.py
+  📄 venv\Lib\site-packages\pandas\core\_numba\kernels\var_.py
+
+📂 legacy
+  📄 venv\Lib\site-packages\pip\_internal\resolution\legacy\__init__.py
+  📄 venv\Lib\site-packages\pip\_internal\resolution\legacy\resolver.py
+
+📂 lexers
+  📄 venv\Lib\site-packages\pip\_vendor\pygments\lexers\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\pygments\lexers\_mapping.py
+  📄 venv\Lib\site-packages\pip\_vendor\pygments\lexers\python.py
+
+📂 lib
+  📄 venv\Lib\site-packages\numpy\lib\__init__.py
+  📄 venv\Lib\site-packages\numpy\lib\_array_utils_impl.py
+  📄 venv\Lib\site-packages\numpy\lib\_arraypad_impl.py
+  📄 venv\Lib\site-packages\numpy\lib\_arraysetops_impl.py
+  📄 venv\Lib\site-packages\numpy\lib\_arrayterator_impl.py
+  📄 venv\Lib\site-packages\numpy\lib\_datasource.py
+  📄 venv\Lib\site-packages\numpy\lib\_format_impl.py
+  📄 venv\Lib\site-packages\numpy\lib\_function_base_impl.py
+  📄 venv\Lib\site-packages\numpy\lib\_histograms_impl.py
+  📄 venv\Lib\site-packages\numpy\lib\_index_tricks_impl.py
+  📄 venv\Lib\site-packages\numpy\lib\_iotools.py
+  📄 venv\Lib\site-packages\numpy\lib\_nanfunctions_impl.py
+  📄 venv\Lib\site-packages\numpy\lib\_npyio_impl.py
+  📄 venv\Lib\site-packages\numpy\lib\_polynomial_impl.py
+  📄 venv\Lib\site-packages\numpy\lib\_scimath_impl.py
+  📄 venv\Lib\site-packages\numpy\lib\_shape_base_impl.py
+  📄 venv\Lib\site-packages\numpy\lib\_stride_tricks_impl.py
+  📄 venv\Lib\site-packages\numpy\lib\_twodim_base_impl.py
+  📄 venv\Lib\site-packages\numpy\lib\_type_check_impl.py
+  📄 venv\Lib\site-packages\numpy\lib\_ufunclike_impl.py
+  📄 venv\Lib\site-packages\numpy\lib\_user_array_impl.py
+  📄 venv\Lib\site-packages\numpy\lib\_utils_impl.py
+  📄 venv\Lib\site-packages\numpy\lib\_version.py
+  📄 venv\Lib\site-packages\numpy\lib\array_utils.py
+  📄 venv\Lib\site-packages\numpy\lib\format.py
+  📄 venv\Lib\site-packages\numpy\lib\introspect.py
+  📄 venv\Lib\site-packages\numpy\lib\mixins.py
+  📄 venv\Lib\site-packages\numpy\lib\npyio.py
+  📄 venv\Lib\site-packages\numpy\lib\recfunctions.py
+  📄 venv\Lib\site-packages\numpy\lib\scimath.py
+  📄 venv\Lib\site-packages\numpy\lib\stride_tricks.py
+  📄 venv\Lib\site-packages\numpy\lib\user_array.py
+  📄 venv\Lib\site-packages\reportlab\lib\__init__.py
+  📄 venv\Lib\site-packages\reportlab\lib\abag.py
+  📄 venv\Lib\site-packages\reportlab\lib\arciv.py
+  📄 venv\Lib\site-packages\reportlab\lib\attrmap.py
+  📄 venv\Lib\site-packages\reportlab\lib\boxstuff.py
+  📄 venv\Lib\site-packages\reportlab\lib\codecharts.py
+  📄 venv\Lib\site-packages\reportlab\lib\colors.py
+  📄 venv\Lib\site-packages\reportlab\lib\corp.py
+  📄 venv\Lib\site-packages\reportlab\lib\enums.py
+  📄 venv\Lib\site-packages\reportlab\lib\extformat.py
+  📄 venv\Lib\site-packages\reportlab\lib\fontfinder.py
+  📄 venv\Lib\site-packages\reportlab\lib\fonts.py
+  📄 venv\Lib\site-packages\reportlab\lib\formatters.py
+  📄 venv\Lib\site-packages\reportlab\lib\geomutils.py
+  📄 venv\Lib\site-packages\reportlab\lib\logger.py
+  📄 venv\Lib\site-packages\reportlab\lib\normalDate.py
+  📄 venv\Lib\site-packages\reportlab\lib\pagesizes.py
+  📄 venv\Lib\site-packages\reportlab\lib\pdfencrypt.py
+  📄 venv\Lib\site-packages\reportlab\lib\PyFontify.py
+  📄 venv\Lib\site-packages\reportlab\lib\pygments2xpre.py
+  📄 venv\Lib\site-packages\reportlab\lib\randomtext.py
+  📄 venv\Lib\site-packages\reportlab\lib\rl_accel.py
+  📄 venv\Lib\site-packages\reportlab\lib\rl_safe_eval.py
+  📄 venv\Lib\site-packages\reportlab\lib\rltempfile.py
+  📄 venv\Lib\site-packages\reportlab\lib\rparsexml.py
+  📄 venv\Lib\site-packages\reportlab\lib\sequencer.py
+  📄 venv\Lib\site-packages\reportlab\lib\styles.py
+  📄 venv\Lib\site-packages\reportlab\lib\testutils.py
+  📄 venv\Lib\site-packages\reportlab\lib\textsplit.py
+  📄 venv\Lib\site-packages\reportlab\lib\units.py
+  📄 venv\Lib\site-packages\reportlab\lib\utils.py
+  📄 venv\Lib\site-packages\reportlab\lib\validators.py
+  📄 venv\Lib\site-packages\reportlab\lib\yaml.py
+
+📂 libs
+  📄 venv\Lib\site-packages\pandas\tests\libs\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\libs\test_hashtable.py
+  📄 venv\Lib\site-packages\pandas\tests\libs\test_join.py
+  📄 venv\Lib\site-packages\pandas\tests\libs\test_lib.py
+  📄 venv\Lib\site-packages\pandas\tests\libs\test_libalgos.py
+
+📂 licenses
+  📄 venv\Lib\site-packages\packaging\licenses\__init__.py
+  📄 venv\Lib\site-packages\packaging\licenses\_spdx.py
+  📄 venv\Lib\site-packages\pip\_vendor\packaging\licenses\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\packaging\licenses\_spdx.py
+
+📂 limited_api
+  📄 venv\Lib\site-packages\numpy\_core\tests\examples\limited_api\setup.py
+
+📂 linalg
+  📄 venv\Lib\site-packages\numpy\linalg\__init__.py
+  📄 venv\Lib\site-packages\numpy\linalg\_linalg.py
+
+📂 list
+  📄 venv\Lib\site-packages\pandas\tests\extension\list\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\list\array.py
+  📄 venv\Lib\site-packages\pandas\tests\extension\list\test_list.py
+
+📂 localpycs
+  📄 build\PERIMONT_ERP\localpycs\__init__.py
+
+📂 locations
+  📄 venv\Lib\site-packages\pip\_internal\locations\__init__.py
+  📄 venv\Lib\site-packages\pip\_internal\locations\_distutils.py
+  📄 venv\Lib\site-packages\pip\_internal\locations\_sysconfig.py
+  📄 venv\Lib\site-packages\pip\_internal\locations\base.py
+
+📂 logistique
+  📄 modules\logistique\__init__.py
+
+📂 logs
+  📄 logs\__init__.py
+
+📂 ma
+  📄 venv\Lib\site-packages\numpy\ma\__init__.py
+  📄 venv\Lib\site-packages\numpy\ma\core.py
+  📄 venv\Lib\site-packages\numpy\ma\extras.py
+  📄 venv\Lib\site-packages\numpy\ma\mrecords.py
+  📄 venv\Lib\site-packages\numpy\ma\testutils.py
+
+📂 masked
+  📄 venv\Lib\site-packages\pandas\tests\arrays\masked\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\masked\test_arithmetic.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\masked\test_arrow_compat.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\masked\test_function.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\masked\test_indexing.py
+
+📂 matrixlib
+  📄 venv\Lib\site-packages\numpy\matrixlib\__init__.py
+  📄 venv\Lib\site-packages\numpy\matrixlib\defmatrix.py
+
+📂 merge
+  📄 venv\Lib\site-packages\pandas\tests\reshape\merge\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\merge\test_join.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\merge\test_merge_asof.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\merge\test_merge_cross.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\merge\test_merge_index_as_string.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\merge\test_merge_ordered.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\merge\test_merge.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\merge\test_multi.py
+
+📂 metadata
+  📄 venv\Lib\site-packages\pip\_internal\metadata\__init__.py
+  📄 venv\Lib\site-packages\pip\_internal\metadata\_json.py
+  📄 venv\Lib\site-packages\pip\_internal\metadata\base.py
+  📄 venv\Lib\site-packages\pip\_internal\metadata\pkg_resources.py
+
+📂 methods
+  📄 venv\Lib\site-packages\pandas\core\methods\__init__.py
+  📄 venv\Lib\site-packages\pandas\core\methods\describe.py
+  📄 venv\Lib\site-packages\pandas\core\methods\selectn.py
+  📄 venv\Lib\site-packages\pandas\core\methods\to_dict.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_add_prefix_suffix.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_align.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_asfreq.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_asof.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_assign.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_astype.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_at_time.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_between_time.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_clip.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_combine_first.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_combine.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_compare.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_convert_dtypes.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_copy.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_count.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_cov_corr.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_describe.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_diff.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_dot.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_drop_duplicates.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_drop.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_droplevel.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_dropna.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_dtypes.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_duplicated.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_equals.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_explode.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_fillna.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_filter.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_first_and_last.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_first_valid_index.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_get_numeric_data.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_head_tail.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_infer_objects.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_info.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_interpolate.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_is_homogeneous_dtype.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_isetitem.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_isin.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_iterrows.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_join.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_map.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_matmul.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_nlargest.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_pct_change.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_pipe.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_pop.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_quantile.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_rank.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_reindex_like.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_reindex.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_rename_axis.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_rename.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_reorder_levels.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_replace.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_reset_index.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_round.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_sample.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_select_dtypes.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_set_axis.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_set_index.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_shift.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_size.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_sort_index.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_sort_values.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_swapaxes.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_swaplevel.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_to_csv.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_to_dict_of_blocks.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_to_dict.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_to_numpy.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_to_period.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_to_records.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_to_timestamp.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_transpose.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_truncate.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_tz_convert.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_tz_localize.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_update.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_value_counts.py
+  📄 venv\Lib\site-packages\pandas\tests\frame\methods\test_values.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\methods\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\methods\test_corrwith.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\methods\test_describe.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\methods\test_groupby_shift_diff.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\methods\test_is_monotonic.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\methods\test_nlargest_nsmallest.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\methods\test_nth.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\methods\test_quantile.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\methods\test_rank.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\methods\test_sample.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\methods\test_size.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\methods\test_skew.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\methods\test_value_counts.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\methods\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\methods\test_asof.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\methods\test_astype.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\methods\test_delete.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\methods\test_factorize.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\methods\test_fillna.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\methods\test_insert.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\methods\test_isocalendar.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\methods\test_map.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\methods\test_normalize.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\methods\test_repeat.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\methods\test_resolution.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\methods\test_round.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\methods\test_shift.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\methods\test_snap.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\methods\test_to_frame.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\methods\test_to_julian_date.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\methods\test_to_period.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\methods\test_to_pydatetime.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\methods\test_to_series.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\methods\test_tz_convert.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\methods\test_tz_localize.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\datetimes\methods\test_unique.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\period\methods\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\period\methods\test_asfreq.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\period\methods\test_astype.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\period\methods\test_factorize.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\period\methods\test_fillna.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\period\methods\test_insert.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\period\methods\test_is_full.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\period\methods\test_repeat.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\period\methods\test_shift.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\period\methods\test_to_timestamp.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\timedeltas\methods\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\timedeltas\methods\test_astype.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\timedeltas\methods\test_factorize.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\timedeltas\methods\test_fillna.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\timedeltas\methods\test_insert.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\timedeltas\methods\test_repeat.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\timedeltas\methods\test_shift.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\timedelta\methods\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\timedelta\methods\test_as_unit.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\timedelta\methods\test_round.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\timestamp\methods\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\timestamp\methods\test_as_unit.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\timestamp\methods\test_normalize.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\timestamp\methods\test_replace.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\timestamp\methods\test_round.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\timestamp\methods\test_timestamp_method.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\timestamp\methods\test_to_julian_date.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\timestamp\methods\test_to_pydatetime.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\timestamp\methods\test_tz_convert.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\timestamp\methods\test_tz_localize.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_add_prefix_suffix.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_align.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_argsort.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_asof.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_astype.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_autocorr.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_between.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_case_when.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_clip.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_combine_first.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_combine.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_compare.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_convert_dtypes.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_copy.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_count.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_cov_corr.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_describe.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_diff.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_drop_duplicates.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_drop.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_dropna.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_dtypes.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_duplicated.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_equals.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_explode.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_fillna.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_get_numeric_data.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_head_tail.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_infer_objects.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_info.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_interpolate.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_is_monotonic.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_is_unique.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_isin.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_isna.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_item.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_map.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_matmul.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_nlargest.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_nunique.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_pct_change.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_pop.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_quantile.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_rank.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_reindex_like.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_reindex.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_rename_axis.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_rename.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_repeat.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_replace.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_reset_index.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_round.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_searchsorted.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_set_name.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_size.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_sort_index.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_sort_values.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_to_csv.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_to_dict.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_to_frame.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_to_numpy.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_tolist.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_truncate.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_tz_localize.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_unique.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_unstack.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_update.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_value_counts.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_values.py
+  📄 venv\Lib\site-packages\pandas\tests\series\methods\test_view.py
+
+📂 Mexico
+  📄 venv\Lib\site-packages\tzdata\zoneinfo\Mexico\__init__.py
+
+📂 models
+  📄 venv\Lib\site-packages\pip\_internal\models\__init__.py
+  📄 venv\Lib\site-packages\pip\_internal\models\candidate.py
+  📄 venv\Lib\site-packages\pip\_internal\models\direct_url.py
+  📄 venv\Lib\site-packages\pip\_internal\models\format_control.py
+  📄 venv\Lib\site-packages\pip\_internal\models\index.py
+  📄 venv\Lib\site-packages\pip\_internal\models\installation_report.py
+  📄 venv\Lib\site-packages\pip\_internal\models\link.py
+  📄 venv\Lib\site-packages\pip\_internal\models\pylock.py
+  📄 venv\Lib\site-packages\pip\_internal\models\scheme.py
+  📄 venv\Lib\site-packages\pip\_internal\models\search_scope.py
+  📄 venv\Lib\site-packages\pip\_internal\models\selection_prefs.py
+  📄 venv\Lib\site-packages\pip\_internal\models\target_python.py
+  📄 venv\Lib\site-packages\pip\_internal\models\wheel.py
+
+📂 modules
+  📄 modules\__init__.py
+
+📂 moments
+  📄 venv\Lib\site-packages\pandas\tests\window\moments\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\window\moments\conftest.py
+  📄 venv\Lib\site-packages\pandas\tests\window\moments\test_moments_consistency_ewm.py
+  📄 venv\Lib\site-packages\pandas\tests\window\moments\test_moments_consistency_expanding.py
+  📄 venv\Lib\site-packages\pandas\tests\window\moments\test_moments_consistency_rolling.py
+
+📂 msgpack
+  📄 venv\Lib\site-packages\pip\_vendor\msgpack\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\msgpack\exceptions.py
+  📄 venv\Lib\site-packages\pip\_vendor\msgpack\ext.py
+  📄 venv\Lib\site-packages\pip\_vendor\msgpack\fallback.py
+
+📂 multi
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\conftest.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\test_analytics.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\test_astype.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\test_compat.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\test_constructors.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\test_conversion.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\test_copy.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\test_drop.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\test_duplicates.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\test_equivalence.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\test_formats.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\test_get_level_values.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\test_get_set.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\test_indexing.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\test_integrity.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\test_isin.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\test_join.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\test_lexsort.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\test_missing.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\test_monotonic.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\test_names.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\test_partial_indexing.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\test_pickle.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\test_reindex.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\test_reshape.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\test_setops.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\test_sorting.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\multi\test_take.py
+
+📂 multiindex
+  📄 venv\Lib\site-packages\pandas\tests\indexing\multiindex\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\multiindex\test_chaining_and_caching.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\multiindex\test_datetime.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\multiindex\test_getitem.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\multiindex\test_iloc.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\multiindex\test_indexing_slow.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\multiindex\test_loc.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\multiindex\test_multiindex.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\multiindex\test_partial.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\multiindex\test_setitem.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\multiindex\test_slice.py
+  📄 venv\Lib\site-packages\pandas\tests\indexing\multiindex\test_sorted.py
+
+📂 network
+  📄 venv\Lib\site-packages\pip\_internal\network\__init__.py
+  📄 venv\Lib\site-packages\pip\_internal\network\auth.py
+  📄 venv\Lib\site-packages\pip\_internal\network\cache.py
+  📄 venv\Lib\site-packages\pip\_internal\network\download.py
+  📄 venv\Lib\site-packages\pip\_internal\network\lazy_wheel.py
+  📄 venv\Lib\site-packages\pip\_internal\network\session.py
+  📄 venv\Lib\site-packages\pip\_internal\network\utils.py
+  📄 venv\Lib\site-packages\pip\_internal\network\xmlrpc.py
+
+📂 North_Dakota
+  📄 venv\Lib\site-packages\tzdata\zoneinfo\America\North_Dakota\__init__.py
+
+📂 numba
+  📄 venv\Lib\site-packages\numpy\random\_examples\numba\extending_distributions.py
+  📄 venv\Lib\site-packages\numpy\random\_examples\numba\extending.py
+
+📂 numeric
+  📄 venv\Lib\site-packages\pandas\tests\indexes\numeric\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\numeric\test_astype.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\numeric\test_indexing.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\numeric\test_join.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\numeric\test_numeric.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\numeric\test_setops.py
+
+📂 numpy
+  📄 venv\Lib\site-packages\numpy\__config__.py
+  📄 venv\Lib\site-packages\numpy\__init__.py
+  📄 venv\Lib\site-packages\numpy\_array_api_info.py
+  📄 venv\Lib\site-packages\numpy\_configtool.py
+  📄 venv\Lib\site-packages\numpy\_distributor_init.py
+  📄 venv\Lib\site-packages\numpy\_expired_attrs_2_0.py
+  📄 venv\Lib\site-packages\numpy\_globals.py
+  📄 venv\Lib\site-packages\numpy\_pytesttester.py
+  📄 venv\Lib\site-packages\numpy\conftest.py
+  📄 venv\Lib\site-packages\numpy\dtypes.py
+  📄 venv\Lib\site-packages\numpy\exceptions.py
+  📄 venv\Lib\site-packages\numpy\matlib.py
+  📄 venv\Lib\site-packages\numpy\version.py
+  📄 venv\Lib\site-packages\pandas\compat\numpy\__init__.py
+  📄 venv\Lib\site-packages\pandas\compat\numpy\function.py
+
+📂 numpy_
+  📄 venv\Lib\site-packages\pandas\tests\arrays\numpy_\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\numpy_\test_indexing.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\numpy_\test_numpy.py
+
+📂 object
+  📄 venv\Lib\site-packages\pandas\tests\indexes\object\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\object\test_astype.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\object\test_indexing.py
+
+📂 offsets
+  📄 venv\Lib\site-packages\pandas\tests\tseries\offsets\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\tseries\offsets\common.py
+  📄 venv\Lib\site-packages\pandas\tests\tseries\offsets\test_business_day.py
+  📄 venv\Lib\site-packages\pandas\tests\tseries\offsets\test_business_hour.py
+  📄 venv\Lib\site-packages\pandas\tests\tseries\offsets\test_business_month.py
+  📄 venv\Lib\site-packages\pandas\tests\tseries\offsets\test_business_quarter.py
+  📄 venv\Lib\site-packages\pandas\tests\tseries\offsets\test_business_year.py
+  📄 venv\Lib\site-packages\pandas\tests\tseries\offsets\test_common.py
+  📄 venv\Lib\site-packages\pandas\tests\tseries\offsets\test_custom_business_day.py
+  📄 venv\Lib\site-packages\pandas\tests\tseries\offsets\test_custom_business_hour.py
+  📄 venv\Lib\site-packages\pandas\tests\tseries\offsets\test_custom_business_month.py
+  📄 venv\Lib\site-packages\pandas\tests\tseries\offsets\test_dst.py
+  📄 venv\Lib\site-packages\pandas\tests\tseries\offsets\test_easter.py
+  📄 venv\Lib\site-packages\pandas\tests\tseries\offsets\test_fiscal.py
+  📄 venv\Lib\site-packages\pandas\tests\tseries\offsets\test_index.py
+  📄 venv\Lib\site-packages\pandas\tests\tseries\offsets\test_month.py
+  📄 venv\Lib\site-packages\pandas\tests\tseries\offsets\test_offsets_properties.py
+  📄 venv\Lib\site-packages\pandas\tests\tseries\offsets\test_offsets.py
+  📄 venv\Lib\site-packages\pandas\tests\tseries\offsets\test_quarter.py
+  📄 venv\Lib\site-packages\pandas\tests\tseries\offsets\test_ticks.py
+  📄 venv\Lib\site-packages\pandas\tests\tseries\offsets\test_week.py
+  📄 venv\Lib\site-packages\pandas\tests\tseries\offsets\test_year.py
+
+📂 openpyxl
+  📄 venv\Lib\site-packages\openpyxl\__init__.py
+  📄 venv\Lib\site-packages\openpyxl\_constants.py
+
+📂 operations
+  📄 venv\Lib\site-packages\pip\_internal\operations\__init__.py
+  📄 venv\Lib\site-packages\pip\_internal\operations\check.py
+  📄 venv\Lib\site-packages\pip\_internal\operations\freeze.py
+  📄 venv\Lib\site-packages\pip\_internal\operations\prepare.py
+
+📂 ops
+  📄 venv\Lib\site-packages\pandas\core\ops\__init__.py
+  📄 venv\Lib\site-packages\pandas\core\ops\array_ops.py
+  📄 venv\Lib\site-packages\pandas\core\ops\common.py
+  📄 venv\Lib\site-packages\pandas\core\ops\dispatch.py
+  📄 venv\Lib\site-packages\pandas\core\ops\docstrings.py
+  📄 venv\Lib\site-packages\pandas\core\ops\invalid.py
+  📄 venv\Lib\site-packages\pandas\core\ops\mask_ops.py
+  📄 venv\Lib\site-packages\pandas\core\ops\missing.py
+
+📂 Pacific
+  📄 venv\Lib\site-packages\tzdata\zoneinfo\Pacific\__init__.py
+
+📂 packages
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\packages\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\packages\six.py
+
+📂 packaging
+  📄 venv\Lib\site-packages\openpyxl\packaging\__init__.py
+  📄 venv\Lib\site-packages\openpyxl\packaging\core.py
+  📄 venv\Lib\site-packages\openpyxl\packaging\custom.py
+  📄 venv\Lib\site-packages\openpyxl\packaging\extended.py
+  📄 venv\Lib\site-packages\openpyxl\packaging\interface.py
+  📄 venv\Lib\site-packages\openpyxl\packaging\manifest.py
+  📄 venv\Lib\site-packages\openpyxl\packaging\relationship.py
+  📄 venv\Lib\site-packages\openpyxl\packaging\workbook.py
+  📄 venv\Lib\site-packages\packaging\__init__.py
+  📄 venv\Lib\site-packages\packaging\_elffile.py
+  📄 venv\Lib\site-packages\packaging\_manylinux.py
+  📄 venv\Lib\site-packages\packaging\_musllinux.py
+  📄 venv\Lib\site-packages\packaging\_parser.py
+  📄 venv\Lib\site-packages\packaging\_structures.py
+  📄 venv\Lib\site-packages\packaging\_tokenizer.py
+  📄 venv\Lib\site-packages\packaging\markers.py
+  📄 venv\Lib\site-packages\packaging\metadata.py
+  📄 venv\Lib\site-packages\packaging\requirements.py
+  📄 venv\Lib\site-packages\packaging\specifiers.py
+  📄 venv\Lib\site-packages\packaging\tags.py
+  📄 venv\Lib\site-packages\packaging\utils.py
+  📄 venv\Lib\site-packages\packaging\version.py
+  📄 venv\Lib\site-packages\pip\_vendor\packaging\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\packaging\_elffile.py
+  📄 venv\Lib\site-packages\pip\_vendor\packaging\_manylinux.py
+  📄 venv\Lib\site-packages\pip\_vendor\packaging\_musllinux.py
+  📄 venv\Lib\site-packages\pip\_vendor\packaging\_parser.py
+  📄 venv\Lib\site-packages\pip\_vendor\packaging\_structures.py
+  📄 venv\Lib\site-packages\pip\_vendor\packaging\_tokenizer.py
+  📄 venv\Lib\site-packages\pip\_vendor\packaging\markers.py
+  📄 venv\Lib\site-packages\pip\_vendor\packaging\metadata.py
+  📄 venv\Lib\site-packages\pip\_vendor\packaging\requirements.py
+  📄 venv\Lib\site-packages\pip\_vendor\packaging\specifiers.py
+  📄 venv\Lib\site-packages\pip\_vendor\packaging\tags.py
+  📄 venv\Lib\site-packages\pip\_vendor\packaging\utils.py
+  📄 venv\Lib\site-packages\pip\_vendor\packaging\version.py
+
+📂 paie
+  📄 modules\paie\__init__.py
+  📄 modules\paie\engine.py
+
+📂 pandas
+  📄 venv\Lib\site-packages\pandas\__init__.py
+  📄 venv\Lib\site-packages\pandas\_typing.py
+  📄 venv\Lib\site-packages\pandas\_version_meson.py
+  📄 venv\Lib\site-packages\pandas\_version.py
+  📄 venv\Lib\site-packages\pandas\conftest.py
+  📄 venv\Lib\site-packages\pandas\testing.py
+
+📂 parser
+  📄 venv\Lib\site-packages\dateutil\parser\__init__.py
+  📄 venv\Lib\site-packages\dateutil\parser\_parser.py
+  📄 venv\Lib\site-packages\dateutil\parser\isoparser.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\conftest.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\test_c_parser_only.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\test_comment.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\test_compression.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\test_concatenate_chunks.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\test_converters.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\test_dialect.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\test_encoding.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\test_header.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\test_index_col.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\test_mangle_dupes.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\test_multi_thread.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\test_na_values.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\test_network.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\test_parse_dates.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\test_python_parser_only.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\test_quoting.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\test_read_fwf.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\test_skiprows.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\test_textreader.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\test_unsupported.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\test_upcast.py
+
+📂 parsers
+  📄 venv\Lib\site-packages\pandas\io\parsers\__init__.py
+  📄 venv\Lib\site-packages\pandas\io\parsers\arrow_parser_wrapper.py
+  📄 venv\Lib\site-packages\pandas\io\parsers\base_parser.py
+  📄 venv\Lib\site-packages\pandas\io\parsers\c_parser_wrapper.py
+  📄 venv\Lib\site-packages\pandas\io\parsers\python_parser.py
+  📄 venv\Lib\site-packages\pandas\io\parsers\readers.py
+
+📂 pass
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\arithmetic.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\array_constructors.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\array_like.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\arrayprint.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\arrayterator.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\bitwise_ops.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\comparisons.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\dtype.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\einsumfunc.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\flatiter.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\fromnumeric.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\index_tricks.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\lib_user_array.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\lib_utils.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\lib_version.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\literal.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\ma.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\mod.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\modules.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\multiarray.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\ndarray_conversion.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\ndarray_misc.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\ndarray_shape_manipulation.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\nditer.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\numeric.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\numerictypes.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\random.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\recfunctions.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\scalars.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\shape.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\simple.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\ufunc_config.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\ufunclike.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\ufuncs.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\data\pass\warnings_and_errors.py
+
+📂 pdfbase
+  📄 venv\Lib\site-packages\reportlab\pdfbase\__init__.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\_can_cmap_data.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\_cidfontdata.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\_fontdata_enc_macexpert.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\_fontdata_enc_macroman.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\_fontdata_enc_pdfdoc.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\_fontdata_enc_standard.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\_fontdata_enc_symbol.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\_fontdata_enc_winansi.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\_fontdata_enc_zapfdingbats.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\_fontdata_widths_courier.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\_fontdata_widths_courierbold.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\_fontdata_widths_courierboldoblique.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\_fontdata_widths_courieroblique.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\_fontdata_widths_helvetica.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\_fontdata_widths_helveticabold.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\_fontdata_widths_helveticaboldoblique.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\_fontdata_widths_helveticaoblique.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\_fontdata_widths_symbol.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\_fontdata_widths_timesbold.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\_fontdata_widths_timesbolditalic.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\_fontdata_widths_timesitalic.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\_fontdata_widths_timesroman.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\_fontdata_widths_zapfdingbats.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\_fontdata.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\_glyphlist.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\acroform.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\cidfonts.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\pdfdoc.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\pdfform.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\pdfmetrics.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\pdfpattern.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\pdfutils.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\rl_codecs.py
+  📄 venv\Lib\site-packages\reportlab\pdfbase\ttfonts.py
+
+📂 pdfgen
+  📄 venv\Lib\site-packages\reportlab\pdfgen\__init__.py
+  📄 venv\Lib\site-packages\reportlab\pdfgen\canvas.py
+  📄 venv\Lib\site-packages\reportlab\pdfgen\pathobject.py
+  📄 venv\Lib\site-packages\reportlab\pdfgen\pdfgeom.py
+  📄 venv\Lib\site-packages\reportlab\pdfgen\pdfimages.py
+  📄 venv\Lib\site-packages\reportlab\pdfgen\textobject.py
+
+📂 PERIMONT_ERP
+  📄 build\PERIMONT_ERP\__init__.py
+  📄 main.py
+  📄 test_init.py
+
+📂 period
+  📄 venv\Lib\site-packages\pandas\tests\arrays\period\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\period\test_arrow_compat.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\period\test_astype.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\period\test_constructors.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\period\test_reductions.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\period\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\period\test_constructors.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\period\test_formats.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\period\test_freq_attr.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\period\test_indexing.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\period\test_join.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\period\test_monotonic.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\period\test_partial_slicing.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\period\test_period_range.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\period\test_period.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\period\test_pickle.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\period\test_resolution.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\period\test_scalar_compat.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\period\test_searchsorted.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\period\test_setops.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\period\test_tools.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\period\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\period\test_arithmetic.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\period\test_asfreq.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\period\test_period.py
+
+📂 personnel
+  📄 modules\personnel\__init__.py
+
+📂 PIL
+  📄 venv\Lib\site-packages\PIL\__init__.py
+  📄 venv\Lib\site-packages\PIL\__main__.py
+  📄 venv\Lib\site-packages\PIL\_binary.py
+  📄 venv\Lib\site-packages\PIL\_deprecate.py
+  📄 venv\Lib\site-packages\PIL\_tkinter_finder.py
+  📄 venv\Lib\site-packages\PIL\_typing.py
+  📄 venv\Lib\site-packages\PIL\_util.py
+  📄 venv\Lib\site-packages\PIL\_version.py
+  📄 venv\Lib\site-packages\PIL\AvifImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\BdfFontFile.py
+  📄 venv\Lib\site-packages\PIL\BlpImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\BmpImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\BufrStubImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\ContainerIO.py
+  📄 venv\Lib\site-packages\PIL\CurImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\DcxImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\DdsImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\EpsImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\ExifTags.py
+  📄 venv\Lib\site-packages\PIL\features.py
+  📄 venv\Lib\site-packages\PIL\FitsImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\FliImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\FontFile.py
+  📄 venv\Lib\site-packages\PIL\FpxImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\FtexImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\GbrImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\GdImageFile.py
+  📄 venv\Lib\site-packages\PIL\GifImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\GimpGradientFile.py
+  📄 venv\Lib\site-packages\PIL\GimpPaletteFile.py
+  📄 venv\Lib\site-packages\PIL\GribStubImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\Hdf5StubImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\IcnsImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\IcoImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\Image.py
+  📄 venv\Lib\site-packages\PIL\ImageChops.py
+  📄 venv\Lib\site-packages\PIL\ImageCms.py
+  📄 venv\Lib\site-packages\PIL\ImageColor.py
+  📄 venv\Lib\site-packages\PIL\ImageDraw.py
+  📄 venv\Lib\site-packages\PIL\ImageDraw2.py
+  📄 venv\Lib\site-packages\PIL\ImageEnhance.py
+  📄 venv\Lib\site-packages\PIL\ImageFile.py
+  📄 venv\Lib\site-packages\PIL\ImageFilter.py
+  📄 venv\Lib\site-packages\PIL\ImageFont.py
+  📄 venv\Lib\site-packages\PIL\ImageGrab.py
+  📄 venv\Lib\site-packages\PIL\ImageMath.py
+  📄 venv\Lib\site-packages\PIL\ImageMode.py
+  📄 venv\Lib\site-packages\PIL\ImageMorph.py
+  📄 venv\Lib\site-packages\PIL\ImageOps.py
+  📄 venv\Lib\site-packages\PIL\ImagePalette.py
+  📄 venv\Lib\site-packages\PIL\ImagePath.py
+  📄 venv\Lib\site-packages\PIL\ImageQt.py
+  📄 venv\Lib\site-packages\PIL\ImageSequence.py
+  📄 venv\Lib\site-packages\PIL\ImageShow.py
+  📄 venv\Lib\site-packages\PIL\ImageStat.py
+  📄 venv\Lib\site-packages\PIL\ImageText.py
+  📄 venv\Lib\site-packages\PIL\ImageTk.py
+  📄 venv\Lib\site-packages\PIL\ImageTransform.py
+  📄 venv\Lib\site-packages\PIL\ImageWin.py
+  📄 venv\Lib\site-packages\PIL\ImImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\ImtImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\IptcImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\Jpeg2KImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\JpegImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\JpegPresets.py
+  📄 venv\Lib\site-packages\PIL\McIdasImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\MicImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\MpegImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\MpoImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\MspImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\PaletteFile.py
+  📄 venv\Lib\site-packages\PIL\PalmImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\PcdImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\PcfFontFile.py
+  📄 venv\Lib\site-packages\PIL\PcxImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\PdfImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\PdfParser.py
+  📄 venv\Lib\site-packages\PIL\PixarImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\PngImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\PpmImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\PsdImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\PSDraw.py
+  📄 venv\Lib\site-packages\PIL\QoiImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\report.py
+  📄 venv\Lib\site-packages\PIL\SgiImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\SpiderImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\SunImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\TarIO.py
+  📄 venv\Lib\site-packages\PIL\TgaImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\TiffImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\TiffTags.py
+  📄 venv\Lib\site-packages\PIL\WalImageFile.py
+  📄 venv\Lib\site-packages\PIL\WebPImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\WmfImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\XbmImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\XpmImagePlugin.py
+  📄 venv\Lib\site-packages\PIL\XVThumbImagePlugin.py
+
+📂 pip
+  📄 venv\Lib\site-packages\pip\__init__.py
+  📄 venv\Lib\site-packages\pip\__main__.py
+  📄 venv\Lib\site-packages\pip\__pip-runner__.py
+
+📂 pivot
+  📄 venv\Lib\site-packages\openpyxl\pivot\__init__.py
+  📄 venv\Lib\site-packages\openpyxl\pivot\cache.py
+  📄 venv\Lib\site-packages\openpyxl\pivot\fields.py
+  📄 venv\Lib\site-packages\openpyxl\pivot\record.py
+  📄 venv\Lib\site-packages\openpyxl\pivot\table.py
+
+📂 pkg_resources
+  📄 venv\Lib\site-packages\pip\_vendor\pkg_resources\__init__.py
+
+📂 platformdirs
+  📄 venv\Lib\site-packages\pip\_vendor\platformdirs\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\platformdirs\__main__.py
+  📄 venv\Lib\site-packages\pip\_vendor\platformdirs\android.py
+  📄 venv\Lib\site-packages\pip\_vendor\platformdirs\api.py
+  📄 venv\Lib\site-packages\pip\_vendor\platformdirs\macos.py
+  📄 venv\Lib\site-packages\pip\_vendor\platformdirs\unix.py
+  📄 venv\Lib\site-packages\pip\_vendor\platformdirs\version.py
+  📄 venv\Lib\site-packages\pip\_vendor\platformdirs\windows.py
+
+📂 platypus
+  📄 venv\Lib\site-packages\reportlab\platypus\__init__.py
+  📄 venv\Lib\site-packages\reportlab\platypus\doctemplate.py
+  📄 venv\Lib\site-packages\reportlab\platypus\figures.py
+  📄 venv\Lib\site-packages\reportlab\platypus\flowables.py
+  📄 venv\Lib\site-packages\reportlab\platypus\frames.py
+  📄 venv\Lib\site-packages\reportlab\platypus\multicol.py
+  📄 venv\Lib\site-packages\reportlab\platypus\para.py
+  📄 venv\Lib\site-packages\reportlab\platypus\paragraph.py
+  📄 venv\Lib\site-packages\reportlab\platypus\paraparser.py
+  📄 venv\Lib\site-packages\reportlab\platypus\tableofcontents.py
+  📄 venv\Lib\site-packages\reportlab\platypus\tables.py
+  📄 venv\Lib\site-packages\reportlab\platypus\xpreformatted.py
+
+📂 plotting
+  📄 venv\Lib\site-packages\pandas\plotting\__init__.py
+  📄 venv\Lib\site-packages\pandas\plotting\_core.py
+  📄 venv\Lib\site-packages\pandas\plotting\_misc.py
+  📄 venv\Lib\site-packages\pandas\tests\plotting\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\plotting\common.py
+  📄 venv\Lib\site-packages\pandas\tests\plotting\conftest.py
+  📄 venv\Lib\site-packages\pandas\tests\plotting\test_backend.py
+  📄 venv\Lib\site-packages\pandas\tests\plotting\test_boxplot_method.py
+  📄 venv\Lib\site-packages\pandas\tests\plotting\test_common.py
+  📄 venv\Lib\site-packages\pandas\tests\plotting\test_converter.py
+  📄 venv\Lib\site-packages\pandas\tests\plotting\test_datetimelike.py
+  📄 venv\Lib\site-packages\pandas\tests\plotting\test_groupby.py
+  📄 venv\Lib\site-packages\pandas\tests\plotting\test_hist_method.py
+  📄 venv\Lib\site-packages\pandas\tests\plotting\test_misc.py
+  📄 venv\Lib\site-packages\pandas\tests\plotting\test_series.py
+  📄 venv\Lib\site-packages\pandas\tests\plotting\test_style.py
+
+📂 polynomial
+  📄 venv\Lib\site-packages\numpy\polynomial\__init__.py
+  📄 venv\Lib\site-packages\numpy\polynomial\_polybase.py
+  📄 venv\Lib\site-packages\numpy\polynomial\chebyshev.py
+  📄 venv\Lib\site-packages\numpy\polynomial\hermite_e.py
+  📄 venv\Lib\site-packages\numpy\polynomial\hermite.py
+  📄 venv\Lib\site-packages\numpy\polynomial\laguerre.py
+  📄 venv\Lib\site-packages\numpy\polynomial\legendre.py
+  📄 venv\Lib\site-packages\numpy\polynomial\polynomial.py
+  📄 venv\Lib\site-packages\numpy\polynomial\polyutils.py
+
+📂 pygments
+  📄 venv\Lib\site-packages\pip\_vendor\pygments\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\pygments\__main__.py
+  📄 venv\Lib\site-packages\pip\_vendor\pygments\console.py
+  📄 venv\Lib\site-packages\pip\_vendor\pygments\filter.py
+  📄 venv\Lib\site-packages\pip\_vendor\pygments\formatter.py
+  📄 venv\Lib\site-packages\pip\_vendor\pygments\lexer.py
+  📄 venv\Lib\site-packages\pip\_vendor\pygments\modeline.py
+  📄 venv\Lib\site-packages\pip\_vendor\pygments\plugin.py
+  📄 venv\Lib\site-packages\pip\_vendor\pygments\regexopt.py
+  📄 venv\Lib\site-packages\pip\_vendor\pygments\scanner.py
+  📄 venv\Lib\site-packages\pip\_vendor\pygments\sphinxext.py
+  📄 venv\Lib\site-packages\pip\_vendor\pygments\style.py
+  📄 venv\Lib\site-packages\pip\_vendor\pygments\token.py
+  📄 venv\Lib\site-packages\pip\_vendor\pygments\unistring.py
+  📄 venv\Lib\site-packages\pip\_vendor\pygments\util.py
+
+📂 pyproject_hooks
+  📄 venv\Lib\site-packages\pip\_vendor\pyproject_hooks\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\pyproject_hooks\_impl.py
+
+📂 pytables
+  📄 venv\Lib\site-packages\pandas\tests\io\pytables\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\io\pytables\common.py
+  📄 venv\Lib\site-packages\pandas\tests\io\pytables\conftest.py
+  📄 venv\Lib\site-packages\pandas\tests\io\pytables\test_append.py
+  📄 venv\Lib\site-packages\pandas\tests\io\pytables\test_categorical.py
+  📄 venv\Lib\site-packages\pandas\tests\io\pytables\test_compat.py
+  📄 venv\Lib\site-packages\pandas\tests\io\pytables\test_complex.py
+  📄 venv\Lib\site-packages\pandas\tests\io\pytables\test_errors.py
+  📄 venv\Lib\site-packages\pandas\tests\io\pytables\test_file_handling.py
+  📄 venv\Lib\site-packages\pandas\tests\io\pytables\test_keys.py
+  📄 venv\Lib\site-packages\pandas\tests\io\pytables\test_put.py
+  📄 venv\Lib\site-packages\pandas\tests\io\pytables\test_pytables_missing.py
+  📄 venv\Lib\site-packages\pandas\tests\io\pytables\test_read.py
+  📄 venv\Lib\site-packages\pandas\tests\io\pytables\test_retain_attributes.py
+  📄 venv\Lib\site-packages\pandas\tests\io\pytables\test_round_trip.py
+  📄 venv\Lib\site-packages\pandas\tests\io\pytables\test_select.py
+  📄 venv\Lib\site-packages\pandas\tests\io\pytables\test_store.py
+  📄 venv\Lib\site-packages\pandas\tests\io\pytables\test_subclass.py
+  📄 venv\Lib\site-packages\pandas\tests\io\pytables\test_time_series.py
+  📄 venv\Lib\site-packages\pandas\tests\io\pytables\test_timezones.py
+
+📂 pytz
+  📄 venv\Lib\site-packages\pytz\__init__.py
+  📄 venv\Lib\site-packages\pytz\exceptions.py
+  📄 venv\Lib\site-packages\pytz\lazy.py
+  📄 venv\Lib\site-packages\pytz\reference.py
+  📄 venv\Lib\site-packages\pytz\tzfile.py
+  📄 venv\Lib\site-packages\pytz\tzinfo.py
+
+📂 random
+  📄 venv\Lib\site-packages\numpy\random\__init__.py
+  📄 venv\Lib\site-packages\numpy\random\_pickle.py
+
+📂 ranges
+  📄 venv\Lib\site-packages\pandas\tests\indexes\ranges\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\ranges\test_constructors.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\ranges\test_indexing.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\ranges\test_join.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\ranges\test_range.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\ranges\test_setops.py
+
+📂 reader
+  📄 venv\Lib\site-packages\openpyxl\reader\__init__.py
+  📄 venv\Lib\site-packages\openpyxl\reader\drawings.py
+  📄 venv\Lib\site-packages\openpyxl\reader\excel.py
+  📄 venv\Lib\site-packages\openpyxl\reader\strings.py
+  📄 venv\Lib\site-packages\openpyxl\reader\workbook.py
+
+📂 rec
+  📄 venv\Lib\site-packages\numpy\rec\__init__.py
+
+📂 reductions
+  📄 venv\Lib\site-packages\pandas\tests\reductions\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\reductions\test_reductions.py
+  📄 venv\Lib\site-packages\pandas\tests\reductions\test_stat_reductions.py
+
+📂 reportlab
+  📄 venv\Lib\site-packages\reportlab\__init__.py
+  📄 venv\Lib\site-packages\reportlab\rl_config.py
+  📄 venv\Lib\site-packages\reportlab\rl_settings.py
+
+📂 reports
+  📄 reports\__init__.py
+
+📂 req
+  📄 venv\Lib\site-packages\pip\_internal\req\__init__.py
+  📄 venv\Lib\site-packages\pip\_internal\req\constructors.py
+  📄 venv\Lib\site-packages\pip\_internal\req\req_dependency_group.py
+  📄 venv\Lib\site-packages\pip\_internal\req\req_file.py
+  📄 venv\Lib\site-packages\pip\_internal\req\req_install.py
+  📄 venv\Lib\site-packages\pip\_internal\req\req_set.py
+  📄 venv\Lib\site-packages\pip\_internal\req\req_uninstall.py
+
+📂 requests
+  📄 venv\Lib\site-packages\pip\_vendor\requests\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\requests\__version__.py
+  📄 venv\Lib\site-packages\pip\_vendor\requests\_internal_utils.py
+  📄 venv\Lib\site-packages\pip\_vendor\requests\adapters.py
+  📄 venv\Lib\site-packages\pip\_vendor\requests\api.py
+  📄 venv\Lib\site-packages\pip\_vendor\requests\auth.py
+  📄 venv\Lib\site-packages\pip\_vendor\requests\certs.py
+  📄 venv\Lib\site-packages\pip\_vendor\requests\compat.py
+  📄 venv\Lib\site-packages\pip\_vendor\requests\cookies.py
+  📄 venv\Lib\site-packages\pip\_vendor\requests\exceptions.py
+  📄 venv\Lib\site-packages\pip\_vendor\requests\help.py
+  📄 venv\Lib\site-packages\pip\_vendor\requests\hooks.py
+  📄 venv\Lib\site-packages\pip\_vendor\requests\models.py
+  📄 venv\Lib\site-packages\pip\_vendor\requests\packages.py
+  📄 venv\Lib\site-packages\pip\_vendor\requests\sessions.py
+  📄 venv\Lib\site-packages\pip\_vendor\requests\status_codes.py
+  📄 venv\Lib\site-packages\pip\_vendor\requests\structures.py
+  📄 venv\Lib\site-packages\pip\_vendor\requests\utils.py
+
+📂 resample
+  📄 venv\Lib\site-packages\pandas\tests\resample\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\resample\conftest.py
+  📄 venv\Lib\site-packages\pandas\tests\resample\test_base.py
+  📄 venv\Lib\site-packages\pandas\tests\resample\test_datetime_index.py
+  📄 venv\Lib\site-packages\pandas\tests\resample\test_period_index.py
+  📄 venv\Lib\site-packages\pandas\tests\resample\test_resample_api.py
+  📄 venv\Lib\site-packages\pandas\tests\resample\test_resampler_grouper.py
+  📄 venv\Lib\site-packages\pandas\tests\resample\test_time_grouper.py
+  📄 venv\Lib\site-packages\pandas\tests\resample\test_timedelta.py
+
+📂 reshape
+  📄 venv\Lib\site-packages\pandas\core\reshape\__init__.py
+  📄 venv\Lib\site-packages\pandas\core\reshape\api.py
+  📄 venv\Lib\site-packages\pandas\core\reshape\concat.py
+  📄 venv\Lib\site-packages\pandas\core\reshape\encoding.py
+  📄 venv\Lib\site-packages\pandas\core\reshape\melt.py
+  📄 venv\Lib\site-packages\pandas\core\reshape\merge.py
+  📄 venv\Lib\site-packages\pandas\core\reshape\pivot.py
+  📄 venv\Lib\site-packages\pandas\core\reshape\reshape.py
+  📄 venv\Lib\site-packages\pandas\core\reshape\tile.py
+  📄 venv\Lib\site-packages\pandas\core\reshape\util.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\test_crosstab.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\test_cut.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\test_from_dummies.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\test_get_dummies.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\test_melt.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\test_pivot_multilevel.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\test_pivot.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\test_qcut.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\test_union_categoricals.py
+  📄 venv\Lib\site-packages\pandas\tests\reshape\test_util.py
+
+📂 resolution
+  📄 venv\Lib\site-packages\pip\_internal\resolution\__init__.py
+  📄 venv\Lib\site-packages\pip\_internal\resolution\base.py
+
+📂 resolvelib
+  📄 venv\Lib\site-packages\pip\_internal\resolution\resolvelib\__init__.py
+  📄 venv\Lib\site-packages\pip\_internal\resolution\resolvelib\base.py
+  📄 venv\Lib\site-packages\pip\_internal\resolution\resolvelib\candidates.py
+  📄 venv\Lib\site-packages\pip\_internal\resolution\resolvelib\factory.py
+  📄 venv\Lib\site-packages\pip\_internal\resolution\resolvelib\found_candidates.py
+  📄 venv\Lib\site-packages\pip\_internal\resolution\resolvelib\provider.py
+  📄 venv\Lib\site-packages\pip\_internal\resolution\resolvelib\reporter.py
+  📄 venv\Lib\site-packages\pip\_internal\resolution\resolvelib\requirements.py
+  📄 venv\Lib\site-packages\pip\_internal\resolution\resolvelib\resolver.py
+  📄 venv\Lib\site-packages\pip\_vendor\resolvelib\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\resolvelib\providers.py
+  📄 venv\Lib\site-packages\pip\_vendor\resolvelib\reporters.py
+  📄 venv\Lib\site-packages\pip\_vendor\resolvelib\structs.py
+
+📂 resolvers
+  📄 venv\Lib\site-packages\pip\_vendor\resolvelib\resolvers\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\resolvelib\resolvers\abstract.py
+  📄 venv\Lib\site-packages\pip\_vendor\resolvelib\resolvers\criterion.py
+  📄 venv\Lib\site-packages\pip\_vendor\resolvelib\resolvers\exceptions.py
+  📄 venv\Lib\site-packages\pip\_vendor\resolvelib\resolvers\resolution.py
+
+📂 rich
+  📄 venv\Lib\site-packages\pip\_vendor\rich\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\__main__.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\_cell_widths.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\_emoji_codes.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\_emoji_replace.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\_export_format.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\_extension.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\_fileno.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\_inspect.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\_log_render.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\_loop.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\_null_file.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\_palettes.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\_pick.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\_ratio.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\_spinners.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\_stack.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\_timer.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\_win32_console.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\_windows_renderer.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\_windows.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\_wrap.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\abc.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\align.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\ansi.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\bar.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\box.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\cells.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\color_triplet.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\color.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\columns.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\console.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\constrain.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\containers.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\control.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\default_styles.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\diagnose.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\emoji.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\errors.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\file_proxy.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\filesize.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\highlighter.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\json.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\jupyter.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\layout.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\live_render.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\live.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\logging.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\markup.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\measure.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\padding.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\pager.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\palette.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\panel.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\pretty.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\progress_bar.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\progress.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\prompt.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\protocol.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\region.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\repr.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\rule.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\scope.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\screen.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\segment.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\spinner.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\status.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\style.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\styled.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\syntax.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\table.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\terminal_theme.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\text.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\theme.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\themes.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\traceback.py
+  📄 venv\Lib\site-packages\pip\_vendor\rich\tree.py
+
+📂 samples
+  📄 venv\Lib\site-packages\reportlab\graphics\samples\__init__.py
+  📄 venv\Lib\site-packages\reportlab\graphics\samples\bubble.py
+  📄 venv\Lib\site-packages\reportlab\graphics\samples\clustered_bar.py
+  📄 venv\Lib\site-packages\reportlab\graphics\samples\clustered_column.py
+  📄 venv\Lib\site-packages\reportlab\graphics\samples\excelcolors.py
+  📄 venv\Lib\site-packages\reportlab\graphics\samples\exploded_pie.py
+  📄 venv\Lib\site-packages\reportlab\graphics\samples\filled_radar.py
+  📄 venv\Lib\site-packages\reportlab\graphics\samples\line_chart.py
+  📄 venv\Lib\site-packages\reportlab\graphics\samples\linechart_with_markers.py
+  📄 venv\Lib\site-packages\reportlab\graphics\samples\radar.py
+  📄 venv\Lib\site-packages\reportlab\graphics\samples\runall.py
+  📄 venv\Lib\site-packages\reportlab\graphics\samples\scatter_lines_markers.py
+  📄 venv\Lib\site-packages\reportlab\graphics\samples\scatter_lines.py
+  📄 venv\Lib\site-packages\reportlab\graphics\samples\scatter.py
+  📄 venv\Lib\site-packages\reportlab\graphics\samples\simple_pie.py
+  📄 venv\Lib\site-packages\reportlab\graphics\samples\stacked_bar.py
+  📄 venv\Lib\site-packages\reportlab\graphics\samples\stacked_column.py
+
+📂 sas
+  📄 venv\Lib\site-packages\pandas\io\sas\__init__.py
+  📄 venv\Lib\site-packages\pandas\io\sas\sas_constants.py
+  📄 venv\Lib\site-packages\pandas\io\sas\sas_xport.py
+  📄 venv\Lib\site-packages\pandas\io\sas\sas7bdat.py
+  📄 venv\Lib\site-packages\pandas\io\sas\sasreader.py
+  📄 venv\Lib\site-packages\pandas\tests\io\sas\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\io\sas\test_byteswap.py
+  📄 venv\Lib\site-packages\pandas\tests\io\sas\test_sas.py
+  📄 venv\Lib\site-packages\pandas\tests\io\sas\test_sas7bdat.py
+  📄 venv\Lib\site-packages\pandas\tests\io\sas\test_xport.py
+
+📂 sauvegarde de demarrage_gael
+  📄 sauvegarde de demarrage_gael\main_window.py
+
+📂 scalar
+  📄 venv\Lib\site-packages\pandas\tests\scalar\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\test_na_scalar.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\test_nat.py
+
+📂 scaling
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\scaling\__init__.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\scaling\scaling_base_class.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\scaling\scaling_tracker.py
+
+📂 screens
+  📄 ui\screens\__init__.py
+  📄 ui\screens\agenda_screen.py
+  📄 ui\screens\dashboard_screen.py
+  📄 ui\screens\finances_screen.py
+  📄 ui\screens\login_screen.py
+  📄 ui\screens\logistique_screen.py
+  📄 ui\screens\main_window.py
+  📄 ui\screens\paie_screen.py
+  📄 ui\screens\personnel_screen.py
+  📄 ui\screens\stock_screen.py
+
+📂 series
+  📄 venv\Lib\site-packages\pandas\tests\series\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\series\test_api.py
+  📄 venv\Lib\site-packages\pandas\tests\series\test_arithmetic.py
+  📄 venv\Lib\site-packages\pandas\tests\series\test_constructors.py
+  📄 venv\Lib\site-packages\pandas\tests\series\test_cumulative.py
+  📄 venv\Lib\site-packages\pandas\tests\series\test_formats.py
+  📄 venv\Lib\site-packages\pandas\tests\series\test_iteration.py
+  📄 venv\Lib\site-packages\pandas\tests\series\test_logical_ops.py
+  📄 venv\Lib\site-packages\pandas\tests\series\test_missing.py
+  📄 venv\Lib\site-packages\pandas\tests\series\test_npfuncs.py
+  📄 venv\Lib\site-packages\pandas\tests\series\test_reductions.py
+  📄 venv\Lib\site-packages\pandas\tests\series\test_subclass.py
+  📄 venv\Lib\site-packages\pandas\tests\series\test_ufunc.py
+  📄 venv\Lib\site-packages\pandas\tests\series\test_unary.py
+  📄 venv\Lib\site-packages\pandas\tests\series\test_validate.py
+
+📂 site-packages
+  📄 venv\Lib\site-packages\six.py
+
+📂 sparse
+  📄 venv\Lib\site-packages\pandas\core\arrays\sparse\__init__.py
+  📄 venv\Lib\site-packages\pandas\core\arrays\sparse\accessor.py
+  📄 venv\Lib\site-packages\pandas\core\arrays\sparse\array.py
+  📄 venv\Lib\site-packages\pandas\core\arrays\sparse\scipy_sparse.py
+  📄 venv\Lib\site-packages\pandas\core\sparse\__init__.py
+  📄 venv\Lib\site-packages\pandas\core\sparse\api.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\sparse\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\sparse\test_accessor.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\sparse\test_arithmetics.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\sparse\test_array.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\sparse\test_astype.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\sparse\test_combine_concat.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\sparse\test_constructors.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\sparse\test_dtype.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\sparse\test_indexing.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\sparse\test_libsparse.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\sparse\test_reductions.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\sparse\test_unary.py
+
+📂 stock
+  📄 modules\stock\__init__.py
+
+📂 string
+  📄 venv\Lib\site-packages\pandas\tests\indexes\string\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\string\test_astype.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\string\test_indexing.py
+
+📂 string_
+  📄 venv\Lib\site-packages\pandas\tests\arrays\string_\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\string_\test_concat.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\string_\test_string_arrow.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\string_\test_string.py
+
+📂 strings
+  📄 venv\Lib\site-packages\numpy\strings\__init__.py
+  📄 venv\Lib\site-packages\pandas\core\strings\__init__.py
+  📄 venv\Lib\site-packages\pandas\core\strings\accessor.py
+  📄 venv\Lib\site-packages\pandas\core\strings\base.py
+  📄 venv\Lib\site-packages\pandas\core\strings\object_array.py
+  📄 venv\Lib\site-packages\pandas\tests\strings\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\strings\conftest.py
+  📄 venv\Lib\site-packages\pandas\tests\strings\test_api.py
+  📄 venv\Lib\site-packages\pandas\tests\strings\test_case_justify.py
+  📄 venv\Lib\site-packages\pandas\tests\strings\test_cat.py
+  📄 venv\Lib\site-packages\pandas\tests\strings\test_extract.py
+  📄 venv\Lib\site-packages\pandas\tests\strings\test_find_replace.py
+  📄 venv\Lib\site-packages\pandas\tests\strings\test_get_dummies.py
+  📄 venv\Lib\site-packages\pandas\tests\strings\test_split_partition.py
+  📄 venv\Lib\site-packages\pandas\tests\strings\test_string_array.py
+  📄 venv\Lib\site-packages\pandas\tests\strings\test_strings.py
+
+📂 style
+  📄 venv\Lib\site-packages\pandas\tests\io\formats\style\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\io\formats\style\test_bar.py
+  📄 venv\Lib\site-packages\pandas\tests\io\formats\style\test_exceptions.py
+  📄 venv\Lib\site-packages\pandas\tests\io\formats\style\test_format.py
+  📄 venv\Lib\site-packages\pandas\tests\io\formats\style\test_highlight.py
+  📄 venv\Lib\site-packages\pandas\tests\io\formats\style\test_html.py
+  📄 venv\Lib\site-packages\pandas\tests\io\formats\style\test_matplotlib.py
+  📄 venv\Lib\site-packages\pandas\tests\io\formats\style\test_non_unique.py
+  📄 venv\Lib\site-packages\pandas\tests\io\formats\style\test_style.py
+  📄 venv\Lib\site-packages\pandas\tests\io\formats\style\test_to_latex.py
+  📄 venv\Lib\site-packages\pandas\tests\io\formats\style\test_to_string.py
+  📄 venv\Lib\site-packages\pandas\tests\io\formats\style\test_tooltip.py
+
+📂 styles
+  📄 ui\styles\__init__.py
+  📄 venv\Lib\site-packages\openpyxl\styles\__init__.py
+  📄 venv\Lib\site-packages\openpyxl\styles\alignment.py
+  📄 venv\Lib\site-packages\openpyxl\styles\borders.py
+  📄 venv\Lib\site-packages\openpyxl\styles\builtins.py
+  📄 venv\Lib\site-packages\openpyxl\styles\cell_style.py
+  📄 venv\Lib\site-packages\openpyxl\styles\colors.py
+  📄 venv\Lib\site-packages\openpyxl\styles\differential.py
+  📄 venv\Lib\site-packages\openpyxl\styles\fills.py
+  📄 venv\Lib\site-packages\openpyxl\styles\fonts.py
+  📄 venv\Lib\site-packages\openpyxl\styles\named_styles.py
+  📄 venv\Lib\site-packages\openpyxl\styles\numbers.py
+  📄 venv\Lib\site-packages\openpyxl\styles\protection.py
+  📄 venv\Lib\site-packages\openpyxl\styles\proxy.py
+  📄 venv\Lib\site-packages\openpyxl\styles\styleable.py
+  📄 venv\Lib\site-packages\openpyxl\styles\stylesheet.py
+  📄 venv\Lib\site-packages\openpyxl\styles\table.py
+  📄 venv\Lib\site-packages\pip\_vendor\pygments\styles\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\pygments\styles\_mapping.py
+
+📂 templates
+  📄 reports\templates\__init__.py
+
+📂 testing
+  📄 venv\Lib\site-packages\numpy\testing\__init__.py
+  📄 venv\Lib\site-packages\numpy\testing\overrides.py
+  📄 venv\Lib\site-packages\numpy\testing\print_coercion_tables.py
+
+📂 tests
+  📄 tests\__init__.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\_locales.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\_natype.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test__exceptions.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_abc.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_api.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_argparse.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_array_api_info.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_array_coercion.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_array_interface.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_arraymethod.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_arrayobject.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_arrayprint.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_casting_floatingpoint_errors.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_casting_unittests.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_conversion_utils.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_cpu_dispatcher.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_cpu_features.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_custom_dtypes.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_cython.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_datetime.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_defchararray.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_deprecations.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_dlpack.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_dtype.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_einsum.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_errstate.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_extint128.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_finfo.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_function_base.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_getlimits.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_half.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_hashtable.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_indexerrors.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_indexing.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_item_selection.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_limited_api.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_longdouble.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_mem_overlap.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_mem_policy.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_memmap.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_multiarray.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_multiprocessing.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_multithreading.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_nditer.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_nep50_promotions.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_numeric.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_numerictypes.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_overrides.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_print.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_protocols.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_records.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_regression.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_scalar_ctors.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_scalar_methods.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_scalarbuffer.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_scalarinherit.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_scalarmath.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_scalarprint.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_shape_base.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_simd_module.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_simd.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_stringdtype.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_strings.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_ufunc.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_umath_accuracy.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_umath_complex.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_umath.py
+  📄 venv\Lib\site-packages\numpy\_core\tests\test_unicode.py
+  📄 venv\Lib\site-packages\numpy\_pyinstaller\tests\__init__.py
+  📄 venv\Lib\site-packages\numpy\_pyinstaller\tests\pyinstaller-smoke.py
+  📄 venv\Lib\site-packages\numpy\_pyinstaller\tests\test_pyinstaller.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\__init__.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_abstract_interface.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_array_from_pyobj.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_assumed_shape.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_block_docstring.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_callback.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_character.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_common.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_crackfortran.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_data.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_docs.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_f2cmap.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_f2py2e.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_isoc.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_kind.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_mixed.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_modules.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_parameter.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_pyf_src.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_quoted_character.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_regression.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_return_character.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_return_complex.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_return_integer.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_return_logical.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_return_real.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_routines.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_semicolon_split.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_size.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_string.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_symbolic.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\test_value_attrspec.py
+  📄 venv\Lib\site-packages\numpy\f2py\tests\util.py
+  📄 venv\Lib\site-packages\numpy\fft\tests\__init__.py
+  📄 venv\Lib\site-packages\numpy\fft\tests\test_helper.py
+  📄 venv\Lib\site-packages\numpy\fft\tests\test_pocketfft.py
+  📄 venv\Lib\site-packages\numpy\lib\tests\__init__.py
+  📄 venv\Lib\site-packages\numpy\lib\tests\test__datasource.py
+  📄 venv\Lib\site-packages\numpy\lib\tests\test__iotools.py
+  📄 venv\Lib\site-packages\numpy\lib\tests\test__version.py
+  📄 venv\Lib\site-packages\numpy\lib\tests\test_array_utils.py
+  📄 venv\Lib\site-packages\numpy\lib\tests\test_arraypad.py
+  📄 venv\Lib\site-packages\numpy\lib\tests\test_arraysetops.py
+  📄 venv\Lib\site-packages\numpy\lib\tests\test_arrayterator.py
+  📄 venv\Lib\site-packages\numpy\lib\tests\test_format.py
+  📄 venv\Lib\site-packages\numpy\lib\tests\test_function_base.py
+  📄 venv\Lib\site-packages\numpy\lib\tests\test_histograms.py
+  📄 venv\Lib\site-packages\numpy\lib\tests\test_index_tricks.py
+  📄 venv\Lib\site-packages\numpy\lib\tests\test_io.py
+  📄 venv\Lib\site-packages\numpy\lib\tests\test_loadtxt.py
+  📄 venv\Lib\site-packages\numpy\lib\tests\test_mixins.py
+  📄 venv\Lib\site-packages\numpy\lib\tests\test_nanfunctions.py
+  📄 venv\Lib\site-packages\numpy\lib\tests\test_packbits.py
+  📄 venv\Lib\site-packages\numpy\lib\tests\test_polynomial.py
+  📄 venv\Lib\site-packages\numpy\lib\tests\test_recfunctions.py
+  📄 venv\Lib\site-packages\numpy\lib\tests\test_regression.py
+  📄 venv\Lib\site-packages\numpy\lib\tests\test_shape_base.py
+  📄 venv\Lib\site-packages\numpy\lib\tests\test_stride_tricks.py
+  📄 venv\Lib\site-packages\numpy\lib\tests\test_twodim_base.py
+  📄 venv\Lib\site-packages\numpy\lib\tests\test_type_check.py
+  📄 venv\Lib\site-packages\numpy\lib\tests\test_ufunclike.py
+  📄 venv\Lib\site-packages\numpy\lib\tests\test_utils.py
+  📄 venv\Lib\site-packages\numpy\linalg\tests\__init__.py
+  📄 venv\Lib\site-packages\numpy\linalg\tests\test_deprecations.py
+  📄 venv\Lib\site-packages\numpy\linalg\tests\test_linalg.py
+  📄 venv\Lib\site-packages\numpy\linalg\tests\test_regression.py
+  📄 venv\Lib\site-packages\numpy\ma\tests\__init__.py
+  📄 venv\Lib\site-packages\numpy\ma\tests\test_arrayobject.py
+  📄 venv\Lib\site-packages\numpy\ma\tests\test_core.py
+  📄 venv\Lib\site-packages\numpy\ma\tests\test_deprecations.py
+  📄 venv\Lib\site-packages\numpy\ma\tests\test_extras.py
+  📄 venv\Lib\site-packages\numpy\ma\tests\test_mrecords.py
+  📄 venv\Lib\site-packages\numpy\ma\tests\test_old_ma.py
+  📄 venv\Lib\site-packages\numpy\ma\tests\test_regression.py
+  📄 venv\Lib\site-packages\numpy\ma\tests\test_subclassing.py
+  📄 venv\Lib\site-packages\numpy\matrixlib\tests\__init__.py
+  📄 venv\Lib\site-packages\numpy\matrixlib\tests\test_defmatrix.py
+  📄 venv\Lib\site-packages\numpy\matrixlib\tests\test_interaction.py
+  📄 venv\Lib\site-packages\numpy\matrixlib\tests\test_masked_matrix.py
+  📄 venv\Lib\site-packages\numpy\matrixlib\tests\test_matrix_linalg.py
+  📄 venv\Lib\site-packages\numpy\matrixlib\tests\test_multiarray.py
+  📄 venv\Lib\site-packages\numpy\matrixlib\tests\test_numeric.py
+  📄 venv\Lib\site-packages\numpy\matrixlib\tests\test_regression.py
+  📄 venv\Lib\site-packages\numpy\polynomial\tests\__init__.py
+  📄 venv\Lib\site-packages\numpy\polynomial\tests\test_chebyshev.py
+  📄 venv\Lib\site-packages\numpy\polynomial\tests\test_classes.py
+  📄 venv\Lib\site-packages\numpy\polynomial\tests\test_hermite_e.py
+  📄 venv\Lib\site-packages\numpy\polynomial\tests\test_hermite.py
+  📄 venv\Lib\site-packages\numpy\polynomial\tests\test_laguerre.py
+  📄 venv\Lib\site-packages\numpy\polynomial\tests\test_legendre.py
+  📄 venv\Lib\site-packages\numpy\polynomial\tests\test_polynomial.py
+  📄 venv\Lib\site-packages\numpy\polynomial\tests\test_polyutils.py
+  📄 venv\Lib\site-packages\numpy\polynomial\tests\test_printing.py
+  📄 venv\Lib\site-packages\numpy\polynomial\tests\test_symbol.py
+  📄 venv\Lib\site-packages\numpy\random\tests\__init__.py
+  📄 venv\Lib\site-packages\numpy\random\tests\test_direct.py
+  📄 venv\Lib\site-packages\numpy\random\tests\test_extending.py
+  📄 venv\Lib\site-packages\numpy\random\tests\test_generator_mt19937_regressions.py
+  📄 venv\Lib\site-packages\numpy\random\tests\test_generator_mt19937.py
+  📄 venv\Lib\site-packages\numpy\random\tests\test_random.py
+  📄 venv\Lib\site-packages\numpy\random\tests\test_randomstate_regression.py
+  📄 venv\Lib\site-packages\numpy\random\tests\test_randomstate.py
+  📄 venv\Lib\site-packages\numpy\random\tests\test_regression.py
+  📄 venv\Lib\site-packages\numpy\random\tests\test_seed_sequence.py
+  📄 venv\Lib\site-packages\numpy\random\tests\test_smoke.py
+  📄 venv\Lib\site-packages\numpy\testing\tests\__init__.py
+  📄 venv\Lib\site-packages\numpy\testing\tests\test_utils.py
+  📄 venv\Lib\site-packages\numpy\tests\__init__.py
+  📄 venv\Lib\site-packages\numpy\tests\test__all__.py
+  📄 venv\Lib\site-packages\numpy\tests\test_configtool.py
+  📄 venv\Lib\site-packages\numpy\tests\test_ctypeslib.py
+  📄 venv\Lib\site-packages\numpy\tests\test_lazyloading.py
+  📄 venv\Lib\site-packages\numpy\tests\test_matlib.py
+  📄 venv\Lib\site-packages\numpy\tests\test_numpy_config.py
+  📄 venv\Lib\site-packages\numpy\tests\test_numpy_version.py
+  📄 venv\Lib\site-packages\numpy\tests\test_public_api.py
+  📄 venv\Lib\site-packages\numpy\tests\test_reloading.py
+  📄 venv\Lib\site-packages\numpy\tests\test_scripts.py
+  📄 venv\Lib\site-packages\numpy\tests\test_warnings.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\__init__.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\test_isfile.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\test_runtime.py
+  📄 venv\Lib\site-packages\numpy\typing\tests\test_typing.py
+  📄 venv\Lib\site-packages\pandas\tests\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\test_aggregation.py
+  📄 venv\Lib\site-packages\pandas\tests\test_algos.py
+  📄 venv\Lib\site-packages\pandas\tests\test_common.py
+  📄 venv\Lib\site-packages\pandas\tests\test_downstream.py
+  📄 venv\Lib\site-packages\pandas\tests\test_errors.py
+  📄 venv\Lib\site-packages\pandas\tests\test_expressions.py
+  📄 venv\Lib\site-packages\pandas\tests\test_flags.py
+  📄 venv\Lib\site-packages\pandas\tests\test_multilevel.py
+  📄 venv\Lib\site-packages\pandas\tests\test_nanops.py
+  📄 venv\Lib\site-packages\pandas\tests\test_optional_dependency.py
+  📄 venv\Lib\site-packages\pandas\tests\test_register_accessor.py
+  📄 venv\Lib\site-packages\pandas\tests\test_sorting.py
+  📄 venv\Lib\site-packages\pandas\tests\test_take.py
+
+📂 theme
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\theme\__init__.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\theme\theme_manager.py
+
+📂 timedelta
+  📄 venv\Lib\site-packages\pandas\tests\scalar\timedelta\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\timedelta\test_arithmetic.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\timedelta\test_constructors.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\timedelta\test_formats.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\timedelta\test_timedelta.py
+
+📂 timedeltas
+  📄 venv\Lib\site-packages\pandas\tests\arrays\timedeltas\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\timedeltas\test_constructors.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\timedeltas\test_cumulative.py
+  📄 venv\Lib\site-packages\pandas\tests\arrays\timedeltas\test_reductions.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\timedeltas\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\timedeltas\test_arithmetic.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\timedeltas\test_constructors.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\timedeltas\test_delete.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\timedeltas\test_formats.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\timedeltas\test_freq_attr.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\timedeltas\test_indexing.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\timedeltas\test_join.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\timedeltas\test_ops.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\timedeltas\test_pickle.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\timedeltas\test_scalar_compat.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\timedeltas\test_searchsorted.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\timedeltas\test_setops.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\timedeltas\test_timedelta_range.py
+  📄 venv\Lib\site-packages\pandas\tests\indexes\timedeltas\test_timedelta.py
+
+📂 timestamp
+  📄 venv\Lib\site-packages\pandas\tests\scalar\timestamp\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\timestamp\test_arithmetic.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\timestamp\test_comparisons.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\timestamp\test_constructors.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\timestamp\test_formats.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\timestamp\test_timestamp.py
+  📄 venv\Lib\site-packages\pandas\tests\scalar\timestamp\test_timezones.py
+
+📂 tomli
+  📄 venv\Lib\site-packages\pip\_vendor\tomli\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\tomli\_parser.py
+  📄 venv\Lib\site-packages\pip\_vendor\tomli\_re.py
+  📄 venv\Lib\site-packages\pip\_vendor\tomli\_types.py
+
+📂 tomli_w
+  📄 venv\Lib\site-packages\pip\_vendor\tomli_w\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\tomli_w\_writer.py
+
+📂 tools
+  📄 venv\Lib\site-packages\pandas\core\tools\__init__.py
+  📄 venv\Lib\site-packages\pandas\core\tools\datetimes.py
+  📄 venv\Lib\site-packages\pandas\core\tools\numeric.py
+  📄 venv\Lib\site-packages\pandas\core\tools\timedeltas.py
+  📄 venv\Lib\site-packages\pandas\core\tools\times.py
+  📄 venv\Lib\site-packages\pandas\tests\tools\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\tools\test_to_datetime.py
+  📄 venv\Lib\site-packages\pandas\tests\tools\test_to_numeric.py
+  📄 venv\Lib\site-packages\pandas\tests\tools\test_to_time.py
+  📄 venv\Lib\site-packages\pandas\tests\tools\test_to_timedelta.py
+
+📂 transform
+  📄 venv\Lib\site-packages\pandas\tests\groupby\transform\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\transform\test_numba.py
+  📄 venv\Lib\site-packages\pandas\tests\groupby\transform\test_transform.py
+
+📂 truststore
+  📄 venv\Lib\site-packages\pip\_vendor\truststore\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\truststore\_api.py
+  📄 venv\Lib\site-packages\pip\_vendor\truststore\_macos.py
+  📄 venv\Lib\site-packages\pip\_vendor\truststore\_openssl.py
+  📄 venv\Lib\site-packages\pip\_vendor\truststore\_ssl_constants.py
+  📄 venv\Lib\site-packages\pip\_vendor\truststore\_windows.py
+
+📂 tseries
+  📄 venv\Lib\site-packages\pandas\tests\tseries\__init__.py
+  📄 venv\Lib\site-packages\pandas\tseries\__init__.py
+  📄 venv\Lib\site-packages\pandas\tseries\api.py
+  📄 venv\Lib\site-packages\pandas\tseries\frequencies.py
+  📄 venv\Lib\site-packages\pandas\tseries\holiday.py
+  📄 venv\Lib\site-packages\pandas\tseries\offsets.py
+
+📂 tslibs
+  📄 venv\Lib\site-packages\pandas\_libs\tslibs\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\tslibs\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\tslibs\test_api.py
+  📄 venv\Lib\site-packages\pandas\tests\tslibs\test_array_to_datetime.py
+  📄 venv\Lib\site-packages\pandas\tests\tslibs\test_ccalendar.py
+  📄 venv\Lib\site-packages\pandas\tests\tslibs\test_conversion.py
+  📄 venv\Lib\site-packages\pandas\tests\tslibs\test_fields.py
+  📄 venv\Lib\site-packages\pandas\tests\tslibs\test_libfrequencies.py
+  📄 venv\Lib\site-packages\pandas\tests\tslibs\test_liboffsets.py
+  📄 venv\Lib\site-packages\pandas\tests\tslibs\test_np_datetime.py
+  📄 venv\Lib\site-packages\pandas\tests\tslibs\test_npy_units.py
+  📄 venv\Lib\site-packages\pandas\tests\tslibs\test_parse_iso8601.py
+  📄 venv\Lib\site-packages\pandas\tests\tslibs\test_parsing.py
+  📄 venv\Lib\site-packages\pandas\tests\tslibs\test_period.py
+  📄 venv\Lib\site-packages\pandas\tests\tslibs\test_resolution.py
+  📄 venv\Lib\site-packages\pandas\tests\tslibs\test_strptime.py
+  📄 venv\Lib\site-packages\pandas\tests\tslibs\test_timedeltas.py
+  📄 venv\Lib\site-packages\pandas\tests\tslibs\test_timezones.py
+  📄 venv\Lib\site-packages\pandas\tests\tslibs\test_to_offset.py
+  📄 venv\Lib\site-packages\pandas\tests\tslibs\test_tzconversion.py
+
+📂 types
+  📄 venv\Lib\site-packages\pandas\api\types\__init__.py
+
+📂 typing
+  📄 venv\Lib\site-packages\numpy\typing\__init__.py
+  📄 venv\Lib\site-packages\numpy\typing\mypy_plugin.py
+  📄 venv\Lib\site-packages\pandas\api\typing\__init__.py
+
+📂 tz
+  📄 venv\Lib\site-packages\dateutil\tz\__init__.py
+  📄 venv\Lib\site-packages\dateutil\tz\_common.py
+  📄 venv\Lib\site-packages\dateutil\tz\_factories.py
+  📄 venv\Lib\site-packages\dateutil\tz\tz.py
+  📄 venv\Lib\site-packages\dateutil\tz\win.py
+
+📂 tzdata
+  📄 venv\Lib\site-packages\tzdata\__init__.py
+
+📂 ui
+  📄 ui\__init__.py
+
+📂 urllib3
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\_collections.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\_version.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\connection.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\connectionpool.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\exceptions.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\fields.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\filepost.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\poolmanager.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\request.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\response.py
+
+📂 US
+  📄 venv\Lib\site-packages\tzdata\zoneinfo\US\__init__.py
+
+📂 usecols
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\usecols\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\usecols\test_parse_dates.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\usecols\test_strings.py
+  📄 venv\Lib\site-packages\pandas\tests\io\parser\usecols\test_usecols_basic.py
+
+📂 util
+  📄 venv\Lib\site-packages\pandas\core\util\__init__.py
+  📄 venv\Lib\site-packages\pandas\core\util\hashing.py
+  📄 venv\Lib\site-packages\pandas\core\util\numba_.py
+  📄 venv\Lib\site-packages\pandas\tests\util\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\util\conftest.py
+  📄 venv\Lib\site-packages\pandas\tests\util\test_assert_almost_equal.py
+  📄 venv\Lib\site-packages\pandas\tests\util\test_assert_attr_equal.py
+  📄 venv\Lib\site-packages\pandas\tests\util\test_assert_categorical_equal.py
+  📄 venv\Lib\site-packages\pandas\tests\util\test_assert_extension_array_equal.py
+  📄 venv\Lib\site-packages\pandas\tests\util\test_assert_frame_equal.py
+  📄 venv\Lib\site-packages\pandas\tests\util\test_assert_index_equal.py
+  📄 venv\Lib\site-packages\pandas\tests\util\test_assert_interval_array_equal.py
+  📄 venv\Lib\site-packages\pandas\tests\util\test_assert_numpy_array_equal.py
+  📄 venv\Lib\site-packages\pandas\tests\util\test_assert_produces_warning.py
+  📄 venv\Lib\site-packages\pandas\tests\util\test_assert_series_equal.py
+  📄 venv\Lib\site-packages\pandas\tests\util\test_deprecate_kwarg.py
+  📄 venv\Lib\site-packages\pandas\tests\util\test_deprecate_nonkeyword_arguments.py
+  📄 venv\Lib\site-packages\pandas\tests\util\test_deprecate.py
+  📄 venv\Lib\site-packages\pandas\tests\util\test_doc.py
+  📄 venv\Lib\site-packages\pandas\tests\util\test_hashing.py
+  📄 venv\Lib\site-packages\pandas\tests\util\test_numba.py
+  📄 venv\Lib\site-packages\pandas\tests\util\test_rewrite_warning.py
+  📄 venv\Lib\site-packages\pandas\tests\util\test_shares_memory.py
+  📄 venv\Lib\site-packages\pandas\tests\util\test_show_versions.py
+  📄 venv\Lib\site-packages\pandas\tests\util\test_util.py
+  📄 venv\Lib\site-packages\pandas\tests\util\test_validate_args_and_kwargs.py
+  📄 venv\Lib\site-packages\pandas\tests\util\test_validate_args.py
+  📄 venv\Lib\site-packages\pandas\tests\util\test_validate_inclusive.py
+  📄 venv\Lib\site-packages\pandas\tests\util\test_validate_kwargs.py
+  📄 venv\Lib\site-packages\pandas\util\__init__.py
+  📄 venv\Lib\site-packages\pandas\util\_decorators.py
+  📄 venv\Lib\site-packages\pandas\util\_doctools.py
+  📄 venv\Lib\site-packages\pandas\util\_exceptions.py
+  📄 venv\Lib\site-packages\pandas\util\_print_versions.py
+  📄 venv\Lib\site-packages\pandas\util\_test_decorators.py
+  📄 venv\Lib\site-packages\pandas\util\_tester.py
+  📄 venv\Lib\site-packages\pandas\util\_validators.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\util\__init__.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\util\connection.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\util\proxy.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\util\queue.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\util\request.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\util\response.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\util\retry.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\util\ssl_.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\util\ssl_match_hostname.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\util\ssltransport.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\util\timeout.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\util\url.py
+  📄 venv\Lib\site-packages\pip\_vendor\urllib3\util\wait.py
+
+📂 utility
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\utility\__init__.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\utility\utility_functions.py
+
+📂 utils
+  📄 utils\__init__.py
+  📄 venv\Lib\site-packages\openpyxl\utils\__init__.py
+  📄 venv\Lib\site-packages\openpyxl\utils\bound_dictionary.py
+  📄 venv\Lib\site-packages\openpyxl\utils\cell.py
+  📄 venv\Lib\site-packages\openpyxl\utils\dataframe.py
+  📄 venv\Lib\site-packages\openpyxl\utils\datetime.py
+  📄 venv\Lib\site-packages\openpyxl\utils\escape.py
+  📄 venv\Lib\site-packages\openpyxl\utils\exceptions.py
+  📄 venv\Lib\site-packages\openpyxl\utils\formulas.py
+  📄 venv\Lib\site-packages\openpyxl\utils\indexed_list.py
+  📄 venv\Lib\site-packages\openpyxl\utils\inference.py
+  📄 venv\Lib\site-packages\openpyxl\utils\protection.py
+  📄 venv\Lib\site-packages\openpyxl\utils\units.py
+  📄 venv\Lib\site-packages\pip\_internal\utils\__init__.py
+  📄 venv\Lib\site-packages\pip\_internal\utils\_jaraco_text.py
+  📄 venv\Lib\site-packages\pip\_internal\utils\_log.py
+  📄 venv\Lib\site-packages\pip\_internal\utils\appdirs.py
+  📄 venv\Lib\site-packages\pip\_internal\utils\compat.py
+  📄 venv\Lib\site-packages\pip\_internal\utils\compatibility_tags.py
+  📄 venv\Lib\site-packages\pip\_internal\utils\datetime.py
+  📄 venv\Lib\site-packages\pip\_internal\utils\deprecation.py
+  📄 venv\Lib\site-packages\pip\_internal\utils\direct_url_helpers.py
+  📄 venv\Lib\site-packages\pip\_internal\utils\egg_link.py
+  📄 venv\Lib\site-packages\pip\_internal\utils\entrypoints.py
+  📄 venv\Lib\site-packages\pip\_internal\utils\filesystem.py
+  📄 venv\Lib\site-packages\pip\_internal\utils\filetypes.py
+  📄 venv\Lib\site-packages\pip\_internal\utils\glibc.py
+  📄 venv\Lib\site-packages\pip\_internal\utils\hashes.py
+  📄 venv\Lib\site-packages\pip\_internal\utils\logging.py
+  📄 venv\Lib\site-packages\pip\_internal\utils\misc.py
+  📄 venv\Lib\site-packages\pip\_internal\utils\packaging.py
+  📄 venv\Lib\site-packages\pip\_internal\utils\retry.py
+  📄 venv\Lib\site-packages\pip\_internal\utils\subprocess.py
+  📄 venv\Lib\site-packages\pip\_internal\utils\temp_dir.py
+  📄 venv\Lib\site-packages\pip\_internal\utils\unpacking.py
+  📄 venv\Lib\site-packages\pip\_internal\utils\urls.py
+  📄 venv\Lib\site-packages\pip\_internal\utils\virtualenv.py
+  📄 venv\Lib\site-packages\pip\_internal\utils\wheel.py
+
+📂 vcs
+  📄 venv\Lib\site-packages\pip\_internal\vcs\__init__.py
+  📄 venv\Lib\site-packages\pip\_internal\vcs\bazaar.py
+  📄 venv\Lib\site-packages\pip\_internal\vcs\git.py
+  📄 venv\Lib\site-packages\pip\_internal\vcs\mercurial.py
+  📄 venv\Lib\site-packages\pip\_internal\vcs\subversion.py
+  📄 venv\Lib\site-packages\pip\_internal\vcs\versioncontrol.py
+
+📂 version
+  📄 venv\Lib\site-packages\pandas\util\version\__init__.py
+
+📂 widgets
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\__init__.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\ctk_button.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\ctk_checkbox.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\ctk_combobox.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\ctk_entry.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\ctk_frame.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\ctk_label.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\ctk_optionmenu.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\ctk_progressbar.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\ctk_radiobutton.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\ctk_scrollable_frame.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\ctk_scrollbar.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\ctk_segmented_button.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\ctk_slider.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\ctk_switch.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\ctk_tabview.py
+  📄 venv\Lib\site-packages\customtkinter\windows\widgets\ctk_textbox.py
+  📄 venv\Lib\site-packages\reportlab\graphics\widgets\__init__.py
+  📄 venv\Lib\site-packages\reportlab\graphics\widgets\adjustableArrow.py
+  📄 venv\Lib\site-packages\reportlab\graphics\widgets\eventcal.py
+  📄 venv\Lib\site-packages\reportlab\graphics\widgets\flags.py
+  📄 venv\Lib\site-packages\reportlab\graphics\widgets\grids.py
+  📄 venv\Lib\site-packages\reportlab\graphics\widgets\markers.py
+  📄 venv\Lib\site-packages\reportlab\graphics\widgets\signsandsymbols.py
+  📄 venv\Lib\site-packages\reportlab\graphics\widgets\table.py
+
+📂 window
+  📄 venv\Lib\site-packages\pandas\_libs\window\__init__.py
+  📄 venv\Lib\site-packages\pandas\core\window\__init__.py
+  📄 venv\Lib\site-packages\pandas\core\window\common.py
+  📄 venv\Lib\site-packages\pandas\core\window\doc.py
+  📄 venv\Lib\site-packages\pandas\core\window\ewm.py
+  📄 venv\Lib\site-packages\pandas\core\window\expanding.py
+  📄 venv\Lib\site-packages\pandas\core\window\numba_.py
+  📄 venv\Lib\site-packages\pandas\core\window\online.py
+  📄 venv\Lib\site-packages\pandas\core\window\rolling.py
+  📄 venv\Lib\site-packages\pandas\tests\window\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\window\conftest.py
+  📄 venv\Lib\site-packages\pandas\tests\window\test_api.py
+  📄 venv\Lib\site-packages\pandas\tests\window\test_apply.py
+  📄 venv\Lib\site-packages\pandas\tests\window\test_base_indexer.py
+  📄 venv\Lib\site-packages\pandas\tests\window\test_cython_aggregations.py
+  📄 venv\Lib\site-packages\pandas\tests\window\test_dtypes.py
+  📄 venv\Lib\site-packages\pandas\tests\window\test_ewm.py
+  📄 venv\Lib\site-packages\pandas\tests\window\test_expanding.py
+  📄 venv\Lib\site-packages\pandas\tests\window\test_groupby.py
+  📄 venv\Lib\site-packages\pandas\tests\window\test_numba.py
+  📄 venv\Lib\site-packages\pandas\tests\window\test_online.py
+  📄 venv\Lib\site-packages\pandas\tests\window\test_pairwise.py
+  📄 venv\Lib\site-packages\pandas\tests\window\test_rolling_functions.py
+  📄 venv\Lib\site-packages\pandas\tests\window\test_rolling_quantile.py
+  📄 venv\Lib\site-packages\pandas\tests\window\test_rolling_skew_kurt.py
+  📄 venv\Lib\site-packages\pandas\tests\window\test_rolling.py
+  📄 venv\Lib\site-packages\pandas\tests\window\test_timeseries_window.py
+  📄 venv\Lib\site-packages\pandas\tests\window\test_win_type.py
+
+📂 windows
+  📄 venv\Lib\site-packages\customtkinter\windows\__init__.py
+  📄 venv\Lib\site-packages\customtkinter\windows\ctk_input_dialog.py
+  📄 venv\Lib\site-packages\customtkinter\windows\ctk_tk.py
+  📄 venv\Lib\site-packages\customtkinter\windows\ctk_toplevel.py
+
+📂 workbook
+  📄 venv\Lib\site-packages\openpyxl\workbook\__init__.py
+  📄 venv\Lib\site-packages\openpyxl\workbook\_writer.py
+  📄 venv\Lib\site-packages\openpyxl\workbook\child.py
+  📄 venv\Lib\site-packages\openpyxl\workbook\defined_name.py
+  📄 venv\Lib\site-packages\openpyxl\workbook\external_reference.py
+  📄 venv\Lib\site-packages\openpyxl\workbook\function_group.py
+  📄 venv\Lib\site-packages\openpyxl\workbook\properties.py
+  📄 venv\Lib\site-packages\openpyxl\workbook\protection.py
+  📄 venv\Lib\site-packages\openpyxl\workbook\smart_tags.py
+  📄 venv\Lib\site-packages\openpyxl\workbook\views.py
+  📄 venv\Lib\site-packages\openpyxl\workbook\web.py
+  📄 venv\Lib\site-packages\openpyxl\workbook\workbook.py
+
+📂 worksheet
+  📄 venv\Lib\site-packages\openpyxl\worksheet\__init__.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\_read_only.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\_reader.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\_write_only.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\_writer.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\cell_range.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\cell_watch.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\controls.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\copier.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\custom.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\datavalidation.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\dimensions.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\drawing.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\errors.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\filters.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\formula.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\header_footer.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\hyperlink.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\merge.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\ole.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\page.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\pagebreak.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\picture.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\print_settings.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\properties.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\protection.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\related.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\scenario.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\smart_tag.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\table.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\views.py
+  📄 venv\Lib\site-packages\openpyxl\worksheet\worksheet.py
+
+📂 writer
+  📄 venv\Lib\site-packages\openpyxl\writer\__init__.py
+  📄 venv\Lib\site-packages\openpyxl\writer\excel.py
+  📄 venv\Lib\site-packages\openpyxl\writer\theme.py
+
+📂 xml
+  📄 venv\Lib\site-packages\openpyxl\xml\__init__.py
+  📄 venv\Lib\site-packages\openpyxl\xml\constants.py
+  📄 venv\Lib\site-packages\openpyxl\xml\functions.py
+  📄 venv\Lib\site-packages\pandas\tests\io\xml\__init__.py
+  📄 venv\Lib\site-packages\pandas\tests\io\xml\conftest.py
+  📄 venv\Lib\site-packages\pandas\tests\io\xml\test_to_xml.py
+  📄 venv\Lib\site-packages\pandas\tests\io\xml\test_xml_dtypes.py
+  📄 venv\Lib\site-packages\pandas\tests\io\xml\test_xml.py
+
+📂 zoneinfo
+  📄 venv\Lib\site-packages\dateutil\zoneinfo\__init__.py
+  📄 venv\Lib\site-packages\dateutil\zoneinfo\rebuild.py
+  📄 venv\Lib\site-packages\tzdata\zoneinfo\__init__.py
+
+📊 STATISTIQUES
+==================================================
+Total fichiers Python: 2841
+Dossiers différents: 269
+
+🗄️ DÉTECTION DES MODÈLES SQL
+==================================================
+Patterns SQL détectés:
+  🔍 BOOLEAN : 402 fichier(s)
+  🔍 CREATE TABLE : 7 fichier(s)
+  🔍 DELETE FROM : 2 fichier(s)
+  🔍 DROP TABLE : 2 fichier(s)
+  🔍 FOREIGN KEY : 1 fichier(s)
+  🔍 INSERT INTO : 18 fichier(s)
+  🔍 INTEGER : 724 fichier(s)
+  🔍 PRIMARY KEY : 7 fichier(s)
+  🔍 REAL : 289 fichier(s)
+  🔍 SELECT .* FROM : 18 fichier(s)
+  🔍 TEXT : 825 fichier(s)
+  🔍 TIMESTAMP : 431 fichier(s)
+  🔍 UPDATE .* SET : 7 fichier(s)
+
+📝 SCHÉMA SQL RECONSTITUÉ
+==================================================
+-- Schéma basé sur l'analyse des fichiers Python
+-- Tables détectées:
+-- ✓ stock (trouvée dans: 3 fichier(s))
+-- ✓ paie (trouvée dans: 3 fichier(s))
+-- ✓ logistique (trouvée dans: 2 fichier(s))
+
+🔒 ANALYSE TERMINÉE - AUCUN FICHIER MODIFIÉ
+

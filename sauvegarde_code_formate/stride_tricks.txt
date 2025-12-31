@@ -1,0 +1,9 @@
+#!/usr/bin/env python3
+"""
+Script de stride_tricks pour PERIMONT_ERP
+Module: venv.Lib.site-packages.numpy.lib.stride_tricks.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+from ._stride_tricks_impl import __doc__, as_strided, sliding_window_view  # noqa: F401
+

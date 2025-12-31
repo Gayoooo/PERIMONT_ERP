@@ -1,0 +1,91 @@
+// Branche: ui\screens\personnel_screen.py
+
+import customtkinter as ctk
+from config.settings import *
+from database.db_manager import Database
+from tkinter import ttk # Pour le tableau (Treeview)
+
+class PersonnelScreen(ctk.CTkFrame):
+    def __init__(self, parent):
+        super().__init__(parent, fg_color="transparent")
+        self.db = Database()
+
+        # Titre de la page
+        self.title = ctk.CTkLabel(self, text="Gestion des Employés", font=("Segoe UI", 24, "bold"), text_color=COLOR_TEXT_MAIN)
+        self.title.pack(anchor="w", padx=20, pady=(0, 20))
+
+        # --- ZONE DE TRAVAIL (2 Colonnes) ---
+        self.main_container = ctk.CTkFrame(self, fg_color="transparent")
+        self.main_container.pack(fill="both", expand=True)
+
+        # 1. Formulaire (Gauche)
+        self.form_frame = ctk.CTkFrame(self.main_container, fg_color=COLOR_CARD_BG, width=300, corner_radius=15)
+        self.form_frame.pack(side="left", fill="y", padx=10, pady=10)
+        self.setup_form()
+
+        # 2. Tableau (Droite)
+        self.table_frame = ctk.CTkFrame(self.main_container, fg_color=COLOR_CARD_BG, corner_radius=15)
+        self.table_frame.pack(side="right", fill="both", expand=True, padx=10, pady=10)
+        self.setup_table()
+
+    def setup_form(self):
+        ctk.CTkLabel(self.form_frame, text="Nouvelle Fiche", font=("Segoe UI", 16, "bold")).pack(pady=20)
+        
+        self.entry_mat = ctk.CTkEntry(self.form_frame, placeholder_text="Matricule (ex: EMP001)", width=240)
+        self.entry_mat.pack(pady=10)
+        
+        self.entry_nom = ctk.CTkEntry(self.form_frame, placeholder_text="Nom complet", width=240)
+        self.entry_nom.pack(pady=10)
+        
+        self.entry_poste = ctk.CTkEntry(self.form_frame, placeholder_text="Fonction/Poste", width=240)
+        self.entry_poste.pack(pady=10)
+
+        self.entry_salaire = ctk.CTkEntry(self.form_frame, placeholder_text="Salaire de base", width=240)
+        self.entry_salaire.pack(pady=10)
+
+        self.btn_save = ctk.CTkButton(self.form_frame, text="ENREGISTRER", fg_color=COLOR_ACCENT, 
+                                      text_color=COLOR_MAIN_BG, font=("Segoe UI", 12, "bold"),
+                                      command=self.save_employee)
+        self.btn_save.pack(pady=30)
+
+    def setup_table(self):
+        # Style pour le Treeview (Tableau)
+        style = ttk.Style()
+        style.theme_use("default")
+        style.configure("Treeview", background=COLOR_CARD_BG, foreground="white", fieldbackground=COLOR_CARD_BG, borderwidth=0, font=("Segoe UI", 10))
+        style.map("Treeview", background=[('selected', COLOR_ACCENT)])
+
+        columns = ("id", "matricule", "nom", "poste", "salaire", "statut")
+        self.tree = ttk.Treeview(self.table_frame, columns=columns, show="headings")
+
+        self.tree.heading("id", text="ID")
+        self.tree.heading("matricule", text="MATRICULE")
+        self.tree.heading("nom", text="NOM")
+        self.tree.heading("poste", text="FONCTION")
+        self.tree.heading("salaire", text="SALAIRE")
+        self.tree.heading("statut", text="STATUT")
+        
+        self.tree.column("id", width=50)
+        self.tree.pack(fill="both", expand=True, padx=10, pady=10)
+        self.refresh_table()
+
+    def save_employee(self):
+        mat = self.entry_mat.get()
+        nom = self.entry_nom.get()
+        poste = self.entry_poste.get()
+        sal = self.entry_salaire.get()
+        
+        if mat and nom:
+            self.db.query("INSERT INTO personnel (matricule, nom, fonction, salaire_base) VALUES (?, ?, ?, ?)", 
+                         (mat, nom, poste, sal))
+            self.refresh_table()
+            # Nettoyage
+            self.entry_mat.delete(0, 'end')
+            self.entry_nom.delete(0, 'end')
+
+    def refresh_table(self):
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        rows = self.db.query("SELECT * FROM personnel").fetchall()
+        for r in rows:
+            self.tree.insert("", "end", values=(r['id'], r['matricule'], r['nom'], r['fonction'], r['salaire_base'], r['statut']))

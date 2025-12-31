@@ -1,0 +1,76 @@
+#database/db_manager.py
+
+import sqlite3
+import sys
+import os
+from config.settings import DB_PATH
+
+class Database:
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(Database, cls).__new__(cls)
+            cls._instance.conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+            cls._instance.conn.row_factory = sqlite3.Row
+            cls._instance.cursor = cls._instance.conn.cursor()
+            cls._instance.create_tables()
+        return cls._instance
+
+    def create_tables(self):
+        queries = [
+            """CREATE TABLE IF NOT EXISTS utilisateurs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE, password TEXT, role TEXT
+            )""",
+            """CREATE TABLE IF NOT EXISTS personnel (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                matricule TEXT UNIQUE, nom TEXT, prenom TEXT, 
+                fonction TEXT, salaire_base REAL, statut TEXT DEFAULT 'Actif'
+            )""",
+            """CREATE TABLE IF NOT EXISTS paie (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id_personnel INTEGER, mois_annee TEXT,
+                primes REAL DEFAULT 0, avances REAL DEFAULT 0,
+                retenues REAL DEFAULT 0, salaire_net REAL,
+                date_paiement TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (id_personnel) REFERENCES personnel(id)
+            )""",
+            """CREATE TABLE IF NOT EXISTS camions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                immatriculation TEXT UNIQUE, modele TEXT, capacite REAL
+            )""",
+            """CREATE TABLE IF NOT EXISTS trajets (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id_camion INTEGER, ville_depart TEXT, ville_arrivee TEXT,
+                distance REAL, carburant_consomme REAL, cout_trajet REAL,
+                date_trajet DATE DEFAULT CURRENT_DATE,
+                FOREIGN KEY (id_camion) REFERENCES camions(id)
+            )""",
+"""CREATE TABLE IF NOT EXISTS stock (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nom_article TEXT UNIQUE,
+    quantite REAL DEFAULT 0,
+    seuil_alerte REAL DEFAULT 10,
+    unite TEXT DEFAULT 'Unité'
+)""",
+"""CREATE TABLE IF NOT EXISTS agenda (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    titre TEXT NOT NULL,
+    description TEXT,
+    date_evenement DATE,
+    type_evenement TEXT, -- 'Maintenance', 'Réunion', 'Paie'
+    priorite TEXT DEFAULT 'Normale'
+)"""
+        ]
+        for q in queries:
+            try:
+                self.cursor.execute(q)
+            except sqlite3.Error as e:
+                print(f"Erreur SQL : {e}")
+        self.conn.commit()
+
+    def query(self, sql, params=()):
+        res = self.cursor.execute(sql, params)
+        self.conn.commit()
+        return res

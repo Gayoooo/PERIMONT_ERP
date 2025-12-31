@@ -1,0 +1,15 @@
+#!/usr/bin/env python3
+"""
+Script de _ufunc pour PERIMONT_ERP
+Module: venv.Lib.site-packages.numpy._typing._ufunc.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+from numpy import ufunc
+
+_UFunc_Nin1_Nout1 = ufunc
+_UFunc_Nin2_Nout1 = ufunc
+_UFunc_Nin1_Nout2 = ufunc
+_UFunc_Nin2_Nout2 = ufunc
+_GUFunc_Nin2_Nout1 = ufunc
+

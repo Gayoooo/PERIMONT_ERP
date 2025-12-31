@@ -1,0 +1,8 @@
+// Chemin: C:\PERIMONT_ERP\venv\Lib\site-packages\pip\_vendor\rich\themes.py
+
+from .default_styles import DEFAULT_STYLES
+from .theme import Theme
+
+
+DEFAULT = Theme(DEFAULT_STYLES)
+

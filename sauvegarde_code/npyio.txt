@@ -1,0 +1,4 @@
+// Chemin: C:\PERIMONT_ERP\venv\Lib\site-packages\numpy\lib\npyio.py
+
+from ._npyio_impl import DataSource, NpzFile, __doc__  # noqa: F401
+

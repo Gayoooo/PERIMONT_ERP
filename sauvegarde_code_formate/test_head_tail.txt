@@ -1,0 +1,16 @@
+#!/usr/bin/env python3
+"""
+Script de test_head_tail pour PERIMONT_ERP
+Module: venv.Lib.site-packages.pandas.tests.series.methods.test_head_tail.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+import pandas._testing as tm
+
+
+def test_head_tail(string_series):
+    tm.assert_series_equal(string_series.head(), string_series[:5])
+    tm.assert_series_equal(string_series.head(0), string_series[0:0])
+    tm.assert_series_equal(string_series.tail(), string_series[-5:])
+    tm.assert_series_equal(string_series.tail(0), string_series[0:0])
+

@@ -1,0 +1,2909 @@
+// Chemin: C:\PERIMONT_ERP\venv\Lib\site-packages\openpyxl\pivot\table.py C:\PERIMONT_ERP\venv\Lib\site-packages\openpyxl\styles\table.py C:\PERIMONT_ERP\venv\Lib\site-packages\openpyxl\worksheet\table.py C:\PERIMONT_ERP\venv\Lib\site-packages\pip\_vendor\rich\table.py C:\PERIMONT_ERP\venv\Lib\site-packages\reportlab\graphics\widgets\table.py
+
+# Copyright (c) 2010-2024 openpyxl
+
+
+from collections import defaultdict
+from openpyxl.descriptors.serialisable import Serialisable
+from openpyxl.descriptors import (
+    Typed,
+    Integer,
+    NoneSet,
+    Set,
+    Bool,
+    String,
+    Bool,
+    Sequence,
+)
+
+from openpyxl.descriptors.excel import ExtensionList, Relation
+from openpyxl.descriptors.sequence import NestedSequence
+from openpyxl.xml.constants import SHEET_MAIN_NS
+from openpyxl.xml.functions import tostring
+from openpyxl.packaging.relationship import (
+    RelationshipList,
+    Relationship,
+    get_rels_path
+)
+from .fields import Index
+
+from openpyxl.worksheet.filters import (
+    AutoFilter,
+)
+
+
+class HierarchyUsage(Serialisable):
+
+    tagname = "hierarchyUsage"
+
+    hierarchyUsage = Integer()
+
+    def __init__(self,
+                 hierarchyUsage=None,
+                ):
+        self.hierarchyUsage = hierarchyUsage
+
+
+class ColHierarchiesUsage(Serialisable):
+
+    tagname = "colHierarchiesUsage"
+
+    colHierarchyUsage = Sequence(expected_type=HierarchyUsage, )
+
+    __elements__ = ('colHierarchyUsage',)
+    __attrs__ = ('count', )
+
+    def __init__(self,
+                 count=None,
+                 colHierarchyUsage=(),
+                ):
+        self.colHierarchyUsage = colHierarchyUsage
+
+
+    @property
+    def count(self):
+        return len(self.colHierarchyUsage)
+
+
+class RowHierarchiesUsage(Serialisable):
+
+    tagname = "rowHierarchiesUsage"
+
+    rowHierarchyUsage = Sequence(expected_type=HierarchyUsage, )
+
+    __elements__ = ('rowHierarchyUsage',)
+    __attrs__ = ('count', )
+
+    def __init__(self,
+                 count=None,
+                 rowHierarchyUsage=(),
+                ):
+        self.rowHierarchyUsage = rowHierarchyUsage
+
+    @property
+    def count(self):
+        return len(self.rowHierarchyUsage)
+
+
+class PivotFilter(Serialisable):
+
+    tagname = "filter"
+
+    fld = Integer()
+    mpFld = Integer(allow_none=True)
+    type = Set(values=(['unknown', 'count', 'percent', 'sum', 'captionEqual',
+                        'captionNotEqual', 'captionBeginsWith', 'captionNotBeginsWith',
+                        'captionEndsWith', 'captionNotEndsWith', 'captionContains',
+                        'captionNotContains', 'captionGreaterThan', 'captionGreaterThanOrEqual',
+                        'captionLessThan', 'captionLessThanOrEqual', 'captionBetween',
+                        'captionNotBetween', 'valueEqual', 'valueNotEqual', 'valueGreaterThan',
+                        'valueGreaterThanOrEqual', 'valueLessThan', 'valueLessThanOrEqual',
+                        'valueBetween', 'valueNotBetween', 'dateEqual', 'dateNotEqual',
+                        'dateOlderThan', 'dateOlderThanOrEqual', 'dateNewerThan',
+                        'dateNewerThanOrEqual', 'dateBetween', 'dateNotBetween', 'tomorrow',
+                        'today', 'yesterday', 'nextWeek', 'thisWeek', 'lastWeek', 'nextMonth',
+                        'thisMonth', 'lastMonth', 'nextQuarter', 'thisQuarter', 'lastQuarter',
+                        'nextYear', 'thisYear', 'lastYear', 'yearToDate', 'Q1', 'Q2', 'Q3', 'Q4',
+                        'M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'M9', 'M10', 'M11',
+                        'M12']))
+    evalOrder = Integer(allow_none=True)
+    id = Integer()
+    iMeasureHier = Integer(allow_none=True)
+    iMeasureFld = Integer(allow_none=True)
+    name = String(allow_none=True)
+    description = String(allow_none=True)
+    stringValue1 = String(allow_none=True)
+    stringValue2 = String(allow_none=True)
+    autoFilter = Typed(expected_type=AutoFilter, )
+    extLst = Typed(expected_type=ExtensionList, allow_none=True)
+
+    __elements__ = ('autoFilter',)
+
+    def __init__(self,
+                 fld=None,
+                 mpFld=None,
+                 type=None,
+                 evalOrder=None,
+                 id=None,
+                 iMeasureHier=None,
+                 iMeasureFld=None,
+                 name=None,
+                 description=None,
+                 stringValue1=None,
+                 stringValue2=None,
+                 autoFilter=None,
+                 extLst=None,
+                ):
+        self.fld = fld
+        self.mpFld = mpFld
+        self.type = type
+        self.evalOrder = evalOrder
+        self.id = id
+        self.iMeasureHier = iMeasureHier
+        self.iMeasureFld = iMeasureFld
+        self.name = name
+        self.description = description
+        self.stringValue1 = stringValue1
+        self.stringValue2 = stringValue2
+        self.autoFilter = autoFilter
+
+
+class PivotFilters(Serialisable):
+
+    count = Integer()
+    filter = Typed(expected_type=PivotFilter, allow_none=True)
+
+    __elements__ = ('filter',)
+
+    def __init__(self,
+                 count=None,
+                 filter=None,
+                ):
+        self.filter = filter
+
+
+class PivotTableStyle(Serialisable):
+
+    tagname = "pivotTableStyleInfo"
+
+    name = String(allow_none=True)
+    showRowHeaders = Bool()
+    showColHeaders = Bool()
+    showRowStripes = Bool()
+    showColStripes = Bool()
+    showLastColumn = Bool()
+
+    def __init__(self,
+                 name=None,
+                 showRowHeaders=None,
+                 showColHeaders=None,
+                 showRowStripes=None,
+                 showColStripes=None,
+                 showLastColumn=None,
+                ):
+        self.name = name
+        self.showRowHeaders = showRowHeaders
+        self.showColHeaders = showColHeaders
+        self.showRowStripes = showRowStripes
+        self.showColStripes = showColStripes
+        self.showLastColumn = showLastColumn
+
+
+class MemberList(Serialisable):
+
+    tagname = "members"
+
+    level = Integer(allow_none=True)
+    member = NestedSequence(expected_type=String, attribute="name")
+
+    __elements__ = ('member',)
+
+    def __init__(self,
+                 count=None,
+                 level=None,
+                 member=(),
+                ):
+        self.level = level
+        self.member = member
+
+    @property
+    def count(self):
+        return len(self.member)
+
+
+class MemberProperty(Serialisable):
+
+    tagname = "mps"
+
+    name = String(allow_none=True)
+    showCell = Bool(allow_none=True)
+    showTip = Bool(allow_none=True)
+    showAsCaption = Bool(allow_none=True)
+    nameLen = Integer(allow_none=True)
+    pPos = Integer(allow_none=True)
+    pLen = Integer(allow_none=True)
+    level = Integer(allow_none=True)
+    field = Integer()
+
+    def __init__(self,
+                 name=None,
+                 showCell=None,
+                 showTip=None,
+                 showAsCaption=None,
+                 nameLen=None,
+                 pPos=None,
+                 pLen=None,
+                 level=None,
+                 field=None,
+                ):
+        self.name = name
+        self.showCell = showCell
+        self.showTip = showTip
+        self.showAsCaption = showAsCaption
+        self.nameLen = nameLen
+        self.pPos = pPos
+        self.pLen = pLen
+        self.level = level
+        self.field = field
+
+
+class PivotHierarchy(Serialisable):
+
+    tagname = "pivotHierarchy"
+
+    outline = Bool()
+    multipleItemSelectionAllowed = Bool()
+    subtotalTop = Bool()
+    showInFieldList = Bool()
+    dragToRow = Bool()
+    dragToCol = Bool()
+    dragToPage = Bool()
+    dragToData = Bool()
+    dragOff = Bool()
+    includeNewItemsInFilter = Bool()
+    caption = String(allow_none=True)
+    mps = NestedSequence(expected_type=MemberProperty, count=True)
+    members = Typed(expected_type=MemberList, allow_none=True)
+    extLst = Typed(expected_type=ExtensionList, allow_none=True)
+
+    __elements__ = ('mps', 'members',)
+
+    def __init__(self,
+                 outline=None,
+                 multipleItemSelectionAllowed=None,
+                 subtotalTop=None,
+                 showInFieldList=None,
+                 dragToRow=None,
+                 dragToCol=None,
+                 dragToPage=None,
+                 dragToData=None,
+                 dragOff=None,
+                 includeNewItemsInFilter=None,
+                 caption=None,
+                 mps=(),
+                 members=None,
+                 extLst=None,
+                ):
+        self.outline = outline
+        self.multipleItemSelectionAllowed = multipleItemSelectionAllowed
+        self.subtotalTop = subtotalTop
+        self.showInFieldList = showInFieldList
+        self.dragToRow = dragToRow
+        self.dragToCol = dragToCol
+        self.dragToPage = dragToPage
+        self.dragToData = dragToData
+        self.dragOff = dragOff
+        self.includeNewItemsInFilter = includeNewItemsInFilter
+        self.caption = caption
+        self.mps = mps
+        self.members = members
+        self.extLst = extLst
+
+
+class Reference(Serialisable):
+
+    tagname = "reference"
+
+    field = Integer(allow_none=True)
+    selected = Bool(allow_none=True)
+    byPosition = Bool(allow_none=True)
+    relative = Bool(allow_none=True)
+    defaultSubtotal = Bool(allow_none=True)
+    sumSubtotal = Bool(allow_none=True)
+    countASubtotal = Bool(allow_none=True)
+    avgSubtotal = Bool(allow_none=True)
+    maxSubtotal = Bool(allow_none=True)
+    minSubtotal = Bool(allow_none=True)
+    productSubtotal = Bool(allow_none=True)
+    countSubtotal = Bool(allow_none=True)
+    stdDevSubtotal = Bool(allow_none=True)
+    stdDevPSubtotal = Bool(allow_none=True)
+    varSubtotal = Bool(allow_none=True)
+    varPSubtotal = Bool(allow_none=True)
+    x = Sequence(expected_type=Index)
+    extLst = Typed(expected_type=ExtensionList, allow_none=True)
+
+    __elements__ = ('x',)
+
+    def __init__(self,
+                 field=None,
+                 count=None,
+                 selected=None,
+                 byPosition=None,
+                 relative=None,
+                 defaultSubtotal=None,
+                 sumSubtotal=None,
+                 countASubtotal=None,
+                 avgSubtotal=None,
+                 maxSubtotal=None,
+                 minSubtotal=None,
+                 productSubtotal=None,
+                 countSubtotal=None,
+                 stdDevSubtotal=None,
+                 stdDevPSubtotal=None,
+                 varSubtotal=None,
+                 varPSubtotal=None,
+                 x=(),
+                 extLst=None,
+                ):
+        self.field = field
+        self.selected = selected
+        self.byPosition = byPosition
+        self.relative = relative
+        self.defaultSubtotal = defaultSubtotal
+        self.sumSubtotal = sumSubtotal
+        self.countASubtotal = countASubtotal
+        self.avgSubtotal = avgSubtotal
+        self.maxSubtotal = maxSubtotal
+        self.minSubtotal = minSubtotal
+        self.productSubtotal = productSubtotal
+        self.countSubtotal = countSubtotal
+        self.stdDevSubtotal = stdDevSubtotal
+        self.stdDevPSubtotal = stdDevPSubtotal
+        self.varSubtotal = varSubtotal
+        self.varPSubtotal = varPSubtotal
+        self.x = x
+
+
+    @property
+    def count(self):
+        return len(self.field)
+
+
+class PivotArea(Serialisable):
+
+    tagname = "pivotArea"
+
+    references = NestedSequence(expected_type=Reference, count=True)
+    extLst = Typed(expected_type=ExtensionList, allow_none=True)
+    field = Integer(allow_none=True)
+    type = NoneSet(values=(['normal', 'data', 'all', 'origin', 'button',
+                            'topEnd', 'topRight']))
+    dataOnly = Bool(allow_none=True)
+    labelOnly = Bool(allow_none=True)
+    grandRow = Bool(allow_none=True)
+    grandCol = Bool(allow_none=True)
+    cacheIndex = Bool(allow_none=True)
+    outline = Bool(allow_none=True)
+    offset = String(allow_none=True)
+    collapsedLevelsAreSubtotals = Bool(allow_none=True)
+    axis = NoneSet(values=(['axisRow', 'axisCol', 'axisPage', 'axisValues']))
+    fieldPosition = Integer(allow_none=True)
+
+    __elements__ = ('references',)
+
+    def __init__(self,
+                 references=(),
+                 extLst=None,
+                 field=None,
+                 type="normal",
+                 dataOnly=True,
+                 labelOnly=None,
+                 grandRow=None,
+                 grandCol=None,
+                 cacheIndex=None,
+                 outline=True,
+                 offset=None,
+                 collapsedLevelsAreSubtotals=None,
+                 axis=None,
+                 fieldPosition=None,
+                ):
+        self.references = references
+        self.extLst = extLst
+        self.field = field
+        self.type = type
+        self.dataOnly = dataOnly
+        self.labelOnly = labelOnly
+        self.grandRow = grandRow
+        self.grandCol = grandCol
+        self.cacheIndex = cacheIndex
+        self.outline = outline
+        self.offset = offset
+        self.collapsedLevelsAreSubtotals = collapsedLevelsAreSubtotals
+        self.axis = axis
+        self.fieldPosition = fieldPosition
+
+
+class ChartFormat(Serialisable):
+
+    tagname = "chartFormat"
+
+    chart = Integer()
+    format = Integer()
+    series = Bool()
+    pivotArea = Typed(expected_type=PivotArea, )
+
+    __elements__ = ('pivotArea',)
+
+    def __init__(self,
+                 chart=None,
+                 format=None,
+                 series=None,
+                 pivotArea=None,
+                ):
+        self.chart = chart
+        self.format = format
+        self.series = series
+        self.pivotArea = pivotArea
+
+
+class ConditionalFormat(Serialisable):
+
+    tagname = "conditionalFormat"
+
+    scope = Set(values=(['selection', 'data', 'field']))
+    type = NoneSet(values=(['all', 'row', 'column']))
+    priority = Integer()
+    pivotAreas = NestedSequence(expected_type=PivotArea)
+    extLst = Typed(expected_type=ExtensionList, allow_none=True)
+
+    __elements__ = ('pivotAreas',)
+
+    def __init__(self,
+                 scope="selection",
+                 type=None,
+                 priority=None,
+                 pivotAreas=(),
+                 extLst=None,
+                ):
+        self.scope = scope
+        self.type = type
+        self.priority = priority
+        self.pivotAreas = pivotAreas
+        self.extLst = extLst
+
+
+class ConditionalFormatList(Serialisable):
+
+    tagname = "conditionalFormats"
+
+    conditionalFormat = Sequence(expected_type=ConditionalFormat)
+
+    __attrs__ = ("count",)
+
+    def __init__(self, conditionalFormat=(), count=None):
+        self.conditionalFormat = conditionalFormat
+
+
+    def by_priority(self):
+        """
+        Return a dictionary of format objects keyed by (field id and format property).
+        This can be used to map the formats to field but also to dedupe to match
+        worksheet definitions which are grouped by cell range
+        """
+
+        fmts = {}
+        for fmt in self.conditionalFormat:
+            for area in fmt.pivotAreas:
+                for ref in area.references:
+                    for field in ref.x:
+                        key = (field.v, fmt.priority)
+                        fmts[key] = fmt
+
+        return fmts
+
+
+    def _dedupe(self):
+        """
+        Group formats by field index and priority.
+        Sorted to match sorting and grouping for corresponding worksheet formats
+
+        The implemtenters notes contain significant deviance from the OOXML
+        specification, in particular how conditional formats in tables relate to
+        those defined in corresponding worksheets and how to determine which
+        format applies to which fields.
+
+        There are some magical interdependencies:
+
+        * Every pivot table fmt must have a worksheet cxf with the same priority.
+
+        * In the reference part the field 4294967294 refers to a data field, the
+        spec says -2
+
+        * Data fields are referenced by the 0-index reference.x.v value
+
+        Things are made more complicated by the fact that field items behave
+        diffently if the parent is a reference or shared item: "In Office if the
+        parent is the reference element, then restrictions of this value are
+        defined by reference@field. If the parent is the tables element, then
+        this value specifies the index into the table tag position in @url."
+        Yeah, right!
+        """
+        fmts = self.by_priority()
+        # sort by priority in order, keeping the highest numerical priority, least when
+        # actually applied
+        # this is not documented but it's what Excel is happy with
+        fmts = {field:fmt for (field, priority), fmt in sorted(fmts.items(), reverse=True)}
+        #fmts = {field:fmt for (field, priority), fmt in fmts.items()}
+        if fmts:
+            self.conditionalFormat = list(fmts.values())
+
+
+    @property
+    def count(self):
+        return len(self.conditionalFormat)
+
+
+    def to_tree(self, tagname=None):
+        self._dedupe()
+        return super().to_tree(tagname)
+
+
+class Format(Serialisable):
+
+    tagname = "format"
+
+    action = NoneSet(values=(['blank', 'formatting', 'drill', 'formula']))
+    dxfId = Integer(allow_none=True)
+    pivotArea = Typed(expected_type=PivotArea, )
+    extLst = Typed(expected_type=ExtensionList, allow_none=True)
+
+    __elements__ = ('pivotArea',)
+
+    def __init__(self,
+                 action="formatting",
+                 dxfId=None,
+                 pivotArea=None,
+                 extLst=None,
+                ):
+        self.action = action
+        self.dxfId = dxfId
+        self.pivotArea = pivotArea
+        self.extLst = extLst
+
+
+class DataField(Serialisable):
+
+    tagname = "dataField"
+
+    name = String(allow_none=True)
+    fld = Integer()
+    subtotal = Set(values=(['average', 'count', 'countNums', 'max', 'min',
+                            'product', 'stdDev', 'stdDevp', 'sum', 'var', 'varp']))
+    showDataAs = Set(values=(['normal', 'difference', 'percent',
+                              'percentDiff', 'runTotal', 'percentOfRow', 'percentOfCol',
+                              'percentOfTotal', 'index']))
+    baseField = Integer()
+    baseItem = Integer()
+    numFmtId = Integer(allow_none=True)
+    extLst = Typed(expected_type=ExtensionList, allow_none=True)
+
+    __elements__ = ()
+
+
+    def __init__(self,
+                 name=None,
+                 fld=None,
+                 subtotal="sum",
+                 showDataAs="normal",
+                 baseField=-1,
+                 baseItem=1048832,
+                 numFmtId=None,
+                 extLst=None,
+                ):
+        self.name = name
+        self.fld = fld
+        self.subtotal = subtotal
+        self.showDataAs = showDataAs
+        self.baseField = baseField
+        self.baseItem = baseItem
+        self.numFmtId = numFmtId
+        self.extLst = extLst
+
+
+class PageField(Serialisable):
+
+    tagname = "pageField"
+
+    fld = Integer()
+    item = Integer(allow_none=True)
+    hier = Integer(allow_none=True)
+    name = String(allow_none=True)
+    cap = String(allow_none=True)
+    extLst = Typed(expected_type=ExtensionList, allow_none=True)
+
+    __elements__ = ()
+
+    def __init__(self,
+                 fld=None,
+                 item=None,
+                 hier=None,
+                 name=None,
+                 cap=None,
+                 extLst=None,
+                ):
+        self.fld = fld
+        self.item = item
+        self.hier = hier
+        self.name = name
+        self.cap = cap
+        self.extLst = extLst
+
+
+class RowColItem(Serialisable):
+
+    tagname = "i"
+
+    t = Set(values=(['data', 'default', 'sum', 'countA', 'avg', 'max', 'min',
+                     'product', 'count', 'stdDev', 'stdDevP', 'var', 'varP', 'grand',
+                     'blank']))
+    r = Integer()
+    i = Integer()
+    x = Sequence(expected_type=Index, attribute="v")
+
+    __elements__ = ('x',)
+
+    def __init__(self,
+                 t="data",
+                 r=0,
+                 i=0,
+                 x=(),
+                ):
+        self.t = t
+        self.r = r
+        self.i = i
+        self.x = x
+
+
+class RowColField(Serialisable):
+
+    tagname = "field"
+
+    x = Integer()
+
+    def __init__(self,
+                 x=None,
+                ):
+        self.x = x
+
+
+class AutoSortScope(Serialisable):
+
+    pivotArea = Typed(expected_type=PivotArea, )
+
+    __elements__ = ('pivotArea',)
+
+    def __init__(self,
+                 pivotArea=None,
+                ):
+        self.pivotArea = pivotArea
+
+
+class FieldItem(Serialisable):
+
+    tagname = "item"
+
+    n = String(allow_none=True)
+    t = Set(values=(['data', 'default', 'sum', 'countA', 'avg', 'max', 'min',
+                     'product', 'count', 'stdDev', 'stdDevP', 'var', 'varP', 'grand',
+                     'blank']))
+    h = Bool(allow_none=True)
+    s = Bool(allow_none=True)
+    sd = Bool(allow_none=True)
+    f = Bool(allow_none=True)
+    m = Bool(allow_none=True)
+    c = Bool(allow_none=True)
+    x = Integer(allow_none=True)
+    d = Bool(allow_none=True)
+    e = Bool(allow_none=True)
+
+    def __init__(self,
+                 n=None,
+                 t="data",
+                 h=None,
+                 s=None,
+                 sd=True,
+                 f=None,
+                 m=None,
+                 c=None,
+                 x=None,
+                 d=None,
+                 e=None,
+                ):
+        self.n = n
+        self.t = t
+        self.h = h
+        self.s = s
+        self.sd = sd
+        self.f = f
+        self.m = m
+        self.c = c
+        self.x = x
+        self.d = d
+        self.e = e
+
+
+class PivotField(Serialisable):
+
+    tagname = "pivotField"
+
+    items = NestedSequence(expected_type=FieldItem, count=True)
+    autoSortScope = Typed(expected_type=AutoSortScope, allow_none=True)
+    extLst = Typed(expected_type=ExtensionList, allow_none=True)
+    name = String(allow_none=True)
+    axis = NoneSet(values=(['axisRow', 'axisCol', 'axisPage', 'axisValues']))
+    dataField = Bool(allow_none=True)
+    subtotalCaption = String(allow_none=True)
+    showDropDowns = Bool(allow_none=True)
+    hiddenLevel = Bool(allow_none=True)
+    uniqueMemberProperty = String(allow_none=True)
+    compact = Bool(allow_none=True)
+    allDrilled = Bool(allow_none=True)
+    numFmtId = Integer(allow_none=True)
+    outline = Bool(allow_none=True)
+    subtotalTop = Bool(allow_none=True)
+    dragToRow = Bool(allow_none=True)
+    dragToCol = Bool(allow_none=True)
+    multipleItemSelectionAllowed = Bool(allow_none=True)
+    dragToPage = Bool(allow_none=True)
+    dragToData = Bool(allow_none=True)
+    dragOff = Bool(allow_none=True)
+    showAll = Bool(allow_none=True)
+    insertBlankRow = Bool(allow_none=True)
+    serverField = Bool(allow_none=True)
+    insertPageBreak = Bool(allow_none=True)
+    autoShow = Bool(allow_none=True)
+    topAutoShow = Bool(allow_none=True)
+    hideNewItems = Bool(allow_none=True)
+    measureFilter = Bool(allow_none=True)
+    includeNewItemsInFilter = Bool(allow_none=True)
+    itemPageCount = Integer(allow_none=True)
+    sortType = Set(values=(['manual', 'ascending', 'descending']))
+    dataSourceSort = Bool(allow_none=True)
+    nonAutoSortDefault = Bool(allow_none=True)
+    rankBy = Integer(allow_none=True)
+    defaultSubtotal = Bool(allow_none=True)
+    sumSubtotal = Bool(allow_none=True)
+    countASubtotal = Bool(allow_none=True)
+    avgSubtotal = Bool(allow_none=True)
+    maxSubtotal = Bool(allow_none=True)
+    minSubtotal = Bool(allow_none=True)
+    productSubtotal = Bool(allow_none=True)
+    countSubtotal = Bool(allow_none=True)
+    stdDevSubtotal = Bool(allow_none=True)
+    stdDevPSubtotal = Bool(allow_none=True)
+    varSubtotal = Bool(allow_none=True)
+    varPSubtotal = Bool(allow_none=True)
+    showPropCell = Bool(allow_none=True)
+    showPropTip = Bool(allow_none=True)
+    showPropAsCaption = Bool(allow_none=True)
+    defaultAttributeDrillState = Bool(allow_none=True)
+
+    __elements__ = ('items', 'autoSortScope',)
+
+    def __init__(self,
+                 items=(),
+                 autoSortScope=None,
+                 name=None,
+                 axis=None,
+                 dataField=None,
+                 subtotalCaption=None,
+                 showDropDowns=True,
+                 hiddenLevel=None,
+                 uniqueMemberProperty=None,
+                 compact=True,
+                 allDrilled=None,
+                 numFmtId=None,
+                 outline=True,
+                 subtotalTop=True,
+                 dragToRow=True,
+                 dragToCol=True,
+                 multipleItemSelectionAllowed=None,
+                 dragToPage=True,
+                 dragToData=True,
+                 dragOff=True,
+                 showAll=True,
+                 insertBlankRow=None,
+                 serverField=None,
+                 insertPageBreak=None,
+                 autoShow=None,
+                 topAutoShow=True,
+                 hideNewItems=None,
+                 measureFilter=None,
+                 includeNewItemsInFilter=None,
+                 itemPageCount=10,
+                 sortType="manual",
+                 dataSourceSort=None,
+                 nonAutoSortDefault=None,
+                 rankBy=None,
+                 defaultSubtotal=True,
+                 sumSubtotal=None,
+                 countASubtotal=None,
+                 avgSubtotal=None,
+                 maxSubtotal=None,
+                 minSubtotal=None,
+                 productSubtotal=None,
+                 countSubtotal=None,
+                 stdDevSubtotal=None,
+                 stdDevPSubtotal=None,
+                 varSubtotal=None,
+                 varPSubtotal=None,
+                 showPropCell=None,
+                 showPropTip=None,
+                 showPropAsCaption=None,
+                 defaultAttributeDrillState=None,
+                 extLst=None,
+                ):
+        self.items = items
+        self.autoSortScope = autoSortScope
+        self.name = name
+        self.axis = axis
+        self.dataField = dataField
+        self.subtotalCaption = subtotalCaption
+        self.showDropDowns = showDropDowns
+        self.hiddenLevel = hiddenLevel
+        self.uniqueMemberProperty = uniqueMemberProperty
+        self.compact = compact
+        self.allDrilled = allDrilled
+        self.numFmtId = numFmtId
+        self.outline = outline
+        self.subtotalTop = subtotalTop
+        self.dragToRow = dragToRow
+        self.dragToCol = dragToCol
+        self.multipleItemSelectionAllowed = multipleItemSelectionAllowed
+        self.dragToPage = dragToPage
+        self.dragToData = dragToData
+        self.dragOff = dragOff
+        self.showAll = showAll
+        self.insertBlankRow = insertBlankRow
+        self.serverField = serverField
+        self.insertPageBreak = insertPageBreak
+        self.autoShow = autoShow
+        self.topAutoShow = topAutoShow
+        self.hideNewItems = hideNewItems
+        self.measureFilter = measureFilter
+        self.includeNewItemsInFilter = includeNewItemsInFilter
+        self.itemPageCount = itemPageCount
+        self.sortType = sortType
+        self.dataSourceSort = dataSourceSort
+        self.nonAutoSortDefault = nonAutoSortDefault
+        self.rankBy = rankBy
+        self.defaultSubtotal = defaultSubtotal
+        self.sumSubtotal = sumSubtotal
+        self.countASubtotal = countASubtotal
+        self.avgSubtotal = avgSubtotal
+        self.maxSubtotal = maxSubtotal
+        self.minSubtotal = minSubtotal
+        self.productSubtotal = productSubtotal
+        self.countSubtotal = countSubtotal
+        self.stdDevSubtotal = stdDevSubtotal
+        self.stdDevPSubtotal = stdDevPSubtotal
+        self.varSubtotal = varSubtotal
+        self.varPSubtotal = varPSubtotal
+        self.showPropCell = showPropCell
+        self.showPropTip = showPropTip
+        self.showPropAsCaption = showPropAsCaption
+        self.defaultAttributeDrillState = defaultAttributeDrillState
+
+
+class Location(Serialisable):
+
+    tagname = "location"
+
+    ref = String()
+    firstHeaderRow = Integer()
+    firstDataRow = Integer()
+    firstDataCol = Integer()
+    rowPageCount = Integer(allow_none=True)
+    colPageCount = Integer(allow_none=True)
+
+    def __init__(self,
+                 ref=None,
+                 firstHeaderRow=None,
+                 firstDataRow=None,
+                 firstDataCol=None,
+                 rowPageCount=None,
+                 colPageCount=None,
+                ):
+        self.ref = ref
+        self.firstHeaderRow = firstHeaderRow
+        self.firstDataRow = firstDataRow
+        self.firstDataCol = firstDataCol
+        self.rowPageCount = rowPageCount
+        self.colPageCount = colPageCount
+
+
+class TableDefinition(Serialisable):
+
+    mime_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.pivotTable+xml"
+    rel_type = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/pivotTable"
+    _id = 1
+    _path = "/xl/pivotTables/pivotTable{0}.xml"
+
+    tagname = "pivotTableDefinition"
+    cache = None
+
+    name = String()
+    cacheId = Integer()
+    dataOnRows = Bool()
+    dataPosition = Integer(allow_none=True)
+    dataCaption = String()
+    grandTotalCaption = String(allow_none=True)
+    errorCaption = String(allow_none=True)
+    showError = Bool()
+    missingCaption = String(allow_none=True)
+    showMissing = Bool()
+    pageStyle = String(allow_none=True)
+    pivotTableStyle = String(allow_none=True)
+    vacatedStyle = String(allow_none=True)
+    tag = String(allow_none=True)
+    updatedVersion = Integer()
+    minRefreshableVersion = Integer()
+    asteriskTotals = Bool()
+    showItems = Bool()
+    editData = Bool()
+    disableFieldList = Bool()
+    showCalcMbrs = Bool()
+    visualTotals = Bool()
+    showMultipleLabel = Bool()
+    showDataDropDown = Bool()
+    showDrill = Bool()
+    printDrill = Bool()
+    showMemberPropertyTips = Bool()
+    showDataTips = Bool()
+    enableWizard = Bool()
+    enableDrill = Bool()
+    enableFieldProperties = Bool()
+    preserveFormatting = Bool()
+    useAutoFormatting = Bool()
+    pageWrap = Integer()
+    pageOverThenDown = Bool()
+    subtotalHiddenItems = Bool()
+    rowGrandTotals = Bool()
+    colGrandTotals = Bool()
+    fieldPrintTitles = Bool()
+    itemPrintTitles = Bool()
+    mergeItem = Bool()
+    showDropZones = Bool()
+    createdVersion = Integer()
+    indent = Integer()
+    showEmptyRow = Bool()
+    showEmptyCol = Bool()
+    showHeaders = Bool()
+    compact = Bool()
+    outline = Bool()
+    outlineData = Bool()
+    compactData = Bool()
+    published = Bool()
+    gridDropZones = Bool()
+    immersive = Bool()
+    multipleFieldFilters = Bool()
+    chartFormat = Integer()
+    rowHeaderCaption = String(allow_none=True)
+    colHeaderCaption = String(allow_none=True)
+    fieldListSortAscending = Bool()
+    mdxSubqueries = Bool()
+    customListSort = Bool(allow_none=True)
+    autoFormatId = Integer(allow_none=True)
+    applyNumberFormats = Bool()
+    applyBorderFormats = Bool()
+    applyFontFormats = Bool()
+    applyPatternFormats = Bool()
+    applyAlignmentFormats = Bool()
+    applyWidthHeightFormats = Bool()
+    location = Typed(expected_type=Location, )
+    pivotFields = NestedSequence(expected_type=PivotField, count=True)
+    rowFields = NestedSequence(expected_type=RowColField, count=True)
+    rowItems = NestedSequence(expected_type=RowColItem, count=True)
+    colFields = NestedSequence(expected_type=RowColField, count=True)
+    colItems = NestedSequence(expected_type=RowColItem, count=True)
+    pageFields = NestedSequence(expected_type=PageField, count=True)
+    dataFields = NestedSequence(expected_type=DataField, count=True)
+    formats = NestedSequence(expected_type=Format, count=True)
+    conditionalFormats = Typed(expected_type=ConditionalFormatList, allow_none=True)
+    chartFormats = NestedSequence(expected_type=ChartFormat, count=True)
+    pivotHierarchies = NestedSequence(expected_type=PivotHierarchy, count=True)
+    pivotTableStyleInfo = Typed(expected_type=PivotTableStyle, allow_none=True)
+    filters = NestedSequence(expected_type=PivotFilter, count=True)
+    rowHierarchiesUsage = Typed(expected_type=RowHierarchiesUsage, allow_none=True)
+    colHierarchiesUsage = Typed(expected_type=ColHierarchiesUsage, allow_none=True)
+    extLst = Typed(expected_type=ExtensionList, allow_none=True)
+    id = Relation()
+
+    __elements__ = ('location', 'pivotFields', 'rowFields', 'rowItems',
+                    'colFields', 'colItems', 'pageFields', 'dataFields', 'formats',
+                    'conditionalFormats', 'chartFormats', 'pivotHierarchies',
+                    'pivotTableStyleInfo', 'filters', 'rowHierarchiesUsage',
+                    'colHierarchiesUsage',)
+
+    def __init__(self,
+                 name=None,
+                 cacheId=None,
+                 dataOnRows=False,
+                 dataPosition=None,
+                 dataCaption=None,
+                 grandTotalCaption=None,
+                 errorCaption=None,
+                 showError=False,
+                 missingCaption=None,
+                 showMissing=True,
+                 pageStyle=None,
+                 pivotTableStyle=None,
+                 vacatedStyle=None,
+                 tag=None,
+                 updatedVersion=0,
+                 minRefreshableVersion=0,
+                 asteriskTotals=False,
+                 showItems=True,
+                 editData=False,
+                 disableFieldList=False,
+                 showCalcMbrs=True,
+                 visualTotals=True,
+                 showMultipleLabel=True,
+                 showDataDropDown=True,
+                 showDrill=True,
+                 printDrill=False,
+                 showMemberPropertyTips=True,
+                 showDataTips=True,
+                 enableWizard=True,
+                 enableDrill=True,
+                 enableFieldProperties=True,
+                 preserveFormatting=True,
+                 useAutoFormatting=False,
+                 pageWrap=0,
+                 pageOverThenDown=False,
+                 subtotalHiddenItems=False,
+                 rowGrandTotals=True,
+                 colGrandTotals=True,
+                 fieldPrintTitles=False,
+                 itemPrintTitles=False,
+                 mergeItem=False,
+                 showDropZones=True,
+                 createdVersion=0,
+                 indent=1,
+                 showEmptyRow=False,
+                 showEmptyCol=False,
+                 showHeaders=True,
+                 compact=True,
+                 outline=False,
+                 outlineData=False,
+                 compactData=True,
+                 published=False,
+                 gridDropZones=False,
+                 immersive=True,
+                 multipleFieldFilters=None,
+                 chartFormat=0,
+                 rowHeaderCaption=None,
+                 colHeaderCaption=None,
+                 fieldListSortAscending=None,
+                 mdxSubqueries=None,
+                 customListSort=None,
+                 autoFormatId=None,
+                 applyNumberFormats=False,
+                 applyBorderFormats=False,
+                 applyFontFormats=False,
+                 applyPatternFormats=False,
+                 applyAlignmentFormats=False,
+                 applyWidthHeightFormats=False,
+                 location=None,
+                 pivotFields=(),
+                 rowFields=(),
+                 rowItems=(),
+                 colFields=(),
+                 colItems=(),
+                 pageFields=(),
+                 dataFields=(),
+                 formats=(),
+                 conditionalFormats=None,
+                 chartFormats=(),
+                 pivotHierarchies=(),
+                 pivotTableStyleInfo=None,
+                 filters=(),
+                 rowHierarchiesUsage=None,
+                 colHierarchiesUsage=None,
+                 extLst=None,
+                 id=None,
+                ):
+        self.name = name
+        self.cacheId = cacheId
+        self.dataOnRows = dataOnRows
+        self.dataPosition = dataPosition
+        self.dataCaption = dataCaption
+        self.grandTotalCaption = grandTotalCaption
+        self.errorCaption = errorCaption
+        self.showError = showError
+        self.missingCaption = missingCaption
+        self.showMissing = showMissing
+        self.pageStyle = pageStyle
+        self.pivotTableStyle = pivotTableStyle
+        self.vacatedStyle = vacatedStyle
+        self.tag = tag
+        self.updatedVersion = updatedVersion
+        self.minRefreshableVersion = minRefreshableVersion
+        self.asteriskTotals = asteriskTotals
+        self.showItems = showItems
+        self.editData = editData
+        self.disableFieldList = disableFieldList
+        self.showCalcMbrs = showCalcMbrs
+        self.visualTotals = visualTotals
+        self.showMultipleLabel = showMultipleLabel
+        self.showDataDropDown = showDataDropDown
+        self.showDrill = showDrill
+        self.printDrill = printDrill
+        self.showMemberPropertyTips = showMemberPropertyTips
+        self.showDataTips = showDataTips
+        self.enableWizard = enableWizard
+        self.enableDrill = enableDrill
+        self.enableFieldProperties = enableFieldProperties
+        self.preserveFormatting = preserveFormatting
+        self.useAutoFormatting = useAutoFormatting
+        self.pageWrap = pageWrap
+        self.pageOverThenDown = pageOverThenDown
+        self.subtotalHiddenItems = subtotalHiddenItems
+        self.rowGrandTotals = rowGrandTotals
+        self.colGrandTotals = colGrandTotals
+        self.fieldPrintTitles = fieldPrintTitles
+        self.itemPrintTitles = itemPrintTitles
+        self.mergeItem = mergeItem
+        self.showDropZones = showDropZones
+        self.createdVersion = createdVersion
+        self.indent = indent
+        self.showEmptyRow = showEmptyRow
+        self.showEmptyCol = showEmptyCol
+        self.showHeaders = showHeaders
+        self.compact = compact
+        self.outline = outline
+        self.outlineData = outlineData
+        self.compactData = compactData
+        self.published = published
+        self.gridDropZones = gridDropZones
+        self.immersive = immersive
+        self.multipleFieldFilters = multipleFieldFilters
+        self.chartFormat = chartFormat
+        self.rowHeaderCaption = rowHeaderCaption
+        self.colHeaderCaption = colHeaderCaption
+        self.fieldListSortAscending = fieldListSortAscending
+        self.mdxSubqueries = mdxSubqueries
+        self.customListSort = customListSort
+        self.autoFormatId = autoFormatId
+        self.applyNumberFormats = applyNumberFormats
+        self.applyBorderFormats = applyBorderFormats
+        self.applyFontFormats = applyFontFormats
+        self.applyPatternFormats = applyPatternFormats
+        self.applyAlignmentFormats = applyAlignmentFormats
+        self.applyWidthHeightFormats = applyWidthHeightFormats
+        self.location = location
+        self.pivotFields = pivotFields
+        self.rowFields = rowFields
+        self.rowItems = rowItems
+        self.colFields = colFields
+        self.colItems = colItems
+        self.pageFields = pageFields
+        self.dataFields = dataFields
+        self.formats = formats
+        self.conditionalFormats = conditionalFormats
+        self.conditionalFormats = None
+        self.chartFormats = chartFormats
+        self.pivotHierarchies = pivotHierarchies
+        self.pivotTableStyleInfo = pivotTableStyleInfo
+        self.filters = filters
+        self.rowHierarchiesUsage = rowHierarchiesUsage
+        self.colHierarchiesUsage = colHierarchiesUsage
+        self.extLst = extLst
+        self.id = id
+
+
+    def to_tree(self):
+        tree = super().to_tree()
+        tree.set("xmlns", SHEET_MAIN_NS)
+        return tree
+
+
+    @property
+    def path(self):
+        return self._path.format(self._id)
+
+
+    def _write(self, archive, manifest):
+        """
+        Add to zipfile and update manifest
+        """
+        self._write_rels(archive, manifest)
+        xml = tostring(self.to_tree())
+        archive.writestr(self.path[1:], xml)
+        manifest.append(self)
+
+
+    def _write_rels(self, archive, manifest):
+        """
+        Write the relevant child objects and add links
+        """
+        if self.cache is None:
+            return
+
+        rels = RelationshipList()
+        r = Relationship(Type=self.cache.rel_type, Target=self.cache.path)
+        rels.append(r)
+        self.id = r.id
+        if self.cache.path[1:] not in archive.namelist():
+            self.cache._write(archive, manifest)
+
+        path = get_rels_path(self.path)
+        xml = tostring(rels.to_tree())
+        archive.writestr(path[1:], xml)
+
+
+    def formatted_fields(self):
+        """Map fields to associated conditional formats by priority"""
+        if not self.conditionalFormats:
+            return {}
+        fields = defaultdict(list)
+        for idx, prio in self.conditionalFormats.by_priority():
+            name = self.dataFields[idx].name
+            fields[name].append(prio)
+        return fields
+
+
+    @property
+    def summary(self):
+        """
+        Provide a simplified summary of the table
+        """
+
+        return f"{self.name} {dict(self.location)}"
+ # Copyright (c) 2010-2024 openpyxl
+
+from openpyxl.descriptors.serialisable import Serialisable
+from openpyxl.descriptors import (
+    Typed,
+    Float,
+    Bool,
+    Set,
+    Integer,
+    NoneSet,
+    String,
+    Sequence
+)
+
+from .colors import Color
+
+
+class TableStyleElement(Serialisable):
+
+    tagname = "tableStyleElement"
+
+    type = Set(values=(['wholeTable', 'headerRow', 'totalRow', 'firstColumn',
+                        'lastColumn', 'firstRowStripe', 'secondRowStripe', 'firstColumnStripe',
+                        'secondColumnStripe', 'firstHeaderCell', 'lastHeaderCell',
+                        'firstTotalCell', 'lastTotalCell', 'firstSubtotalColumn',
+                        'secondSubtotalColumn', 'thirdSubtotalColumn', 'firstSubtotalRow',
+                        'secondSubtotalRow', 'thirdSubtotalRow', 'blankRow',
+                        'firstColumnSubheading', 'secondColumnSubheading',
+                        'thirdColumnSubheading', 'firstRowSubheading', 'secondRowSubheading',
+                        'thirdRowSubheading', 'pageFieldLabels', 'pageFieldValues']))
+    size = Integer(allow_none=True)
+    dxfId = Integer(allow_none=True)
+
+    def __init__(self,
+                 type=None,
+                 size=None,
+                 dxfId=None,
+                ):
+        self.type = type
+        self.size = size
+        self.dxfId = dxfId
+
+
+class TableStyle(Serialisable):
+
+    tagname = "tableStyle"
+
+    name = String()
+    pivot = Bool(allow_none=True)
+    table = Bool(allow_none=True)
+    count = Integer(allow_none=True)
+    tableStyleElement = Sequence(expected_type=TableStyleElement, allow_none=True)
+
+    __elements__ = ('tableStyleElement',)
+
+    def __init__(self,
+                 name=None,
+                 pivot=None,
+                 table=None,
+                 count=None,
+                 tableStyleElement=(),
+                ):
+        self.name = name
+        self.pivot = pivot
+        self.table = table
+        self.count = count
+        self.tableStyleElement = tableStyleElement
+
+
+class TableStyleList(Serialisable):
+
+    tagname = "tableStyles"
+
+    defaultTableStyle = String(allow_none=True)
+    defaultPivotStyle = String(allow_none=True)
+    tableStyle = Sequence(expected_type=TableStyle, allow_none=True)
+
+    __elements__ = ('tableStyle',)
+    __attrs__ = ("count", "defaultTableStyle", "defaultPivotStyle")
+
+    def __init__(self,
+                 count=None,
+                 defaultTableStyle="TableStyleMedium9",
+                 defaultPivotStyle="PivotStyleLight16",
+                 tableStyle=(),
+                ):
+        self.defaultTableStyle = defaultTableStyle
+        self.defaultPivotStyle = defaultPivotStyle
+        self.tableStyle = tableStyle
+
+
+    @property
+    def count(self):
+        return len(self.tableStyle)
+ # Copyright (c) 2010-2024 openpyxl
+
+from openpyxl.descriptors.serialisable import Serialisable
+from openpyxl.descriptors import (
+    Descriptor,
+    Alias,
+    Typed,
+    Bool,
+    Integer,
+    NoneSet,
+    String,
+    Sequence,
+)
+from openpyxl.descriptors.excel import ExtensionList, CellRange
+from openpyxl.descriptors.sequence import NestedSequence
+from openpyxl.xml.constants import SHEET_MAIN_NS, REL_NS
+from openpyxl.xml.functions import tostring
+from openpyxl.utils import range_boundaries
+from openpyxl.utils.escape import escape, unescape
+
+from .related import Related
+
+from .filters import (
+    AutoFilter,
+    SortState,
+)
+
+TABLESTYLES = tuple(
+    ["TableStyleMedium{0}".format(i) for i in range(1, 29)]
+    + ["TableStyleLight{0}".format(i) for i in range(1, 22)]
+    + ["TableStyleDark{0}".format(i) for i in range(1, 12)]
+)
+
+PIVOTSTYLES = tuple(
+    ["PivotStyleMedium{0}".format(i) for i in range(1, 29)]
+    + ["PivotStyleLight{0}".format(i) for i in range(1, 29)]
+    + ["PivotStyleDark{0}".format(i) for i in range(1, 29)]
+)
+
+
+class TableStyleInfo(Serialisable):
+
+    tagname = "tableStyleInfo"
+
+    name = String(allow_none=True)
+    showFirstColumn = Bool(allow_none=True)
+    showLastColumn = Bool(allow_none=True)
+    showRowStripes = Bool(allow_none=True)
+    showColumnStripes = Bool(allow_none=True)
+
+    def __init__(self,
+                 name=None,
+                 showFirstColumn=None,
+                 showLastColumn=None,
+                 showRowStripes=None,
+                 showColumnStripes=None,
+                ):
+        self.name = name
+        self.showFirstColumn = showFirstColumn
+        self.showLastColumn = showLastColumn
+        self.showRowStripes = showRowStripes
+        self.showColumnStripes = showColumnStripes
+
+
+class XMLColumnProps(Serialisable):
+
+    tagname = "xmlColumnPr"
+
+    mapId = Integer()
+    xpath = String()
+    denormalized = Bool(allow_none=True)
+    xmlDataType = String()
+    extLst = Typed(expected_type=ExtensionList, allow_none=True)
+
+    __elements__ = ()
+
+    def __init__(self,
+                 mapId=None,
+                 xpath=None,
+                 denormalized=None,
+                 xmlDataType=None,
+                 extLst=None,
+                ):
+        self.mapId = mapId
+        self.xpath = xpath
+        self.denormalized = denormalized
+        self.xmlDataType = xmlDataType
+
+
+class TableFormula(Serialisable):
+
+    tagname = "tableFormula"
+
+    ## Note formula is stored as the text value
+
+    array = Bool(allow_none=True)
+    attr_text = Descriptor()
+    text = Alias('attr_text')
+
+
+    def __init__(self,
+                 array=None,
+                 attr_text=None,
+                ):
+        self.array = array
+        self.attr_text = attr_text
+
+
+class TableColumn(Serialisable):
+
+    tagname = "tableColumn"
+
+    id = Integer()
+    uniqueName = String(allow_none=True)
+    name = String()
+    totalsRowFunction = NoneSet(values=(['sum', 'min', 'max', 'average',
+                                         'count', 'countNums', 'stdDev', 'var', 'custom']))
+    totalsRowLabel = String(allow_none=True)
+    queryTableFieldId = Integer(allow_none=True)
+    headerRowDxfId = Integer(allow_none=True)
+    dataDxfId = Integer(allow_none=True)
+    totalsRowDxfId = Integer(allow_none=True)
+    headerRowCellStyle = String(allow_none=True)
+    dataCellStyle = String(allow_none=True)
+    totalsRowCellStyle = String(allow_none=True)
+    calculatedColumnFormula = Typed(expected_type=TableFormula, allow_none=True)
+    totalsRowFormula = Typed(expected_type=TableFormula, allow_none=True)
+    xmlColumnPr = Typed(expected_type=XMLColumnProps, allow_none=True)
+    extLst = Typed(expected_type=ExtensionList, allow_none=True)
+
+    __elements__ = ('calculatedColumnFormula', 'totalsRowFormula',
+                    'xmlColumnPr', 'extLst')
+
+    def __init__(self,
+                 id=None,
+                 uniqueName=None,
+                 name=None,
+                 totalsRowFunction=None,
+                 totalsRowLabel=None,
+                 queryTableFieldId=None,
+                 headerRowDxfId=None,
+                 dataDxfId=None,
+                 totalsRowDxfId=None,
+                 headerRowCellStyle=None,
+                 dataCellStyle=None,
+                 totalsRowCellStyle=None,
+                 calculatedColumnFormula=None,
+                 totalsRowFormula=None,
+                 xmlColumnPr=None,
+                 extLst=None,
+                ):
+        self.id = id
+        self.uniqueName = uniqueName
+        self.name = name
+        self.totalsRowFunction = totalsRowFunction
+        self.totalsRowLabel = totalsRowLabel
+        self.queryTableFieldId = queryTableFieldId
+        self.headerRowDxfId = headerRowDxfId
+        self.dataDxfId = dataDxfId
+        self.totalsRowDxfId = totalsRowDxfId
+        self.headerRowCellStyle = headerRowCellStyle
+        self.dataCellStyle = dataCellStyle
+        self.totalsRowCellStyle = totalsRowCellStyle
+        self.calculatedColumnFormula = calculatedColumnFormula
+        self.totalsRowFormula = totalsRowFormula
+        self.xmlColumnPr = xmlColumnPr
+        self.extLst = extLst
+
+
+    def __iter__(self):
+        for k, v in super().__iter__():
+            if k == 'name':
+                v = escape(v)
+            yield k, v
+
+
+    @classmethod
+    def from_tree(cls, node):
+        self = super().from_tree(node)
+        self.name = unescape(self.name)
+        return self
+
+
+class TableNameDescriptor(String):
+
+    """
+    Table names cannot have spaces in them
+    """
+
+    def __set__(self, instance, value):
+        if value is not None and " " in value:
+            raise ValueError("Table names cannot have spaces")
+        super().__set__(instance, value)
+
+
+class Table(Serialisable):
+
+    _path = "/tables/table{0}.xml"
+    mime_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml"
+    _rel_type = REL_NS + "/table"
+    _rel_id = None
+
+    tagname = "table"
+
+    id = Integer()
+    name = String(allow_none=True)
+    displayName = TableNameDescriptor()
+    comment = String(allow_none=True)
+    ref = CellRange()
+    tableType = NoneSet(values=(['worksheet', 'xml', 'queryTable']))
+    headerRowCount = Integer(allow_none=True)
+    insertRow = Bool(allow_none=True)
+    insertRowShift = Bool(allow_none=True)
+    totalsRowCount = Integer(allow_none=True)
+    totalsRowShown = Bool(allow_none=True)
+    published = Bool(allow_none=True)
+    headerRowDxfId = Integer(allow_none=True)
+    dataDxfId = Integer(allow_none=True)
+    totalsRowDxfId = Integer(allow_none=True)
+    headerRowBorderDxfId = Integer(allow_none=True)
+    tableBorderDxfId = Integer(allow_none=True)
+    totalsRowBorderDxfId = Integer(allow_none=True)
+    headerRowCellStyle = String(allow_none=True)
+    dataCellStyle = String(allow_none=True)
+    totalsRowCellStyle = String(allow_none=True)
+    connectionId = Integer(allow_none=True)
+    autoFilter = Typed(expected_type=AutoFilter, allow_none=True)
+    sortState = Typed(expected_type=SortState, allow_none=True)
+    tableColumns = NestedSequence(expected_type=TableColumn, count=True)
+    tableStyleInfo = Typed(expected_type=TableStyleInfo, allow_none=True)
+    extLst = Typed(expected_type=ExtensionList, allow_none=True)
+
+    __elements__ = ('autoFilter', 'sortState', 'tableColumns',
+                    'tableStyleInfo')
+
+    def __init__(self,
+                 id=1,
+                 displayName=None,
+                 ref=None,
+                 name=None,
+                 comment=None,
+                 tableType=None,
+                 headerRowCount=1,
+                 insertRow=None,
+                 insertRowShift=None,
+                 totalsRowCount=None,
+                 totalsRowShown=None,
+                 published=None,
+                 headerRowDxfId=None,
+                 dataDxfId=None,
+                 totalsRowDxfId=None,
+                 headerRowBorderDxfId=None,
+                 tableBorderDxfId=None,
+                 totalsRowBorderDxfId=None,
+                 headerRowCellStyle=None,
+                 dataCellStyle=None,
+                 totalsRowCellStyle=None,
+                 connectionId=None,
+                 autoFilter=None,
+                 sortState=None,
+                 tableColumns=(),
+                 tableStyleInfo=None,
+                 extLst=None,
+                ):
+        self.id = id
+        self.displayName = displayName
+        if name is None:
+            name = displayName
+        self.name = name
+        self.comment = comment
+        self.ref = ref
+        self.tableType = tableType
+        self.headerRowCount = headerRowCount
+        self.insertRow = insertRow
+        self.insertRowShift = insertRowShift
+        self.totalsRowCount = totalsRowCount
+        self.totalsRowShown = totalsRowShown
+        self.published = published
+        self.headerRowDxfId = headerRowDxfId
+        self.dataDxfId = dataDxfId
+        self.totalsRowDxfId = totalsRowDxfId
+        self.headerRowBorderDxfId = headerRowBorderDxfId
+        self.tableBorderDxfId = tableBorderDxfId
+        self.totalsRowBorderDxfId = totalsRowBorderDxfId
+        self.headerRowCellStyle = headerRowCellStyle
+        self.dataCellStyle = dataCellStyle
+        self.totalsRowCellStyle = totalsRowCellStyle
+        self.connectionId = connectionId
+        self.autoFilter = autoFilter
+        self.sortState = sortState
+        self.tableColumns = tableColumns
+        self.tableStyleInfo = tableStyleInfo
+
+
+    def to_tree(self):
+        tree = super().to_tree()
+        tree.set("xmlns", SHEET_MAIN_NS)
+        return tree
+
+
+    @property
+    def path(self):
+        """
+        Return path within the archive
+        """
+        return "/xl" + self._path.format(self.id)
+
+
+    def _write(self, archive):
+        """
+        Serialise to XML and write to archive
+        """
+        xml = self.to_tree()
+        archive.writestr(self.path[1:], tostring(xml))
+
+
+    def _initialise_columns(self):
+        """
+        Create a list of table columns from a cell range
+        Always set a ref if we have headers (the default)
+        Column headings must be strings and must match cells in the worksheet.
+        """
+
+        min_col, min_row, max_col, max_row = range_boundaries(self.ref)
+        for idx in range(min_col, max_col+1):
+            col = TableColumn(id=idx, name="Column{0}".format(idx))
+            self.tableColumns.append(col)
+        if self.headerRowCount and not self.autoFilter:
+            self.autoFilter = AutoFilter(ref=self.ref)
+
+
+    @property
+    def column_names(self):
+        return [column.name for column in self.tableColumns]
+
+
+class TablePartList(Serialisable):
+
+    tagname = "tableParts"
+
+    count = Integer(allow_none=True)
+    tablePart = Sequence(expected_type=Related)
+
+    __elements__ = ('tablePart',)
+    __attrs__ = ('count',)
+
+    def __init__(self,
+                 count=None,
+                 tablePart=(),
+                ):
+        self.tablePart = tablePart
+
+
+    def append(self, part):
+        self.tablePart.append(part)
+
+
+    @property
+    def count(self):
+        return len(self.tablePart)
+
+
+    def __bool__(self):
+        return bool(self.tablePart)
+
+
+class TableList(dict):
+
+
+    def add(self, table):
+        if not isinstance(table, Table):
+            raise TypeError("You can only add tables")
+        self[table.name] = table
+
+
+    def get(self, name=None, table_range=None):
+        if name is not None:
+            return super().get(name)
+        for table in self.values():
+            if table_range == table.ref:
+                return table
+
+
+    def items(self):
+        return [(name, table.ref) for name, table in super().items()]
+ from dataclasses import dataclass, field, replace
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    Iterable,
+    List,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
+
+from . import box, errors
+from ._loop import loop_first_last, loop_last
+from ._pick import pick_bool
+from ._ratio import ratio_distribute, ratio_reduce
+from .align import VerticalAlignMethod
+from .jupyter import JupyterMixin
+from .measure import Measurement
+from .padding import Padding, PaddingDimensions
+from .protocol import is_renderable
+from .segment import Segment
+from .style import Style, StyleType
+from .text import Text, TextType
+
+if TYPE_CHECKING:
+    from .console import (
+        Console,
+        ConsoleOptions,
+        JustifyMethod,
+        OverflowMethod,
+        RenderableType,
+        RenderResult,
+    )
+
+
+@dataclass
+class Column:
+    """Defines a column within a ~Table.
+
+    Args:
+        title (Union[str, Text], optional): The title of the table rendered at the top. Defaults to None.
+        caption (Union[str, Text], optional): The table caption rendered below. Defaults to None.
+        width (int, optional): The width in characters of the table, or ``None`` to automatically fit. Defaults to None.
+        min_width (Optional[int], optional): The minimum width of the table, or ``None`` for no minimum. Defaults to None.
+        box (box.Box, optional): One of the constants in box.py used to draw the edges (see :ref:`appendix_box`), or ``None`` for no box lines. Defaults to box.HEAVY_HEAD.
+        safe_box (Optional[bool], optional): Disable box characters that don't display on windows legacy terminal with *raster* fonts. Defaults to True.
+        padding (PaddingDimensions, optional): Padding for cells (top, right, bottom, left). Defaults to (0, 1).
+        collapse_padding (bool, optional): Enable collapsing of padding around cells. Defaults to False.
+        pad_edge (bool, optional): Enable padding of edge cells. Defaults to True.
+        expand (bool, optional): Expand the table to fit the available space if ``True``, otherwise the table width will be auto-calculated. Defaults to False.
+        show_header (bool, optional): Show a header row. Defaults to True.
+        show_footer (bool, optional): Show a footer row. Defaults to False.
+        show_edge (bool, optional): Draw a box around the outside of the table. Defaults to True.
+        show_lines (bool, optional): Draw lines between every row. Defaults to False.
+        leading (int, optional): Number of blank lines between rows (precludes ``show_lines``). Defaults to 0.
+        style (Union[str, Style], optional): Default style for the table. Defaults to "none".
+        row_styles (List[Union, str], optional): Optional list of row styles, if more than one style is given then the styles will alternate. Defaults to None.
+        header_style (Union[str, Style], optional): Style of the header. Defaults to "table.header".
+        footer_style (Union[str, Style], optional): Style of the footer. Defaults to "table.footer".
+        border_style (Union[str, Style], optional): Style of the border. Defaults to None.
+        title_style (Union[str, Style], optional): Style of the title. Defaults to None.
+        caption_style (Union[str, Style], optional): Style of the caption. Defaults to None.
+        title_justify (str, optional): Justify method for title. Defaults to "center".
+        caption_justify (str, optional): Justify method for caption. Defaults to "center".
+        highlight (bool, optional): Highlight cell contents (if str). Defaults to False.
+    """
+
+    header: "RenderableType" = ""
+    """RenderableType: Renderable for the header (typically a string)"""
+
+    footer: "RenderableType" = ""
+    """RenderableType: Renderable for the footer (typically a string)"""
+
+    header_style: StyleType = ""
+    """StyleType: The style of the header."""
+
+    footer_style: StyleType = ""
+    """StyleType: The style of the footer."""
+
+    style: StyleType = ""
+    """StyleType: The style of the column."""
+
+    justify: "JustifyMethod" = "left"
+    """str: How to justify text within the column ("left", "center", "right", or "full")"""
+
+    vertical: "VerticalAlignMethod" = "top"
+    """str: How to vertically align content ("top", "middle", or "bottom")"""
+
+    overflow: "OverflowMethod" = "ellipsis"
+    """str: Overflow method."""
+
+    width: Optional[int] = None
+    """Optional[int]: Width of the column, or ``None`` (default) to auto calculate width."""
+
+    min_width: Optional[int] = None
+    """Optional[int]: Minimum width of column, or ``None`` for no minimum. Defaults to None."""
+
+    max_width: Optional[int] = None
+    """Optional[int]: Maximum width of column, or ``None`` for no maximum. Defaults to None."""
+
+    ratio: Optional[int] = None
+    """Optional[int]: Ratio to use when calculating column width, or ``None`` (default) to adapt to column contents."""
+
+    no_wrap: bool = False
+    """bool: Prevent wrapping of text within the column. Defaults to ``False``."""
+
+    highlight: bool = False
+    """bool: Apply highlighter to column. Defaults to ``False``."""
+
+    _index: int = 0
+    """Index of column."""
+
+    _cells: List["RenderableType"] = field(default_factory=list)
+
+    def copy(self) -> "Column":
+        """Return a copy of this Column."""
+        return replace(self, _cells=[])
+
+    @property
+    def cells(self) -> Iterable["RenderableType"]:
+        """Get all cells in the column, not including header."""
+        yield from self._cells
+
+    @property
+    def flexible(self) -> bool:
+        """Check if this column is flexible."""
+        return self.ratio is not None
+
+
+@dataclass
+class Row:
+    """Information regarding a row."""
+
+    style: Optional[StyleType] = None
+    """Style to apply to row."""
+
+    end_section: bool = False
+    """Indicated end of section, which will force a line beneath the row."""
+
+
+class _Cell(NamedTuple):
+    """A single cell in a table."""
+
+    style: StyleType
+    """Style to apply to cell."""
+    renderable: "RenderableType"
+    """Cell renderable."""
+    vertical: VerticalAlignMethod
+    """Cell vertical alignment."""
+
+
+class Table(JupyterMixin):
+    """A console renderable to draw a table.
+
+    Args:
+        *headers (Union[Column, str]): Column headers, either as a string, or :class:`~rich.table.Column` instance.
+        title (Union[str, Text], optional): The title of the table rendered at the top. Defaults to None.
+        caption (Union[str, Text], optional): The table caption rendered below. Defaults to None.
+        width (int, optional): The width in characters of the table, or ``None`` to automatically fit. Defaults to None.
+        min_width (Optional[int], optional): The minimum width of the table, or ``None`` for no minimum. Defaults to None.
+        box (box.Box, optional): One of the constants in box.py used to draw the edges (see :ref:`appendix_box`), or ``None`` for no box lines. Defaults to box.HEAVY_HEAD.
+        safe_box (Optional[bool], optional): Disable box characters that don't display on windows legacy terminal with *raster* fonts. Defaults to True.
+        padding (PaddingDimensions, optional): Padding for cells (top, right, bottom, left). Defaults to (0, 1).
+        collapse_padding (bool, optional): Enable collapsing of padding around cells. Defaults to False.
+        pad_edge (bool, optional): Enable padding of edge cells. Defaults to True.
+        expand (bool, optional): Expand the table to fit the available space if ``True``, otherwise the table width will be auto-calculated. Defaults to False.
+        show_header (bool, optional): Show a header row. Defaults to True.
+        show_footer (bool, optional): Show a footer row. Defaults to False.
+        show_edge (bool, optional): Draw a box around the outside of the table. Defaults to True.
+        show_lines (bool, optional): Draw lines between every row. Defaults to False.
+        leading (int, optional): Number of blank lines between rows (precludes ``show_lines``). Defaults to 0.
+        style (Union[str, Style], optional): Default style for the table. Defaults to "none".
+        row_styles (List[Union, str], optional): Optional list of row styles, if more than one style is given then the styles will alternate. Defaults to None.
+        header_style (Union[str, Style], optional): Style of the header. Defaults to "table.header".
+        footer_style (Union[str, Style], optional): Style of the footer. Defaults to "table.footer".
+        border_style (Union[str, Style], optional): Style of the border. Defaults to None.
+        title_style (Union[str, Style], optional): Style of the title. Defaults to None.
+        caption_style (Union[str, Style], optional): Style of the caption. Defaults to None.
+        title_justify (str, optional): Justify method for title. Defaults to "center".
+        caption_justify (str, optional): Justify method for caption. Defaults to "center".
+        highlight (bool, optional): Highlight cell contents (if str). Defaults to False.
+    """
+
+    columns: List[Column]
+    rows: List[Row]
+
+    def __init__(
+        self,
+        *headers: Union[Column, str],
+        title: Optional[TextType] = None,
+        caption: Optional[TextType] = None,
+        width: Optional[int] = None,
+        min_width: Optional[int] = None,
+        box: Optional[box.Box] = box.HEAVY_HEAD,
+        safe_box: Optional[bool] = None,
+        padding: PaddingDimensions = (0, 1),
+        collapse_padding: bool = False,
+        pad_edge: bool = True,
+        expand: bool = False,
+        show_header: bool = True,
+        show_footer: bool = False,
+        show_edge: bool = True,
+        show_lines: bool = False,
+        leading: int = 0,
+        style: StyleType = "none",
+        row_styles: Optional[Iterable[StyleType]] = None,
+        header_style: Optional[StyleType] = "table.header",
+        footer_style: Optional[StyleType] = "table.footer",
+        border_style: Optional[StyleType] = None,
+        title_style: Optional[StyleType] = None,
+        caption_style: Optional[StyleType] = None,
+        title_justify: "JustifyMethod" = "center",
+        caption_justify: "JustifyMethod" = "center",
+        highlight: bool = False,
+    ) -> None:
+        self.columns: List[Column] = []
+        self.rows: List[Row] = []
+        self.title = title
+        self.caption = caption
+        self.width = width
+        self.min_width = min_width
+        self.box = box
+        self.safe_box = safe_box
+        self._padding = Padding.unpack(padding)
+        self.pad_edge = pad_edge
+        self._expand = expand
+        self.show_header = show_header
+        self.show_footer = show_footer
+        self.show_edge = show_edge
+        self.show_lines = show_lines
+        self.leading = leading
+        self.collapse_padding = collapse_padding
+        self.style = style
+        self.header_style = header_style or ""
+        self.footer_style = footer_style or ""
+        self.border_style = border_style
+        self.title_style = title_style
+        self.caption_style = caption_style
+        self.title_justify: "JustifyMethod" = title_justify
+        self.caption_justify: "JustifyMethod" = caption_justify
+        self.highlight = highlight
+        self.row_styles: Sequence[StyleType] = list(row_styles or [])
+        append_column = self.columns.append
+        for header in headers:
+            if isinstance(header, str):
+                self.add_column(header=header)
+            else:
+                header._index = len(self.columns)
+                append_column(header)
+
+    @classmethod
+    def grid(
+        cls,
+        *headers: Union[Column, str],
+        padding: PaddingDimensions = 0,
+        collapse_padding: bool = True,
+        pad_edge: bool = False,
+        expand: bool = False,
+    ) -> "Table":
+        """Get a table with no lines, headers, or footer.
+
+        Args:
+            *headers (Union[Column, str]): Column headers, either as a string, or :class:`~rich.table.Column` instance.
+            padding (PaddingDimensions, optional): Get padding around cells. Defaults to 0.
+            collapse_padding (bool, optional): Enable collapsing of padding around cells. Defaults to True.
+            pad_edge (bool, optional): Enable padding around edges of table. Defaults to False.
+            expand (bool, optional): Expand the table to fit the available space if ``True``, otherwise the table width will be auto-calculated. Defaults to False.
+
+        Returns:
+            Table: A table instance.
+        """
+        return cls(
+            *headers,
+            box=None,
+            padding=padding,
+            collapse_padding=collapse_padding,
+            show_header=False,
+            show_footer=False,
+            show_edge=False,
+            pad_edge=pad_edge,
+            expand=expand,
+        )
+
+    @property
+    def expand(self) -> bool:
+        """Setting a non-None self.width implies expand."""
+        return self._expand or self.width is not None
+
+    @expand.setter
+    def expand(self, expand: bool) -> None:
+        """Set expand."""
+        self._expand = expand
+
+    @property
+    def _extra_width(self) -> int:
+        """Get extra width to add to cell content."""
+        width = 0
+        if self.box and self.show_edge:
+            width += 2
+        if self.box:
+            width += len(self.columns) - 1
+        return width
+
+    @property
+    def row_count(self) -> int:
+        """Get the current number of rows."""
+        return len(self.rows)
+
+    def get_row_style(self, console: "Console", index: int) -> StyleType:
+        """Get the current row style."""
+        style = Style.null()
+        if self.row_styles:
+            style += console.get_style(self.row_styles[index % len(self.row_styles)])
+        row_style = self.rows[index].style
+        if row_style is not None:
+            style += console.get_style(row_style)
+        return style
+
+    def __rich_measure__(
+        self, console: "Console", options: "ConsoleOptions"
+    ) -> Measurement:
+        max_width = options.max_width
+        if self.width is not None:
+            max_width = self.width
+        if max_width < 0:
+            return Measurement(0, 0)
+
+        extra_width = self._extra_width
+        max_width = sum(
+            self._calculate_column_widths(
+                console, options.update_width(max_width - extra_width)
+            )
+        )
+        _measure_column = self._measure_column
+
+        measurements = [
+            _measure_column(console, options.update_width(max_width), column)
+            for column in self.columns
+        ]
+        minimum_width = (
+            sum(measurement.minimum for measurement in measurements) + extra_width
+        )
+        maximum_width = (
+            sum(measurement.maximum for measurement in measurements) + extra_width
+            if (self.width is None)
+            else self.width
+        )
+        measurement = Measurement(minimum_width, maximum_width)
+        measurement = measurement.clamp(self.min_width)
+        return measurement
+
+    @property
+    def padding(self) -> Tuple[int, int, int, int]:
+        """Get cell padding."""
+        return self._padding
+
+    @padding.setter
+    def padding(self, padding: PaddingDimensions) -> "Table":
+        """Set cell padding."""
+        self._padding = Padding.unpack(padding)
+        return self
+
+    def add_column(
+        self,
+        header: "RenderableType" = "",
+        footer: "RenderableType" = "",
+        *,
+        header_style: Optional[StyleType] = None,
+        highlight: Optional[bool] = None,
+        footer_style: Optional[StyleType] = None,
+        style: Optional[StyleType] = None,
+        justify: "JustifyMethod" = "left",
+        vertical: "VerticalAlignMethod" = "top",
+        overflow: "OverflowMethod" = "ellipsis",
+        width: Optional[int] = None,
+        min_width: Optional[int] = None,
+        max_width: Optional[int] = None,
+        ratio: Optional[int] = None,
+        no_wrap: bool = False,
+    ) -> None:
+        """Add a column to the table.
+
+        Args:
+            header (RenderableType, optional): Text or renderable for the header.
+                Defaults to "".
+            footer (RenderableType, optional): Text or renderable for the footer.
+                Defaults to "".
+            header_style (Union[str, Style], optional): Style for the header, or None for default. Defaults to None.
+            highlight (bool, optional): Whether to highlight the text. The default of None uses the value of the table (self) object.
+            footer_style (Union[str, Style], optional): Style for the footer, or None for default. Defaults to None.
+            style (Union[str, Style], optional): Style for the column cells, or None for default. Defaults to None.
+            justify (JustifyMethod, optional): Alignment for cells. Defaults to "left".
+            vertical (VerticalAlignMethod, optional): Vertical alignment, one of "top", "middle", or "bottom". Defaults to "top".
+            overflow (OverflowMethod): Overflow method: "crop", "fold", "ellipsis". Defaults to "ellipsis".
+            width (int, optional): Desired width of column in characters, or None to fit to contents. Defaults to None.
+            min_width (Optional[int], optional): Minimum width of column, or ``None`` for no minimum. Defaults to None.
+            max_width (Optional[int], optional): Maximum width of column, or ``None`` for no maximum. Defaults to None.
+            ratio (int, optional): Flexible ratio for the column (requires ``Table.expand`` or ``Table.width``). Defaults to None.
+            no_wrap (bool, optional): Set to ``True`` to disable wrapping of this column.
+        """
+
+        column = Column(
+            _index=len(self.columns),
+            header=header,
+            footer=footer,
+            header_style=header_style or "",
+            highlight=highlight if highlight is not None else self.highlight,
+            footer_style=footer_style or "",
+            style=style or "",
+            justify=justify,
+            vertical=vertical,
+            overflow=overflow,
+            width=width,
+            min_width=min_width,
+            max_width=max_width,
+            ratio=ratio,
+            no_wrap=no_wrap,
+        )
+        self.columns.append(column)
+
+    def add_row(
+        self,
+        *renderables: Optional["RenderableType"],
+        style: Optional[StyleType] = None,
+        end_section: bool = False,
+    ) -> None:
+        """Add a row of renderables.
+
+        Args:
+            *renderables (None or renderable): Each cell in a row must be a renderable object (including str),
+                or ``None`` for a blank cell.
+            style (StyleType, optional): An optional style to apply to the entire row. Defaults to None.
+            end_section (bool, optional): End a section and draw a line. Defaults to False.
+
+        Raises:
+            errors.NotRenderableError: If you add something that can't be rendered.
+        """
+
+        def add_cell(column: Column, renderable: "RenderableType") -> None:
+            column._cells.append(renderable)
+
+        cell_renderables: List[Optional["RenderableType"]] = list(renderables)
+
+        columns = self.columns
+        if len(cell_renderables) < len(columns):
+            cell_renderables = [
+                *cell_renderables,
+                *[None] * (len(columns) - len(cell_renderables)),
+            ]
+        for index, renderable in enumerate(cell_renderables):
+            if index == len(columns):
+                column = Column(_index=index, highlight=self.highlight)
+                for _ in self.rows:
+                    add_cell(column, Text(""))
+                self.columns.append(column)
+            else:
+                column = columns[index]
+            if renderable is None:
+                add_cell(column, "")
+            elif is_renderable(renderable):
+                add_cell(column, renderable)
+            else:
+                raise errors.NotRenderableError(
+                    f"unable to render {type(renderable).__name__}; a string or other renderable object is required"
+                )
+        self.rows.append(Row(style=style, end_section=end_section))
+
+    def add_section(self) -> None:
+        """Add a new section (draw a line after current row)."""
+
+        if self.rows:
+            self.rows[-1].end_section = True
+
+    def __rich_console__(
+        self, console: "Console", options: "ConsoleOptions"
+    ) -> "RenderResult":
+        if not self.columns:
+            yield Segment("\n")
+            return
+
+        max_width = options.max_width
+        if self.width is not None:
+            max_width = self.width
+
+        extra_width = self._extra_width
+        widths = self._calculate_column_widths(
+            console, options.update_width(max_width - extra_width)
+        )
+        table_width = sum(widths) + extra_width
+
+        render_options = options.update(
+            width=table_width, highlight=self.highlight, height=None
+        )
+
+        def render_annotation(
+            text: TextType, style: StyleType, justify: "JustifyMethod" = "center"
+        ) -> "RenderResult":
+            render_text = (
+                console.render_str(text, style=style, highlight=False)
+                if isinstance(text, str)
+                else text
+            )
+            return console.render(
+                render_text, options=render_options.update(justify=justify)
+            )
+
+        if self.title:
+            yield from render_annotation(
+                self.title,
+                style=Style.pick_first(self.title_style, "table.title"),
+                justify=self.title_justify,
+            )
+        yield from self._render(console, render_options, widths)
+        if self.caption:
+            yield from render_annotation(
+                self.caption,
+                style=Style.pick_first(self.caption_style, "table.caption"),
+                justify=self.caption_justify,
+            )
+
+    def _calculate_column_widths(
+        self, console: "Console", options: "ConsoleOptions"
+    ) -> List[int]:
+        """Calculate the widths of each column, including padding, not including borders."""
+        max_width = options.max_width
+        columns = self.columns
+        width_ranges = [
+            self._measure_column(console, options, column) for column in columns
+        ]
+        widths = [_range.maximum or 1 for _range in width_ranges]
+        get_padding_width = self._get_padding_width
+        extra_width = self._extra_width
+        if self.expand:
+            ratios = [col.ratio or 0 for col in columns if col.flexible]
+            if any(ratios):
+                fixed_widths = [
+                    0 if column.flexible else _range.maximum
+                    for _range, column in zip(width_ranges, columns)
+                ]
+                flex_minimum = [
+                    (column.width or 1) + get_padding_width(column._index)
+                    for column in columns
+                    if column.flexible
+                ]
+                flexible_width = max_width - sum(fixed_widths)
+                flex_widths = ratio_distribute(flexible_width, ratios, flex_minimum)
+                iter_flex_widths = iter(flex_widths)
+                for index, column in enumerate(columns):
+                    if column.flexible:
+                        widths[index] = fixed_widths[index] + next(iter_flex_widths)
+        table_width = sum(widths)
+
+        if table_width > max_width:
+            widths = self._collapse_widths(
+                widths,
+                [(column.width is None and not column.no_wrap) for column in columns],
+                max_width,
+            )
+            table_width = sum(widths)
+            # last resort, reduce columns evenly
+            if table_width > max_width:
+                excess_width = table_width - max_width
+                widths = ratio_reduce(excess_width, [1] * len(widths), widths, widths)
+                table_width = sum(widths)
+
+            width_ranges = [
+                self._measure_column(console, options.update_width(width), column)
+                for width, column in zip(widths, columns)
+            ]
+            widths = [_range.maximum or 0 for _range in width_ranges]
+
+        if (table_width < max_width and self.expand) or (
+            self.min_width is not None and table_width < (self.min_width - extra_width)
+        ):
+            _max_width = (
+                max_width
+                if self.min_width is None
+                else min(self.min_width - extra_width, max_width)
+            )
+            pad_widths = ratio_distribute(_max_width - table_width, widths)
+            widths = [_width + pad for _width, pad in zip(widths, pad_widths)]
+
+        return widths
+
+    @classmethod
+    def _collapse_widths(
+        cls, widths: List[int], wrapable: List[bool], max_width: int
+    ) -> List[int]:
+        """Reduce widths so that the total is under max_width.
+
+        Args:
+            widths (List[int]): List of widths.
+            wrapable (List[bool]): List of booleans that indicate if a column may shrink.
+            max_width (int): Maximum width to reduce to.
+
+        Returns:
+            List[int]: A new list of widths.
+        """
+        total_width = sum(widths)
+        excess_width = total_width - max_width
+        if any(wrapable):
+            while total_width and excess_width > 0:
+                max_column = max(
+                    width for width, allow_wrap in zip(widths, wrapable) if allow_wrap
+                )
+                second_max_column = max(
+                    width if allow_wrap and width != max_column else 0
+                    for width, allow_wrap in zip(widths, wrapable)
+                )
+                column_difference = max_column - second_max_column
+                ratios = [
+                    (1 if (width == max_column and allow_wrap) else 0)
+                    for width, allow_wrap in zip(widths, wrapable)
+                ]
+                if not any(ratios) or not column_difference:
+                    break
+                max_reduce = [min(excess_width, column_difference)] * len(widths)
+                widths = ratio_reduce(excess_width, ratios, max_reduce, widths)
+
+                total_width = sum(widths)
+                excess_width = total_width - max_width
+        return widths
+
+    def _get_cells(
+        self, console: "Console", column_index: int, column: Column
+    ) -> Iterable[_Cell]:
+        """Get all the cells with padding and optional header."""
+
+        collapse_padding = self.collapse_padding
+        pad_edge = self.pad_edge
+        padding = self.padding
+        any_padding = any(padding)
+
+        first_column = column_index == 0
+        last_column = column_index == len(self.columns) - 1
+
+        _padding_cache: Dict[Tuple[bool, bool], Tuple[int, int, int, int]] = {}
+
+        def get_padding(first_row: bool, last_row: bool) -> Tuple[int, int, int, int]:
+            cached = _padding_cache.get((first_row, last_row))
+            if cached:
+                return cached
+            top, right, bottom, left = padding
+
+            if collapse_padding:
+                if not first_column:
+                    left = max(0, left - right)
+                if not last_row:
+                    bottom = max(0, top - bottom)
+
+            if not pad_edge:
+                if first_column:
+                    left = 0
+                if last_column:
+                    right = 0
+                if first_row:
+                    top = 0
+                if last_row:
+                    bottom = 0
+            _padding = (top, right, bottom, left)
+            _padding_cache[(first_row, last_row)] = _padding
+            return _padding
+
+        raw_cells: List[Tuple[StyleType, "RenderableType"]] = []
+        _append = raw_cells.append
+        get_style = console.get_style
+        if self.show_header:
+            header_style = get_style(self.header_style or "") + get_style(
+                column.header_style
+            )
+            _append((header_style, column.header))
+        cell_style = get_style(column.style or "")
+        for cell in column.cells:
+            _append((cell_style, cell))
+        if self.show_footer:
+            footer_style = get_style(self.footer_style or "") + get_style(
+                column.footer_style
+            )
+            _append((footer_style, column.footer))
+
+        if any_padding:
+            _Padding = Padding
+            for first, last, (style, renderable) in loop_first_last(raw_cells):
+                yield _Cell(
+                    style,
+                    _Padding(renderable, get_padding(first, last)),
+                    getattr(renderable, "vertical", None) or column.vertical,
+                )
+        else:
+            for style, renderable in raw_cells:
+                yield _Cell(
+                    style,
+                    renderable,
+                    getattr(renderable, "vertical", None) or column.vertical,
+                )
+
+    def _get_padding_width(self, column_index: int) -> int:
+        """Get extra width from padding."""
+        _, pad_right, _, pad_left = self.padding
+        if self.collapse_padding:
+            if column_index > 0:
+                pad_left = max(0, pad_left - pad_right)
+        return pad_left + pad_right
+
+    def _measure_column(
+        self,
+        console: "Console",
+        options: "ConsoleOptions",
+        column: Column,
+    ) -> Measurement:
+        """Get the minimum and maximum width of the column."""
+
+        max_width = options.max_width
+        if max_width < 1:
+            return Measurement(0, 0)
+
+        padding_width = self._get_padding_width(column._index)
+
+        if column.width is not None:
+            # Fixed width column
+            return Measurement(
+                column.width + padding_width, column.width + padding_width
+            ).with_maximum(max_width)
+        # Flexible column, we need to measure contents
+        min_widths: List[int] = []
+        max_widths: List[int] = []
+        append_min = min_widths.append
+        append_max = max_widths.append
+        get_render_width = Measurement.get
+        for cell in self._get_cells(console, column._index, column):
+            _min, _max = get_render_width(console, options, cell.renderable)
+            append_min(_min)
+            append_max(_max)
+
+        measurement = Measurement(
+            max(min_widths) if min_widths else 1,
+            max(max_widths) if max_widths else max_width,
+        ).with_maximum(max_width)
+        measurement = measurement.clamp(
+            None if column.min_width is None else column.min_width + padding_width,
+            None if column.max_width is None else column.max_width + padding_width,
+        )
+        return measurement
+
+    def _render(
+        self, console: "Console", options: "ConsoleOptions", widths: List[int]
+    ) -> "RenderResult":
+        table_style = console.get_style(self.style or "")
+
+        border_style = table_style + console.get_style(self.border_style or "")
+        _column_cells = (
+            self._get_cells(console, column_index, column)
+            for column_index, column in enumerate(self.columns)
+        )
+        row_cells: List[Tuple[_Cell, ...]] = list(zip(*_column_cells))
+        _box = (
+            self.box.substitute(
+                options, safe=pick_bool(self.safe_box, console.safe_box)
+            )
+            if self.box
+            else None
+        )
+        _box = _box.get_plain_headed_box() if _box and not self.show_header else _box
+
+        new_line = Segment.line()
+
+        columns = self.columns
+        show_header = self.show_header
+        show_footer = self.show_footer
+        show_edge = self.show_edge
+        show_lines = self.show_lines
+        leading = self.leading
+
+        _Segment = Segment
+        if _box:
+            box_segments = [
+                (
+                    _Segment(_box.head_left, border_style),
+                    _Segment(_box.head_right, border_style),
+                    _Segment(_box.head_vertical, border_style),
+                ),
+                (
+                    _Segment(_box.mid_left, border_style),
+                    _Segment(_box.mid_right, border_style),
+                    _Segment(_box.mid_vertical, border_style),
+                ),
+                (
+                    _Segment(_box.foot_left, border_style),
+                    _Segment(_box.foot_right, border_style),
+                    _Segment(_box.foot_vertical, border_style),
+                ),
+            ]
+            if show_edge:
+                yield _Segment(_box.get_top(widths), border_style)
+                yield new_line
+        else:
+            box_segments = []
+
+        get_row_style = self.get_row_style
+        get_style = console.get_style
+
+        for index, (first, last, row_cell) in enumerate(loop_first_last(row_cells)):
+            header_row = first and show_header
+            footer_row = last and show_footer
+            row = (
+                self.rows[index - show_header]
+                if (not header_row and not footer_row)
+                else None
+            )
+            max_height = 1
+            cells: List[List[List[Segment]]] = []
+            if header_row or footer_row:
+                row_style = Style.null()
+            else:
+                row_style = get_style(
+                    get_row_style(console, index - 1 if show_header else index)
+                )
+            for width, cell, column in zip(widths, row_cell, columns):
+                render_options = options.update(
+                    width=width,
+                    justify=column.justify,
+                    no_wrap=column.no_wrap,
+                    overflow=column.overflow,
+                    height=None,
+                    highlight=column.highlight,
+                )
+                lines = console.render_lines(
+                    cell.renderable,
+                    render_options,
+                    style=get_style(cell.style) + row_style,
+                )
+                max_height = max(max_height, len(lines))
+                cells.append(lines)
+
+            row_height = max(len(cell) for cell in cells)
+
+            def align_cell(
+                cell: List[List[Segment]],
+                vertical: "VerticalAlignMethod",
+                width: int,
+                style: Style,
+            ) -> List[List[Segment]]:
+                if header_row:
+                    vertical = "bottom"
+                elif footer_row:
+                    vertical = "top"
+
+                if vertical == "top":
+                    return _Segment.align_top(cell, width, row_height, style)
+                elif vertical == "middle":
+                    return _Segment.align_middle(cell, width, row_height, style)
+                return _Segment.align_bottom(cell, width, row_height, style)
+
+            cells[:] = [
+                _Segment.set_shape(
+                    align_cell(
+                        cell,
+                        _cell.vertical,
+                        width,
+                        get_style(_cell.style) + row_style,
+                    ),
+                    width,
+                    max_height,
+                )
+                for width, _cell, cell, column in zip(widths, row_cell, cells, columns)
+            ]
+
+            if _box:
+                if last and show_footer:
+                    yield _Segment(
+                        _box.get_row(widths, "foot", edge=show_edge), border_style
+                    )
+                    yield new_line
+                left, right, _divider = box_segments[0 if first else (2 if last else 1)]
+
+                # If the column divider is whitespace also style it with the row background
+                divider = (
+                    _divider
+                    if _divider.text.strip()
+                    else _Segment(
+                        _divider.text, row_style.background_style + _divider.style
+                    )
+                )
+                for line_no in range(max_height):
+                    if show_edge:
+                        yield left
+                    for last_cell, rendered_cell in loop_last(cells):
+                        yield from rendered_cell[line_no]
+                        if not last_cell:
+                            yield divider
+                    if show_edge:
+                        yield right
+                    yield new_line
+            else:
+                for line_no in range(max_height):
+                    for rendered_cell in cells:
+                        yield from rendered_cell[line_no]
+                    yield new_line
+            if _box and first and show_header:
+                yield _Segment(
+                    _box.get_row(widths, "head", edge=show_edge), border_style
+                )
+                yield new_line
+            end_section = row and row.end_section
+            if _box and (show_lines or leading or end_section):
+                if (
+                    not last
+                    and not (show_footer and index >= len(row_cells) - 2)
+                    and not (show_header and header_row)
+                ):
+                    if leading:
+                        yield _Segment(
+                            _box.get_row(widths, "mid", edge=show_edge) * leading,
+                            border_style,
+                        )
+                    else:
+                        yield _Segment(
+                            _box.get_row(widths, "row", edge=show_edge), border_style
+                        )
+                    yield new_line
+
+        if _box and show_edge:
+            yield _Segment(_box.get_bottom(widths), border_style)
+            yield new_line
+
+
+if __name__ == "__main__":  # pragma: no cover
+    from pip._vendor.rich.console import Console
+    from pip._vendor.rich.highlighter import ReprHighlighter
+
+    from ._timer import timer
+
+    with timer("Table render"):
+        table = Table(
+            title="Star Wars Movies",
+            caption="Rich example table",
+            caption_justify="right",
+        )
+
+        table.add_column(
+            "Released", header_style="bright_cyan", style="cyan", no_wrap=True
+        )
+        table.add_column("Title", style="magenta")
+        table.add_column("Box Office", justify="right", style="green")
+
+        table.add_row(
+            "Dec 20, 2019",
+            "Star Wars: The Rise of Skywalker",
+            "$952,110,690",
+        )
+        table.add_row("May 25, 2018", "Solo: A Star Wars Story", "$393,151,347")
+        table.add_row(
+            "Dec 15, 2017",
+            "Star Wars Ep. V111: The Last Jedi",
+            "$1,332,539,889",
+            style="on black",
+            end_section=True,
+        )
+        table.add_row(
+            "Dec 16, 2016",
+            "Rogue One: A Star Wars Story",
+            "$1,332,439,889",
+        )
+
+        def header(text: str) -> None:
+            console.print()
+            console.rule(highlight(text))
+            console.print()
+
+        console = Console()
+        highlight = ReprHighlighter()
+        header("Example Table")
+        console.print(table, justify="center")
+
+        table.expand = True
+        header("expand=True")
+        console.print(table)
+
+        table.width = 50
+        header("width=50")
+
+        console.print(table, justify="center")
+
+        table.width = None
+        table.expand = False
+        table.row_styles = ["dim", "none"]
+        header("row_styles=['dim', 'none']")
+
+        console.print(table, justify="center")
+
+        table.width = None
+        table.expand = False
+        table.row_styles = ["dim", "none"]
+        table.leading = 1
+        header("leading=1, row_styles=['dim', 'none']")
+        console.print(table, justify="center")
+
+        table.width = None
+        table.expand = False
+        table.row_styles = ["dim", "none"]
+        table.show_lines = True
+        table.leading = 0
+        header("show_lines=True, row_styles=['dim', 'none']")
+        console.print(table, justify="center")
+ #!/usr/bin/env python
+#Copyright ReportLab Europe Ltd. 2000-2017
+#see license.txt for license details
+#history https://hg.reportlab.com/hg-public/reportlab/log/tip/src/reportlab/graphics/widgets/table.py
+__version__='3.3.0'
+
+from reportlab.graphics.widgetbase import Widget
+from reportlab.graphics import shapes
+from reportlab.lib import colors
+from reportlab.lib.validators import *
+from reportlab.lib.attrmap import *
+
+from reportlab.graphics.shapes import Drawing
+
+class TableWidget(Widget):
+    """A two dimensions table of labels
+    """
+
+    _attrMap = AttrMap(
+        x = AttrMapValue(isNumber, desc="x position of left edge of table"),
+        y = AttrMapValue(isNumber, desc="y position of bottom edge of table"),
+        width = AttrMapValue(isNumber, desc="table width"),
+        height = AttrMapValue(isNumber, desc="table height"),
+        borderStrokeColor = AttrMapValue(isColorOrNone, desc="table border color"),
+        fillColor = AttrMapValue(isColorOrNone, desc="table fill color"),
+        borderStrokeWidth = AttrMapValue(isNumber, desc="border line width"),
+        horizontalDividerStrokeColor = AttrMapValue(isColorOrNone, desc="table inner horizontal lines color"),
+        verticalDividerStrokeColor = AttrMapValue(isColorOrNone, desc="table inner vertical lines color"),
+        horizontalDividerStrokeWidth = AttrMapValue(isNumber, desc="table inner horizontal lines width"),
+        verticalDividerStrokeWidth = AttrMapValue(isNumber, desc="table inner vertical lines width"),
+        dividerDashArray = AttrMapValue(isListOfNumbersOrNone, desc='Dash array for dividerLines.'),
+        data = AttrMapValue(None, desc="a list of list of strings to be displayed in the cells"),
+        boxAnchor = AttrMapValue(isBoxAnchor, desc="location of the table anchoring point"),
+        fontName = AttrMapValue(isString, desc="text font in the table"),
+        fontSize = AttrMapValue(isNumber, desc="font size of the table"),
+        fontColor = AttrMapValue(isColorOrNone, desc="font color"),
+        alignment = AttrMapValue(OneOf("left", "right"), desc="Alignment of text within cells"),
+        textAnchor = AttrMapValue(OneOf('start','middle','end','numeric'), desc="Alignment of text within cells"),
+    )
+
+    def __init__(self, x=10, y=10, **kw):
+
+        self.x = x
+        self.y = y
+        self.width = 200
+        self.height = 100
+        self.borderStrokeColor = colors.black
+        self.fillColor = None
+        self.borderStrokeWidth = 0.5
+        self.horizontalDividerStrokeColor = colors.black
+        self.verticalDividerStrokeColor = colors.black
+        self.horizontalDividerStrokeWidth = 0.5
+        self.verticalDividerStrokeWidth = 0.25
+        self.dividerDashArray = None
+        self.data = [['North','South','East','West'],[100,110,120,130],['A','B','C','D']] # list of rows each row is a list of columns
+        self.boxAnchor = 'nw'
+        #self.fontName = None
+        self.fontSize = 8
+        self.fontColor = colors.black
+        self.alignment = 'right'
+        self.textAnchor = 'start'
+
+
+        for k, v in kw.items():
+            if k in list(self.__class__._attrMap.keys()):
+                setattr(self, k, v)
+            else:
+                raise ValueError('invalid argument supplied for class %s'%self.__class__)
+
+    def demo(self):
+        """ returns a sample of this widget with data
+        """
+        d = Drawing(400, 200)
+        t = TableWidget()
+        d.add(t, name='table')
+        d.table.dividerDashArray = (1, 3, 2)
+        d.table.verticalDividerStrokeColor = None
+        d.table.borderStrokeWidth = 0
+        d.table.borderStrokeColor = colors.red
+        return d
+
+    def draw(self):
+        """ returns a group of shapes
+        """
+        g = shapes.Group()
+
+        #overall border and fill
+        if self.borderStrokeColor or self.fillColor: # adds border and filling color
+            rect = shapes.Rect(self.x, self.y, self.width, self.height)
+            rect.fillColor = self.fillColor
+            rect.strokeColor = self.borderStrokeColor
+            rect.strokeWidth = self.borderStrokeWidth
+            g.add(rect)
+
+        #special case - for an empty table we want to avoid divide-by-zero
+        data = self.preProcessData(self.data)
+        rows = len(self.data)
+        cols = len(self.data[0])
+        #print "(rows,cols)=(%s, %s)"%(rows,cols)
+        row_step = self.height / float(rows)
+        col_step = self.width / float(cols)
+        #print "(row_step,col_step)=(%s, %s)"%(row_step,col_step)
+        # draw the grid
+        if self.horizontalDividerStrokeColor:
+            for i in range(rows): # make horizontal lines
+                x1 = self.x
+                x2 = self.x + self.width
+                y = self.y + row_step*i
+                #print 'line (%s, %s), (%s, %s)'%(x1, y, x2, y)
+                line = shapes.Line(x1, y, x2, y)
+                line.strokeDashArray = self.dividerDashArray
+                line.strokeWidth = self.horizontalDividerStrokeWidth
+                line.strokeColor = self.horizontalDividerStrokeColor
+                g.add(line)
+        if self.verticalDividerStrokeColor:
+            for i in range(cols): # make vertical lines
+                x = self.x+col_step*i
+                y1 = self.y
+                y2 = self.y + self.height
+                #print 'line (%s, %s), (%s, %s)'%(x, y1, x, y2)
+                line = shapes.Line(x, y1, x, y2)
+                line.strokeDashArray = self.dividerDashArray
+                line.strokeWidth = self.verticalDividerStrokeWidth
+                line.strokeColor = self.verticalDividerStrokeColor
+                g.add(line)
+
+        # since we plot data from down up, we reverse the list
+        self.data.reverse()
+        for (j, row) in enumerate(self.data):
+            y = self.y + j*row_step + 0.5*row_step - 0.5 * self.fontSize
+            for (i, datum) in enumerate(row):
+                if datum:
+                    x = self.x + i*col_step + 0.5*col_step
+                    s = shapes.String(x, y, str(datum), textAnchor=self.textAnchor)
+                    s.fontName = self.fontName
+                    s.fontSize = self.fontSize
+                    s.fillColor = self.fontColor
+                    g.add(s)
+        return g
+
+    def preProcessData(self, data):
+        """preprocess and return a new array with at least one row
+        and column (use a None) if needed, and all rows the same
+        length (adding Nones if needed)
+
+        """
+        if not data:
+            return [[None]]
+        #make all rows have similar number of cells, append None when needed
+        max_row = max( [len(x) for x in data] )
+        for rowNo, row in enumerate(data):
+            if len(row) < max_row:
+                row.extend([None]*(max_row-len(row)))
+        return data
+
+#test
+if __name__ == '__main__':
+    d = TableWidget().demo()
+    import os
+    d.save(formats=['pdf'],outDir=os.getcwd(),fnRoot=None)
+

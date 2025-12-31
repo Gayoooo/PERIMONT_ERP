@@ -1,0 +1,6 @@
+from database.db_manager import Database
+try:
+    db = Database()
+    print("✅ Structure créée et Base de données initialisée avec succès !")
+except Exception as e:
+    print(f"❌ Erreur : {e}")

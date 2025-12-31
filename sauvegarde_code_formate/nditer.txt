@@ -1,0 +1,12 @@
+#!/usr/bin/env python3
+"""
+Script de nditer pour PERIMONT_ERP
+Module: venv.Lib.site-packages.numpy.typing.tests.data.pass.nditer.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+import numpy as np
+
+arr = np.array([1])
+np.nditer([arr, None])
+

@@ -1,0 +1,8 @@
+#!/usr/bin/env python3
+"""
+Script de __init__ pour PERIMONT_ERP
+Module: venv.Lib.site-packages.tzdata.zoneinfo.US.__init__.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+

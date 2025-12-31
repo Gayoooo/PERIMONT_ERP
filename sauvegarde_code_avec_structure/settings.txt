@@ -1,0 +1,19 @@
+// Branche: config\settings.py
+
+import os
+
+# Chemins
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DB_PATH = os.path.join(BASE_DIR, "database", "perimont.db")
+
+# Couleurs Ultra Modernes (Palette Midnight Blue & Slate)
+COLOR_MAIN_BG = "#0F172A"      # Fond très sombre
+COLOR_CARD_BG = "#1E293B"      # Fond des cartes/formulaires
+COLOR_ACCENT = "#38BDF8"       # Bleu ciel électrique
+COLOR_TEXT_MAIN = "#F8FAFC"    # Blanc cassé
+COLOR_TEXT_DIM = "#94A3B8"     # Gris bleuté pour le texte secondaire
+COLOR_ERROR = "#F87171"        # Rouge pastel
+
+# Paramètres UI
+WINDOW_WIDTH = 1100
+WINDOW_HEIGHT = 700

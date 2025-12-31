@@ -1,0 +1,5755 @@
+// Chemin: C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\core\common.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\core\computation\common.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\core\dtypes\common.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\core\ops\common.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\core\window\common.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\io\common.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\apply\common.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\arithmetic\common.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\base\common.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\frame\common.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\indexing\common.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\io\pytables\common.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\plotting\common.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\tseries\offsets\common.py C:\PERIMONT_ERP\venv\Lib\site-packages\reportlab\graphics\barcode\common.py
+
+"""
+Misc tools for implementing data structures
+
+Note: pandas.core.common is *not* part of the public API.
+"""
+from __future__ import annotations
+
+import builtins
+from collections import (
+    abc,
+    defaultdict,
+)
+from collections.abc import (
+    Collection,
+    Generator,
+    Hashable,
+    Iterable,
+    Sequence,
+)
+import contextlib
+from functools import partial
+import inspect
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    cast,
+    overload,
+)
+import warnings
+
+import numpy as np
+
+from pandas._libs import lib
+from pandas.compat.numpy import np_version_gte1p24
+
+from pandas.core.dtypes.cast import construct_1d_object_array_from_listlike
+from pandas.core.dtypes.common import (
+    is_bool_dtype,
+    is_integer,
+)
+from pandas.core.dtypes.generic import (
+    ABCExtensionArray,
+    ABCIndex,
+    ABCMultiIndex,
+    ABCSeries,
+)
+from pandas.core.dtypes.inference import iterable_not_string
+
+if TYPE_CHECKING:
+    from pandas._typing import (
+        AnyArrayLike,
+        ArrayLike,
+        NpDtype,
+        RandomState,
+        T,
+    )
+
+    from pandas import Index
+
+
+def flatten(line):
+    """
+    Flatten an arbitrarily nested sequence.
+
+    Parameters
+    ----------
+    line : sequence
+        The non string sequence to flatten
+
+    Notes
+    -----
+    This doesn't consider strings sequences.
+
+    Returns
+    -------
+    flattened : generator
+    """
+    for element in line:
+        if iterable_not_string(element):
+            yield from flatten(element)
+        else:
+            yield element
+
+
+def consensus_name_attr(objs):
+    name = objs[0].name
+    for obj in objs[1:]:
+        try:
+            if obj.name != name:
+                name = None
+        except ValueError:
+            name = None
+    return name
+
+
+def is_bool_indexer(key: Any) -> bool:
+    """
+    Check whether `key` is a valid boolean indexer.
+
+    Parameters
+    ----------
+    key : Any
+        Only list-likes may be considered boolean indexers.
+        All other types are not considered a boolean indexer.
+        For array-like input, boolean ndarrays or ExtensionArrays
+        with ``_is_boolean`` set are considered boolean indexers.
+
+    Returns
+    -------
+    bool
+        Whether `key` is a valid boolean indexer.
+
+    Raises
+    ------
+    ValueError
+        When the array is an object-dtype ndarray or ExtensionArray
+        and contains missing values.
+
+    See Also
+    --------
+    check_array_indexer : Check that `key` is a valid array to index,
+        and convert to an ndarray.
+    """
+    if isinstance(
+        key, (ABCSeries, np.ndarray, ABCIndex, ABCExtensionArray)
+    ) and not isinstance(key, ABCMultiIndex):
+        if key.dtype == np.object_:
+            key_array = np.asarray(key)
+
+            if not lib.is_bool_array(key_array):
+                na_msg = "Cannot mask with non-boolean array containing NA / NaN values"
+                if lib.is_bool_array(key_array, skipna=True):
+                    # Don't raise on e.g. ["A", "B", np.nan], see
+                    #  test_loc_getitem_list_of_labels_categoricalindex_with_na
+                    raise ValueError(na_msg)
+                return False
+            return True
+        elif is_bool_dtype(key.dtype):
+            return True
+    elif isinstance(key, list):
+        # check if np.array(key).dtype would be bool
+        if len(key) > 0:
+            if type(key) is not list:  # noqa: E721
+                # GH#42461 cython will raise TypeError if we pass a subclass
+                key = list(key)
+            return lib.is_bool_list(key)
+
+    return False
+
+
+def cast_scalar_indexer(val):
+    """
+    Disallow indexing with a float key, even if that key is a round number.
+
+    Parameters
+    ----------
+    val : scalar
+
+    Returns
+    -------
+    outval : scalar
+    """
+    # assumes lib.is_scalar(val)
+    if lib.is_float(val) and val.is_integer():
+        raise IndexError(
+            # GH#34193
+            "Indexing with a float is no longer supported. Manually convert "
+            "to an integer key instead."
+        )
+    return val
+
+
+def not_none(*args):
+    """
+    Returns a generator consisting of the arguments that are not None.
+    """
+    return (arg for arg in args if arg is not None)
+
+
+def any_none(*args) -> bool:
+    """
+    Returns a boolean indicating if any argument is None.
+    """
+    return any(arg is None for arg in args)
+
+
+def all_none(*args) -> bool:
+    """
+    Returns a boolean indicating if all arguments are None.
+    """
+    return all(arg is None for arg in args)
+
+
+def any_not_none(*args) -> bool:
+    """
+    Returns a boolean indicating if any argument is not None.
+    """
+    return any(arg is not None for arg in args)
+
+
+def all_not_none(*args) -> bool:
+    """
+    Returns a boolean indicating if all arguments are not None.
+    """
+    return all(arg is not None for arg in args)
+
+
+def count_not_none(*args) -> int:
+    """
+    Returns the count of arguments that are not None.
+    """
+    return sum(x is not None for x in args)
+
+
+@overload
+def asarray_tuplesafe(
+    values: ArrayLike | list | tuple | zip, dtype: NpDtype | None = ...
+) -> np.ndarray:
+    # ExtensionArray can only be returned when values is an Index, all other iterables
+    # will return np.ndarray. Unfortunately "all other" cannot be encoded in a type
+    # signature, so instead we special-case some common types.
+    ...
+
+
+@overload
+def asarray_tuplesafe(values: Iterable, dtype: NpDtype | None = ...) -> ArrayLike:
+    ...
+
+
+def asarray_tuplesafe(values: Iterable, dtype: NpDtype | None = None) -> ArrayLike:
+    if not (isinstance(values, (list, tuple)) or hasattr(values, "__array__")):
+        values = list(values)
+    elif isinstance(values, ABCIndex):
+        return values._values
+    elif isinstance(values, ABCSeries):
+        return values._values
+
+    if isinstance(values, list) and dtype in [np.object_, object]:
+        return construct_1d_object_array_from_listlike(values)
+
+    try:
+        with warnings.catch_warnings():
+            # Can remove warning filter once NumPy 1.24 is min version
+            if not np_version_gte1p24:
+                warnings.simplefilter("ignore", np.VisibleDeprecationWarning)
+            result = np.asarray(values, dtype=dtype)
+    except ValueError:
+        # Using try/except since it's more performant than checking is_list_like
+        # over each element
+        # error: Argument 1 to "construct_1d_object_array_from_listlike"
+        # has incompatible type "Iterable[Any]"; expected "Sized"
+        return construct_1d_object_array_from_listlike(values)  # type: ignore[arg-type]
+
+    if issubclass(result.dtype.type, str):
+        result = np.asarray(values, dtype=object)
+
+    if result.ndim == 2:
+        # Avoid building an array of arrays:
+        values = [tuple(x) for x in values]
+        result = construct_1d_object_array_from_listlike(values)
+
+    return result
+
+
+def index_labels_to_array(
+    labels: np.ndarray | Iterable, dtype: NpDtype | None = None
+) -> np.ndarray:
+    """
+    Transform label or iterable of labels to array, for use in Index.
+
+    Parameters
+    ----------
+    dtype : dtype
+        If specified, use as dtype of the resulting array, otherwise infer.
+
+    Returns
+    -------
+    array
+    """
+    if isinstance(labels, (str, tuple)):
+        labels = [labels]
+
+    if not isinstance(labels, (list, np.ndarray)):
+        try:
+            labels = list(labels)
+        except TypeError:  # non-iterable
+            labels = [labels]
+
+    labels = asarray_tuplesafe(labels, dtype=dtype)
+
+    return labels
+
+
+def maybe_make_list(obj):
+    if obj is not None and not isinstance(obj, (tuple, list)):
+        return [obj]
+    return obj
+
+
+def maybe_iterable_to_list(obj: Iterable[T] | T) -> Collection[T] | T:
+    """
+    If obj is Iterable but not list-like, consume into list.
+    """
+    if isinstance(obj, abc.Iterable) and not isinstance(obj, abc.Sized):
+        return list(obj)
+    obj = cast(Collection, obj)
+    return obj
+
+
+def is_null_slice(obj) -> bool:
+    """
+    We have a null slice.
+    """
+    return (
+        isinstance(obj, slice)
+        and obj.start is None
+        and obj.stop is None
+        and obj.step is None
+    )
+
+
+def is_empty_slice(obj) -> bool:
+    """
+    We have an empty slice, e.g. no values are selected.
+    """
+    return (
+        isinstance(obj, slice)
+        and obj.start is not None
+        and obj.stop is not None
+        and obj.start == obj.stop
+    )
+
+
+def is_true_slices(line) -> list[bool]:
+    """
+    Find non-trivial slices in "line": return a list of booleans with same length.
+    """
+    return [isinstance(k, slice) and not is_null_slice(k) for k in line]
+
+
+# TODO: used only once in indexing; belongs elsewhere?
+def is_full_slice(obj, line: int) -> bool:
+    """
+    We have a full length slice.
+    """
+    return (
+        isinstance(obj, slice)
+        and obj.start == 0
+        and obj.stop == line
+        and obj.step is None
+    )
+
+
+def get_callable_name(obj):
+    # typical case has name
+    if hasattr(obj, "__name__"):
+        return getattr(obj, "__name__")
+    # some objects don't; could recurse
+    if isinstance(obj, partial):
+        return get_callable_name(obj.func)
+    # fall back to class name
+    if callable(obj):
+        return type(obj).__name__
+    # everything failed (probably because the argument
+    # wasn't actually callable); we return None
+    # instead of the empty string in this case to allow
+    # distinguishing between no name and a name of ''
+    return None
+
+
+def apply_if_callable(maybe_callable, obj, **kwargs):
+    """
+    Evaluate possibly callable input using obj and kwargs if it is callable,
+    otherwise return as it is.
+
+    Parameters
+    ----------
+    maybe_callable : possibly a callable
+    obj : NDFrame
+    **kwargs
+    """
+    if callable(maybe_callable):
+        return maybe_callable(obj, **kwargs)
+
+    return maybe_callable
+
+
+def standardize_mapping(into):
+    """
+    Helper function to standardize a supplied mapping.
+
+    Parameters
+    ----------
+    into : instance or subclass of collections.abc.Mapping
+        Must be a class, an initialized collections.defaultdict,
+        or an instance of a collections.abc.Mapping subclass.
+
+    Returns
+    -------
+    mapping : a collections.abc.Mapping subclass or other constructor
+        a callable object that can accept an iterator to create
+        the desired Mapping.
+
+    See Also
+    --------
+    DataFrame.to_dict
+    Series.to_dict
+    """
+    if not inspect.isclass(into):
+        if isinstance(into, defaultdict):
+            return partial(defaultdict, into.default_factory)
+        into = type(into)
+    if not issubclass(into, abc.Mapping):
+        raise TypeError(f"unsupported type: {into}")
+    if into == defaultdict:
+        raise TypeError("to_dict() only accepts initialized defaultdicts")
+    return into
+
+
+@overload
+def random_state(state: np.random.Generator) -> np.random.Generator:
+    ...
+
+
+@overload
+def random_state(
+    state: int | np.ndarray | np.random.BitGenerator | np.random.RandomState | None,
+) -> np.random.RandomState:
+    ...
+
+
+def random_state(state: RandomState | None = None):
+    """
+    Helper function for processing random_state arguments.
+
+    Parameters
+    ----------
+    state : int, array-like, BitGenerator, Generator, np.random.RandomState, None.
+        If receives an int, array-like, or BitGenerator, passes to
+        np.random.RandomState() as seed.
+        If receives an np.random RandomState or Generator, just returns that unchanged.
+        If receives `None`, returns np.random.
+        If receives anything else, raises an informative ValueError.
+
+        Default None.
+
+    Returns
+    -------
+    np.random.RandomState or np.random.Generator. If state is None, returns np.random
+
+    """
+    if is_integer(state) or isinstance(state, (np.ndarray, np.random.BitGenerator)):
+        return np.random.RandomState(state)
+    elif isinstance(state, np.random.RandomState):
+        return state
+    elif isinstance(state, np.random.Generator):
+        return state
+    elif state is None:
+        return np.random
+    else:
+        raise ValueError(
+            "random_state must be an integer, array-like, a BitGenerator, Generator, "
+            "a numpy RandomState, or None"
+        )
+
+
+def pipe(
+    obj, func: Callable[..., T] | tuple[Callable[..., T], str], *args, **kwargs
+) -> T:
+    """
+    Apply a function ``func`` to object ``obj`` either by passing obj as the
+    first argument to the function or, in the case that the func is a tuple,
+    interpret the first element of the tuple as a function and pass the obj to
+    that function as a keyword argument whose key is the value of the second
+    element of the tuple.
+
+    Parameters
+    ----------
+    func : callable or tuple of (callable, str)
+        Function to apply to this object or, alternatively, a
+        ``(callable, data_keyword)`` tuple where ``data_keyword`` is a
+        string indicating the keyword of ``callable`` that expects the
+        object.
+    *args : iterable, optional
+        Positional arguments passed into ``func``.
+    **kwargs : dict, optional
+        A dictionary of keyword arguments passed into ``func``.
+
+    Returns
+    -------
+    object : the return type of ``func``.
+    """
+    if isinstance(func, tuple):
+        func, target = func
+        if target in kwargs:
+            msg = f"{target} is both the pipe target and a keyword argument"
+            raise ValueError(msg)
+        kwargs[target] = obj
+        return func(*args, **kwargs)
+    else:
+        return func(obj, *args, **kwargs)
+
+
+def get_rename_function(mapper):
+    """
+    Returns a function that will map names/labels, dependent if mapper
+    is a dict, Series or just a function.
+    """
+
+    def f(x):
+        if x in mapper:
+            return mapper[x]
+        else:
+            return x
+
+    return f if isinstance(mapper, (abc.Mapping, ABCSeries)) else mapper
+
+
+def convert_to_list_like(
+    values: Hashable | Iterable | AnyArrayLike,
+) -> list | AnyArrayLike:
+    """
+    Convert list-like or scalar input to list-like. List, numpy and pandas array-like
+    inputs are returned unmodified whereas others are converted to list.
+    """
+    if isinstance(values, (list, np.ndarray, ABCIndex, ABCSeries, ABCExtensionArray)):
+        return values
+    elif isinstance(values, abc.Iterable) and not isinstance(values, str):
+        return list(values)
+
+    return [values]
+
+
+@contextlib.contextmanager
+def temp_setattr(
+    obj, attr: str, value, condition: bool = True
+) -> Generator[None, None, None]:
+    """
+    Temporarily set attribute on an object.
+
+    Parameters
+    ----------
+    obj : object
+        Object whose attribute will be modified.
+    attr : str
+        Attribute to modify.
+    value : Any
+        Value to temporarily set attribute to.
+    condition : bool, default True
+        Whether to set the attribute. Provided in order to not have to
+        conditionally use this context manager.
+
+    Yields
+    ------
+    object : obj with modified attribute.
+    """
+    if condition:
+        old_value = getattr(obj, attr)
+        setattr(obj, attr, value)
+    try:
+        yield obj
+    finally:
+        if condition:
+            setattr(obj, attr, old_value)
+
+
+def require_length_match(data, index: Index) -> None:
+    """
+    Check the length of data matches the length of the index.
+    """
+    if len(data) != len(index):
+        raise ValueError(
+            "Length of values "
+            f"({len(data)}) "
+            "does not match length of index "
+            f"({len(index)})"
+        )
+
+
+# the ufuncs np.maximum.reduce and np.minimum.reduce default to axis=0,
+#  whereas np.min and np.max (which directly call obj.min and obj.max)
+#  default to axis=None.
+_builtin_table = {
+    builtins.sum: np.sum,
+    builtins.max: np.maximum.reduce,
+    builtins.min: np.minimum.reduce,
+}
+
+# GH#53425: Only for deprecation
+_builtin_table_alias = {
+    builtins.sum: "np.sum",
+    builtins.max: "np.maximum.reduce",
+    builtins.min: "np.minimum.reduce",
+}
+
+_cython_table = {
+    builtins.sum: "sum",
+    builtins.max: "max",
+    builtins.min: "min",
+    np.all: "all",
+    np.any: "any",
+    np.sum: "sum",
+    np.nansum: "sum",
+    np.mean: "mean",
+    np.nanmean: "mean",
+    np.prod: "prod",
+    np.nanprod: "prod",
+    np.std: "std",
+    np.nanstd: "std",
+    np.var: "var",
+    np.nanvar: "var",
+    np.median: "median",
+    np.nanmedian: "median",
+    np.max: "max",
+    np.nanmax: "max",
+    np.min: "min",
+    np.nanmin: "min",
+    np.cumprod: "cumprod",
+    np.nancumprod: "cumprod",
+    np.cumsum: "cumsum",
+    np.nancumsum: "cumsum",
+}
+
+
+def get_cython_func(arg: Callable) -> str | None:
+    """
+    if we define an internal function for this argument, return it
+    """
+    return _cython_table.get(arg)
+
+
+def is_builtin_func(arg):
+    """
+    if we define a builtin function for this argument, return it,
+    otherwise return the arg
+    """
+    return _builtin_table.get(arg, arg)
+
+
+def fill_missing_names(names: Sequence[Hashable | None]) -> list[Hashable]:
+    """
+    If a name is missing then replace it by level_n, where n is the count
+
+    .. versionadded:: 1.4.0
+
+    Parameters
+    ----------
+    names : list-like
+        list of column names or None values.
+
+    Returns
+    -------
+    list
+        list of column names with the None values replaced.
+    """
+    return [f"level_{i}" if name is None else name for i, name in enumerate(names)]
+ from __future__ import annotations
+
+from functools import reduce
+
+import numpy as np
+
+from pandas._config import get_option
+
+
+def ensure_decoded(s) -> str:
+    """
+    If we have bytes, decode them to unicode.
+    """
+    if isinstance(s, (np.bytes_, bytes)):
+        s = s.decode(get_option("display.encoding"))
+    return s
+
+
+def result_type_many(*arrays_and_dtypes):
+    """
+    Wrapper around numpy.result_type which overcomes the NPY_MAXARGS (32)
+    argument limit.
+    """
+    try:
+        return np.result_type(*arrays_and_dtypes)
+    except ValueError:
+        # we have > NPY_MAXARGS terms in our expression
+        return reduce(np.result_type, arrays_and_dtypes)
+    except TypeError:
+        from pandas.core.dtypes.cast import find_common_type
+        from pandas.core.dtypes.common import is_extension_array_dtype
+
+        arr_and_dtypes = list(arrays_and_dtypes)
+        ea_dtypes, non_ea_dtypes = [], []
+        for arr_or_dtype in arr_and_dtypes:
+            if is_extension_array_dtype(arr_or_dtype):
+                ea_dtypes.append(arr_or_dtype)
+            else:
+                non_ea_dtypes.append(arr_or_dtype)
+
+        if non_ea_dtypes:
+            try:
+                np_dtype = np.result_type(*non_ea_dtypes)
+            except ValueError:
+                np_dtype = reduce(np.result_type, arrays_and_dtypes)
+            return find_common_type(ea_dtypes + [np_dtype])
+
+        return find_common_type(ea_dtypes)
+ """
+Common type operations.
+"""
+from __future__ import annotations
+
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+)
+import warnings
+
+import numpy as np
+
+from pandas._config import using_string_dtype
+
+from pandas._libs import (
+    Interval,
+    Period,
+    algos,
+    lib,
+)
+from pandas._libs.tslibs import conversion
+from pandas.util._exceptions import find_stack_level
+
+from pandas.core.dtypes.base import _registry as registry
+from pandas.core.dtypes.dtypes import (
+    CategoricalDtype,
+    DatetimeTZDtype,
+    ExtensionDtype,
+    IntervalDtype,
+    PeriodDtype,
+    SparseDtype,
+)
+from pandas.core.dtypes.generic import ABCIndex
+from pandas.core.dtypes.inference import (
+    is_array_like,
+    is_bool,
+    is_complex,
+    is_dataclass,
+    is_decimal,
+    is_dict_like,
+    is_file_like,
+    is_float,
+    is_hashable,
+    is_integer,
+    is_interval,
+    is_iterator,
+    is_list_like,
+    is_named_tuple,
+    is_nested_list_like,
+    is_number,
+    is_re,
+    is_re_compilable,
+    is_scalar,
+    is_sequence,
+)
+
+if TYPE_CHECKING:
+    from pandas._typing import (
+        ArrayLike,
+        DtypeObj,
+    )
+
+DT64NS_DTYPE = conversion.DT64NS_DTYPE
+TD64NS_DTYPE = conversion.TD64NS_DTYPE
+INT64_DTYPE = np.dtype(np.int64)
+
+# oh the troubles to reduce import time
+_is_scipy_sparse = None
+
+ensure_float64 = algos.ensure_float64
+ensure_int64 = algos.ensure_int64
+ensure_int32 = algos.ensure_int32
+ensure_int16 = algos.ensure_int16
+ensure_int8 = algos.ensure_int8
+ensure_platform_int = algos.ensure_platform_int
+ensure_object = algos.ensure_object
+ensure_uint64 = algos.ensure_uint64
+
+
+def ensure_str(value: bytes | Any) -> str:
+    """
+    Ensure that bytes and non-strings get converted into ``str`` objects.
+    """
+    if isinstance(value, bytes):
+        value = value.decode("utf-8")
+    elif not isinstance(value, str):
+        value = str(value)
+    return value
+
+
+def ensure_python_int(value: int | np.integer) -> int:
+    """
+    Ensure that a value is a python int.
+
+    Parameters
+    ----------
+    value: int or numpy.integer
+
+    Returns
+    -------
+    int
+
+    Raises
+    ------
+    TypeError: if the value isn't an int or can't be converted to one.
+    """
+    if not (is_integer(value) or is_float(value)):
+        if not is_scalar(value):
+            raise TypeError(
+                f"Value needs to be a scalar value, was type {type(value).__name__}"
+            )
+        raise TypeError(f"Wrong type {type(value)} for value {value}")
+    try:
+        new_value = int(value)
+        assert new_value == value
+    except (TypeError, ValueError, AssertionError) as err:
+        raise TypeError(f"Wrong type {type(value)} for value {value}") from err
+    return new_value
+
+
+def classes(*klasses) -> Callable:
+    """Evaluate if the tipo is a subclass of the klasses."""
+    return lambda tipo: issubclass(tipo, klasses)
+
+
+def _classes_and_not_datetimelike(*klasses) -> Callable:
+    """
+    Evaluate if the tipo is a subclass of the klasses
+    and not a datetimelike.
+    """
+    return lambda tipo: (
+        issubclass(tipo, klasses)
+        and not issubclass(tipo, (np.datetime64, np.timedelta64))
+    )
+
+
+def is_object_dtype(arr_or_dtype) -> bool:
+    """
+    Check whether an array-like or dtype is of the object dtype.
+
+    Parameters
+    ----------
+    arr_or_dtype : array-like or dtype
+        The array-like or dtype to check.
+
+    Returns
+    -------
+    boolean
+        Whether or not the array-like or dtype is of the object dtype.
+
+    Examples
+    --------
+    >>> from pandas.api.types import is_object_dtype
+    >>> is_object_dtype(object)
+    True
+    >>> is_object_dtype(int)
+    False
+    >>> is_object_dtype(np.array([], dtype=object))
+    True
+    >>> is_object_dtype(np.array([], dtype=int))
+    False
+    >>> is_object_dtype([1, 2, 3])
+    False
+    """
+    return _is_dtype_type(arr_or_dtype, classes(np.object_))
+
+
+def is_sparse(arr) -> bool:
+    """
+    Check whether an array-like is a 1-D pandas sparse array.
+
+    .. deprecated:: 2.1.0
+        Use isinstance(dtype, pd.SparseDtype) instead.
+
+    Check that the one-dimensional array-like is a pandas sparse array.
+    Returns True if it is a pandas sparse array, not another type of
+    sparse array.
+
+    Parameters
+    ----------
+    arr : array-like
+        Array-like to check.
+
+    Returns
+    -------
+    bool
+        Whether or not the array-like is a pandas sparse array.
+
+    Examples
+    --------
+    Returns `True` if the parameter is a 1-D pandas sparse array.
+
+    >>> from pandas.api.types import is_sparse
+    >>> is_sparse(pd.arrays.SparseArray([0, 0, 1, 0]))
+    True
+    >>> is_sparse(pd.Series(pd.arrays.SparseArray([0, 0, 1, 0])))
+    True
+
+    Returns `False` if the parameter is not sparse.
+
+    >>> is_sparse(np.array([0, 0, 1, 0]))
+    False
+    >>> is_sparse(pd.Series([0, 1, 0, 0]))
+    False
+
+    Returns `False` if the parameter is not a pandas sparse array.
+
+    >>> from scipy.sparse import bsr_matrix
+    >>> is_sparse(bsr_matrix([0, 1, 0, 0]))
+    False
+
+    Returns `False` if the parameter has more than one dimension.
+    """
+    warnings.warn(
+        "is_sparse is deprecated and will be removed in a future "
+        "version. Check `isinstance(dtype, pd.SparseDtype)` instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
+    dtype = getattr(arr, "dtype", arr)
+    return isinstance(dtype, SparseDtype)
+
+
+def is_scipy_sparse(arr) -> bool:
+    """
+    Check whether an array-like is a scipy.sparse.spmatrix instance.
+
+    Parameters
+    ----------
+    arr : array-like
+        The array-like to check.
+
+    Returns
+    -------
+    boolean
+        Whether or not the array-like is a scipy.sparse.spmatrix instance.
+
+    Notes
+    -----
+    If scipy is not installed, this function will always return False.
+
+    Examples
+    --------
+    >>> from scipy.sparse import bsr_matrix
+    >>> is_scipy_sparse(bsr_matrix([1, 2, 3]))
+    True
+    >>> is_scipy_sparse(pd.arrays.SparseArray([1, 2, 3]))
+    False
+    """
+    global _is_scipy_sparse
+
+    if _is_scipy_sparse is None:  # pylint: disable=used-before-assignment
+        try:
+            from scipy.sparse import issparse as _is_scipy_sparse
+        except ImportError:
+            _is_scipy_sparse = lambda _: False
+
+    assert _is_scipy_sparse is not None
+    return _is_scipy_sparse(arr)
+
+
+def is_datetime64_dtype(arr_or_dtype) -> bool:
+    """
+    Check whether an array-like or dtype is of the datetime64 dtype.
+
+    Parameters
+    ----------
+    arr_or_dtype : array-like or dtype
+        The array-like or dtype to check.
+
+    Returns
+    -------
+    boolean
+        Whether or not the array-like or dtype is of the datetime64 dtype.
+
+    Examples
+    --------
+    >>> from pandas.api.types import is_datetime64_dtype
+    >>> is_datetime64_dtype(object)
+    False
+    >>> is_datetime64_dtype(np.datetime64)
+    True
+    >>> is_datetime64_dtype(np.array([], dtype=int))
+    False
+    >>> is_datetime64_dtype(np.array([], dtype=np.datetime64))
+    True
+    >>> is_datetime64_dtype([1, 2, 3])
+    False
+    """
+    if isinstance(arr_or_dtype, np.dtype):
+        # GH#33400 fastpath for dtype object
+        return arr_or_dtype.kind == "M"
+    return _is_dtype_type(arr_or_dtype, classes(np.datetime64))
+
+
+def is_datetime64tz_dtype(arr_or_dtype) -> bool:
+    """
+    Check whether an array-like or dtype is of a DatetimeTZDtype dtype.
+
+    .. deprecated:: 2.1.0
+        Use isinstance(dtype, pd.DatetimeTZDtype) instead.
+
+    Parameters
+    ----------
+    arr_or_dtype : array-like or dtype
+        The array-like or dtype to check.
+
+    Returns
+    -------
+    boolean
+        Whether or not the array-like or dtype is of a DatetimeTZDtype dtype.
+
+    Examples
+    --------
+    >>> from pandas.api.types import is_datetime64tz_dtype
+    >>> is_datetime64tz_dtype(object)
+    False
+    >>> is_datetime64tz_dtype([1, 2, 3])
+    False
+    >>> is_datetime64tz_dtype(pd.DatetimeIndex([1, 2, 3]))  # tz-naive
+    False
+    >>> is_datetime64tz_dtype(pd.DatetimeIndex([1, 2, 3], tz="US/Eastern"))
+    True
+
+    >>> from pandas.core.dtypes.dtypes import DatetimeTZDtype
+    >>> dtype = DatetimeTZDtype("ns", tz="US/Eastern")
+    >>> s = pd.Series([], dtype=dtype)
+    >>> is_datetime64tz_dtype(dtype)
+    True
+    >>> is_datetime64tz_dtype(s)
+    True
+    """
+    # GH#52607
+    warnings.warn(
+        "is_datetime64tz_dtype is deprecated and will be removed in a future "
+        "version. Check `isinstance(dtype, pd.DatetimeTZDtype)` instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    if isinstance(arr_or_dtype, DatetimeTZDtype):
+        # GH#33400 fastpath for dtype object
+        # GH 34986
+        return True
+
+    if arr_or_dtype is None:
+        return False
+    return DatetimeTZDtype.is_dtype(arr_or_dtype)
+
+
+def is_timedelta64_dtype(arr_or_dtype) -> bool:
+    """
+    Check whether an array-like or dtype is of the timedelta64 dtype.
+
+    Parameters
+    ----------
+    arr_or_dtype : array-like or dtype
+        The array-like or dtype to check.
+
+    Returns
+    -------
+    boolean
+        Whether or not the array-like or dtype is of the timedelta64 dtype.
+
+    Examples
+    --------
+    >>> from pandas.core.dtypes.common import is_timedelta64_dtype
+    >>> is_timedelta64_dtype(object)
+    False
+    >>> is_timedelta64_dtype(np.timedelta64)
+    True
+    >>> is_timedelta64_dtype([1, 2, 3])
+    False
+    >>> is_timedelta64_dtype(pd.Series([], dtype="timedelta64[ns]"))
+    True
+    >>> is_timedelta64_dtype('0 days')
+    False
+    """
+    if isinstance(arr_or_dtype, np.dtype):
+        # GH#33400 fastpath for dtype object
+        return arr_or_dtype.kind == "m"
+
+    return _is_dtype_type(arr_or_dtype, classes(np.timedelta64))
+
+
+def is_period_dtype(arr_or_dtype) -> bool:
+    """
+    Check whether an array-like or dtype is of the Period dtype.
+
+    .. deprecated:: 2.2.0
+        Use isinstance(dtype, pd.Period) instead.
+
+    Parameters
+    ----------
+    arr_or_dtype : array-like or dtype
+        The array-like or dtype to check.
+
+    Returns
+    -------
+    boolean
+        Whether or not the array-like or dtype is of the Period dtype.
+
+    Examples
+    --------
+    >>> from pandas.core.dtypes.common import is_period_dtype
+    >>> is_period_dtype(object)
+    False
+    >>> is_period_dtype(pd.PeriodDtype(freq="D"))
+    True
+    >>> is_period_dtype([1, 2, 3])
+    False
+    >>> is_period_dtype(pd.Period("2017-01-01"))
+    False
+    >>> is_period_dtype(pd.PeriodIndex([], freq="Y"))
+    True
+    """
+    warnings.warn(
+        "is_period_dtype is deprecated and will be removed in a future version. "
+        "Use `isinstance(dtype, pd.PeriodDtype)` instead",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    if isinstance(arr_or_dtype, ExtensionDtype):
+        # GH#33400 fastpath for dtype object
+        return arr_or_dtype.type is Period
+
+    if arr_or_dtype is None:
+        return False
+    return PeriodDtype.is_dtype(arr_or_dtype)
+
+
+def is_interval_dtype(arr_or_dtype) -> bool:
+    """
+    Check whether an array-like or dtype is of the Interval dtype.
+
+    .. deprecated:: 2.2.0
+        Use isinstance(dtype, pd.IntervalDtype) instead.
+
+    Parameters
+    ----------
+    arr_or_dtype : array-like or dtype
+        The array-like or dtype to check.
+
+    Returns
+    -------
+    boolean
+        Whether or not the array-like or dtype is of the Interval dtype.
+
+    Examples
+    --------
+    >>> from pandas.core.dtypes.common import is_interval_dtype
+    >>> is_interval_dtype(object)
+    False
+    >>> is_interval_dtype(pd.IntervalDtype())
+    True
+    >>> is_interval_dtype([1, 2, 3])
+    False
+    >>>
+    >>> interval = pd.Interval(1, 2, closed="right")
+    >>> is_interval_dtype(interval)
+    False
+    >>> is_interval_dtype(pd.IntervalIndex([interval]))
+    True
+    """
+    # GH#52607
+    warnings.warn(
+        "is_interval_dtype is deprecated and will be removed in a future version. "
+        "Use `isinstance(dtype, pd.IntervalDtype)` instead",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    if isinstance(arr_or_dtype, ExtensionDtype):
+        # GH#33400 fastpath for dtype object
+        return arr_or_dtype.type is Interval
+
+    if arr_or_dtype is None:
+        return False
+    return IntervalDtype.is_dtype(arr_or_dtype)
+
+
+def is_categorical_dtype(arr_or_dtype) -> bool:
+    """
+    Check whether an array-like or dtype is of the Categorical dtype.
+
+    .. deprecated:: 2.2.0
+        Use isinstance(dtype, pd.CategoricalDtype) instead.
+
+    Parameters
+    ----------
+    arr_or_dtype : array-like or dtype
+        The array-like or dtype to check.
+
+    Returns
+    -------
+    boolean
+        Whether or not the array-like or dtype is of the Categorical dtype.
+
+    Examples
+    --------
+    >>> from pandas.api.types import is_categorical_dtype
+    >>> from pandas import CategoricalDtype
+    >>> is_categorical_dtype(object)
+    False
+    >>> is_categorical_dtype(CategoricalDtype())
+    True
+    >>> is_categorical_dtype([1, 2, 3])
+    False
+    >>> is_categorical_dtype(pd.Categorical([1, 2, 3]))
+    True
+    >>> is_categorical_dtype(pd.CategoricalIndex([1, 2, 3]))
+    True
+    """
+    # GH#52527
+    warnings.warn(
+        "is_categorical_dtype is deprecated and will be removed in a future "
+        "version. Use isinstance(dtype, pd.CategoricalDtype) instead",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    if isinstance(arr_or_dtype, ExtensionDtype):
+        # GH#33400 fastpath for dtype object
+        return arr_or_dtype.name == "category"
+
+    if arr_or_dtype is None:
+        return False
+    return CategoricalDtype.is_dtype(arr_or_dtype)
+
+
+def is_string_or_object_np_dtype(dtype: np.dtype) -> bool:
+    """
+    Faster alternative to is_string_dtype, assumes we have a np.dtype object.
+    """
+    return dtype == object or dtype.kind in "SU"
+
+
+def is_string_dtype(arr_or_dtype) -> bool:
+    """
+    Check whether the provided array or dtype is of the string dtype.
+
+    If an array is passed with an object dtype, the elements must be
+    inferred as strings.
+
+    Parameters
+    ----------
+    arr_or_dtype : array-like or dtype
+        The array or dtype to check.
+
+    Returns
+    -------
+    boolean
+        Whether or not the array or dtype is of the string dtype.
+
+    Examples
+    --------
+    >>> from pandas.api.types import is_string_dtype
+    >>> is_string_dtype(str)
+    True
+    >>> is_string_dtype(object)
+    True
+    >>> is_string_dtype(int)
+    False
+    >>> is_string_dtype(np.array(['a', 'b']))
+    True
+    >>> is_string_dtype(pd.Series([1, 2]))
+    False
+    >>> is_string_dtype(pd.Series([1, 2], dtype=object))
+    False
+    """
+    if hasattr(arr_or_dtype, "dtype") and _get_dtype(arr_or_dtype).kind == "O":
+        return is_all_strings(arr_or_dtype)
+
+    def condition(dtype) -> bool:
+        if is_string_or_object_np_dtype(dtype):
+            return True
+        try:
+            return dtype == "string"
+        except TypeError:
+            return False
+
+    return _is_dtype(arr_or_dtype, condition)
+
+
+def is_dtype_equal(source, target) -> bool:
+    """
+    Check if two dtypes are equal.
+
+    Parameters
+    ----------
+    source : The first dtype to compare
+    target : The second dtype to compare
+
+    Returns
+    -------
+    boolean
+        Whether or not the two dtypes are equal.
+
+    Examples
+    --------
+    >>> is_dtype_equal(int, float)
+    False
+    >>> is_dtype_equal("int", int)
+    True
+    >>> is_dtype_equal(object, "category")
+    False
+    >>> is_dtype_equal(CategoricalDtype(), "category")
+    True
+    >>> is_dtype_equal(DatetimeTZDtype(tz="UTC"), "datetime64")
+    False
+    """
+    if isinstance(target, str):
+        if not isinstance(source, str):
+            # GH#38516 ensure we get the same behavior from
+            #  is_dtype_equal(CDT, "category") and CDT == "category"
+            try:
+                src = _get_dtype(source)
+                if isinstance(src, ExtensionDtype):
+                    return src == target
+            except (TypeError, AttributeError, ImportError):
+                return False
+    elif isinstance(source, str):
+        return is_dtype_equal(target, source)
+
+    try:
+        source = _get_dtype(source)
+        target = _get_dtype(target)
+        return source == target
+    except (TypeError, AttributeError, ImportError):
+        # invalid comparison
+        # object == category will hit this
+        return False
+
+
+def is_integer_dtype(arr_or_dtype) -> bool:
+    """
+    Check whether the provided array or dtype is of an integer dtype.
+
+    Unlike in `is_any_int_dtype`, timedelta64 instances will return False.
+
+    The nullable Integer dtypes (e.g. pandas.Int64Dtype) are also considered
+    as integer by this function.
+
+    Parameters
+    ----------
+    arr_or_dtype : array-like or dtype
+        The array or dtype to check.
+
+    Returns
+    -------
+    boolean
+        Whether or not the array or dtype is of an integer dtype and
+        not an instance of timedelta64.
+
+    Examples
+    --------
+    >>> from pandas.api.types import is_integer_dtype
+    >>> is_integer_dtype(str)
+    False
+    >>> is_integer_dtype(int)
+    True
+    >>> is_integer_dtype(float)
+    False
+    >>> is_integer_dtype(np.uint64)
+    True
+    >>> is_integer_dtype('int8')
+    True
+    >>> is_integer_dtype('Int8')
+    True
+    >>> is_integer_dtype(pd.Int8Dtype)
+    True
+    >>> is_integer_dtype(np.datetime64)
+    False
+    >>> is_integer_dtype(np.timedelta64)
+    False
+    >>> is_integer_dtype(np.array(['a', 'b']))
+    False
+    >>> is_integer_dtype(pd.Series([1, 2]))
+    True
+    >>> is_integer_dtype(np.array([], dtype=np.timedelta64))
+    False
+    >>> is_integer_dtype(pd.Index([1, 2.]))  # float
+    False
+    """
+    return _is_dtype_type(
+        arr_or_dtype, _classes_and_not_datetimelike(np.integer)
+    ) or _is_dtype(
+        arr_or_dtype, lambda typ: isinstance(typ, ExtensionDtype) and typ.kind in "iu"
+    )
+
+
+def is_signed_integer_dtype(arr_or_dtype) -> bool:
+    """
+    Check whether the provided array or dtype is of a signed integer dtype.
+
+    Unlike in `is_any_int_dtype`, timedelta64 instances will return False.
+
+    The nullable Integer dtypes (e.g. pandas.Int64Dtype) are also considered
+    as integer by this function.
+
+    Parameters
+    ----------
+    arr_or_dtype : array-like or dtype
+        The array or dtype to check.
+
+    Returns
+    -------
+    boolean
+        Whether or not the array or dtype is of a signed integer dtype
+        and not an instance of timedelta64.
+
+    Examples
+    --------
+    >>> from pandas.core.dtypes.common import is_signed_integer_dtype
+    >>> is_signed_integer_dtype(str)
+    False
+    >>> is_signed_integer_dtype(int)
+    True
+    >>> is_signed_integer_dtype(float)
+    False
+    >>> is_signed_integer_dtype(np.uint64)  # unsigned
+    False
+    >>> is_signed_integer_dtype('int8')
+    True
+    >>> is_signed_integer_dtype('Int8')
+    True
+    >>> is_signed_integer_dtype(pd.Int8Dtype)
+    True
+    >>> is_signed_integer_dtype(np.datetime64)
+    False
+    >>> is_signed_integer_dtype(np.timedelta64)
+    False
+    >>> is_signed_integer_dtype(np.array(['a', 'b']))
+    False
+    >>> is_signed_integer_dtype(pd.Series([1, 2]))
+    True
+    >>> is_signed_integer_dtype(np.array([], dtype=np.timedelta64))
+    False
+    >>> is_signed_integer_dtype(pd.Index([1, 2.]))  # float
+    False
+    >>> is_signed_integer_dtype(np.array([1, 2], dtype=np.uint32))  # unsigned
+    False
+    """
+    return _is_dtype_type(
+        arr_or_dtype, _classes_and_not_datetimelike(np.signedinteger)
+    ) or _is_dtype(
+        arr_or_dtype, lambda typ: isinstance(typ, ExtensionDtype) and typ.kind == "i"
+    )
+
+
+def is_unsigned_integer_dtype(arr_or_dtype) -> bool:
+    """
+    Check whether the provided array or dtype is of an unsigned integer dtype.
+
+    The nullable Integer dtypes (e.g. pandas.UInt64Dtype) are also
+    considered as integer by this function.
+
+    Parameters
+    ----------
+    arr_or_dtype : array-like or dtype
+        The array or dtype to check.
+
+    Returns
+    -------
+    boolean
+        Whether or not the array or dtype is of an unsigned integer dtype.
+
+    Examples
+    --------
+    >>> from pandas.api.types import is_unsigned_integer_dtype
+    >>> is_unsigned_integer_dtype(str)
+    False
+    >>> is_unsigned_integer_dtype(int)  # signed
+    False
+    >>> is_unsigned_integer_dtype(float)
+    False
+    >>> is_unsigned_integer_dtype(np.uint64)
+    True
+    >>> is_unsigned_integer_dtype('uint8')
+    True
+    >>> is_unsigned_integer_dtype('UInt8')
+    True
+    >>> is_unsigned_integer_dtype(pd.UInt8Dtype)
+    True
+    >>> is_unsigned_integer_dtype(np.array(['a', 'b']))
+    False
+    >>> is_unsigned_integer_dtype(pd.Series([1, 2]))  # signed
+    False
+    >>> is_unsigned_integer_dtype(pd.Index([1, 2.]))  # float
+    False
+    >>> is_unsigned_integer_dtype(np.array([1, 2], dtype=np.uint32))
+    True
+    """
+    return _is_dtype_type(
+        arr_or_dtype, _classes_and_not_datetimelike(np.unsignedinteger)
+    ) or _is_dtype(
+        arr_or_dtype, lambda typ: isinstance(typ, ExtensionDtype) and typ.kind == "u"
+    )
+
+
+def is_int64_dtype(arr_or_dtype) -> bool:
+    """
+    Check whether the provided array or dtype is of the int64 dtype.
+
+    .. deprecated:: 2.1.0
+
+       is_int64_dtype is deprecated and will be removed in a future
+       version. Use dtype == np.int64 instead.
+
+    Parameters
+    ----------
+    arr_or_dtype : array-like or dtype
+        The array or dtype to check.
+
+    Returns
+    -------
+    boolean
+        Whether or not the array or dtype is of the int64 dtype.
+
+    Notes
+    -----
+    Depending on system architecture, the return value of `is_int64_dtype(
+    int)` will be True if the OS uses 64-bit integers and False if the OS
+    uses 32-bit integers.
+
+    Examples
+    --------
+    >>> from pandas.api.types import is_int64_dtype
+    >>> is_int64_dtype(str)  # doctest: +SKIP
+    False
+    >>> is_int64_dtype(np.int32)  # doctest: +SKIP
+    False
+    >>> is_int64_dtype(np.int64)  # doctest: +SKIP
+    True
+    >>> is_int64_dtype('int8')  # doctest: +SKIP
+    False
+    >>> is_int64_dtype('Int8')  # doctest: +SKIP
+    False
+    >>> is_int64_dtype(pd.Int64Dtype)  # doctest: +SKIP
+    True
+    >>> is_int64_dtype(float)  # doctest: +SKIP
+    False
+    >>> is_int64_dtype(np.uint64)  # unsigned  # doctest: +SKIP
+    False
+    >>> is_int64_dtype(np.array(['a', 'b']))  # doctest: +SKIP
+    False
+    >>> is_int64_dtype(np.array([1, 2], dtype=np.int64))  # doctest: +SKIP
+    True
+    >>> is_int64_dtype(pd.Index([1, 2.]))  # float  # doctest: +SKIP
+    False
+    >>> is_int64_dtype(np.array([1, 2], dtype=np.uint32))  # unsigned  # doctest: +SKIP
+    False
+    """
+    # GH#52564
+    warnings.warn(
+        "is_int64_dtype is deprecated and will be removed in a future "
+        "version. Use dtype == np.int64 instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return _is_dtype_type(arr_or_dtype, classes(np.int64))
+
+
+def is_datetime64_any_dtype(arr_or_dtype) -> bool:
+    """
+    Check whether the provided array or dtype is of the datetime64 dtype.
+
+    Parameters
+    ----------
+    arr_or_dtype : array-like or dtype
+        The array or dtype to check.
+
+    Returns
+    -------
+    bool
+        Whether or not the array or dtype is of the datetime64 dtype.
+
+    Examples
+    --------
+    >>> from pandas.api.types import is_datetime64_any_dtype
+    >>> from pandas.core.dtypes.dtypes import DatetimeTZDtype
+    >>> is_datetime64_any_dtype(str)
+    False
+    >>> is_datetime64_any_dtype(int)
+    False
+    >>> is_datetime64_any_dtype(np.datetime64)  # can be tz-naive
+    True
+    >>> is_datetime64_any_dtype(DatetimeTZDtype("ns", "US/Eastern"))
+    True
+    >>> is_datetime64_any_dtype(np.array(['a', 'b']))
+    False
+    >>> is_datetime64_any_dtype(np.array([1, 2]))
+    False
+    >>> is_datetime64_any_dtype(np.array([], dtype="datetime64[ns]"))
+    True
+    >>> is_datetime64_any_dtype(pd.DatetimeIndex([1, 2, 3], dtype="datetime64[ns]"))
+    True
+    """
+    if isinstance(arr_or_dtype, (np.dtype, ExtensionDtype)):
+        # GH#33400 fastpath for dtype object
+        return arr_or_dtype.kind == "M"
+
+    if arr_or_dtype is None:
+        return False
+
+    try:
+        tipo = _get_dtype(arr_or_dtype)
+    except TypeError:
+        return False
+    return lib.is_np_dtype(tipo, "M") or isinstance(tipo, DatetimeTZDtype)
+
+
+def is_datetime64_ns_dtype(arr_or_dtype) -> bool:
+    """
+    Check whether the provided array or dtype is of the datetime64[ns] dtype.
+
+    Parameters
+    ----------
+    arr_or_dtype : array-like or dtype
+        The array or dtype to check.
+
+    Returns
+    -------
+    bool
+        Whether or not the array or dtype is of the datetime64[ns] dtype.
+
+    Examples
+    --------
+    >>> from pandas.api.types import is_datetime64_ns_dtype
+    >>> from pandas.core.dtypes.dtypes import DatetimeTZDtype
+    >>> is_datetime64_ns_dtype(str)
+    False
+    >>> is_datetime64_ns_dtype(int)
+    False
+    >>> is_datetime64_ns_dtype(np.datetime64)  # no unit
+    False
+    >>> is_datetime64_ns_dtype(DatetimeTZDtype("ns", "US/Eastern"))
+    True
+    >>> is_datetime64_ns_dtype(np.array(['a', 'b']))
+    False
+    >>> is_datetime64_ns_dtype(np.array([1, 2]))
+    False
+    >>> is_datetime64_ns_dtype(np.array([], dtype="datetime64"))  # no unit
+    False
+    >>> is_datetime64_ns_dtype(np.array([], dtype="datetime64[ps]"))  # wrong unit
+    False
+    >>> is_datetime64_ns_dtype(pd.DatetimeIndex([1, 2, 3], dtype="datetime64[ns]"))
+    True
+    """
+    if arr_or_dtype is None:
+        return False
+    try:
+        tipo = _get_dtype(arr_or_dtype)
+    except TypeError:
+        return False
+    return tipo == DT64NS_DTYPE or (
+        isinstance(tipo, DatetimeTZDtype) and tipo.unit == "ns"
+    )
+
+
+def is_timedelta64_ns_dtype(arr_or_dtype) -> bool:
+    """
+    Check whether the provided array or dtype is of the timedelta64[ns] dtype.
+
+    This is a very specific dtype, so generic ones like `np.timedelta64`
+    will return False if passed into this function.
+
+    Parameters
+    ----------
+    arr_or_dtype : array-like or dtype
+        The array or dtype to check.
+
+    Returns
+    -------
+    boolean
+        Whether or not the array or dtype is of the timedelta64[ns] dtype.
+
+    Examples
+    --------
+    >>> from pandas.core.dtypes.common import is_timedelta64_ns_dtype
+    >>> is_timedelta64_ns_dtype(np.dtype('m8[ns]'))
+    True
+    >>> is_timedelta64_ns_dtype(np.dtype('m8[ps]'))  # Wrong frequency
+    False
+    >>> is_timedelta64_ns_dtype(np.array([1, 2], dtype='m8[ns]'))
+    True
+    >>> is_timedelta64_ns_dtype(np.array([1, 2], dtype=np.timedelta64))
+    False
+    """
+    return _is_dtype(arr_or_dtype, lambda dtype: dtype == TD64NS_DTYPE)
+
+
+# This exists to silence numpy deprecation warnings, see GH#29553
+def is_numeric_v_string_like(a: ArrayLike, b) -> bool:
+    """
+    Check if we are comparing a string-like object to a numeric ndarray.
+    NumPy doesn't like to compare such objects, especially numeric arrays
+    and scalar string-likes.
+
+    Parameters
+    ----------
+    a : array-like, scalar
+        The first object to check.
+    b : array-like, scalar
+        The second object to check.
+
+    Returns
+    -------
+    boolean
+        Whether we return a comparing a string-like object to a numeric array.
+
+    Examples
+    --------
+    >>> is_numeric_v_string_like(np.array([1]), "foo")
+    True
+    >>> is_numeric_v_string_like(np.array([1, 2]), np.array(["foo"]))
+    True
+    >>> is_numeric_v_string_like(np.array(["foo"]), np.array([1, 2]))
+    True
+    >>> is_numeric_v_string_like(np.array([1]), np.array([2]))
+    False
+    >>> is_numeric_v_string_like(np.array(["foo"]), np.array(["foo"]))
+    False
+    """
+    is_a_array = isinstance(a, np.ndarray)
+    is_b_array = isinstance(b, np.ndarray)
+
+    is_a_numeric_array = is_a_array and a.dtype.kind in ("u", "i", "f", "c", "b")
+    is_b_numeric_array = is_b_array and b.dtype.kind in ("u", "i", "f", "c", "b")
+    is_a_string_array = is_a_array and a.dtype.kind in ("S", "U")
+    is_b_string_array = is_b_array and b.dtype.kind in ("S", "U")
+
+    is_b_scalar_string_like = not is_b_array and isinstance(b, str)
+
+    return (
+        (is_a_numeric_array and is_b_scalar_string_like)
+        or (is_a_numeric_array and is_b_string_array)
+        or (is_b_numeric_array and is_a_string_array)
+    )
+
+
+def needs_i8_conversion(dtype: DtypeObj | None) -> bool:
+    """
+    Check whether the dtype should be converted to int64.
+
+    Dtype "needs" such a conversion if the dtype is of a datetime-like dtype
+
+    Parameters
+    ----------
+    dtype : np.dtype, ExtensionDtype, or None
+
+    Returns
+    -------
+    boolean
+        Whether or not the dtype should be converted to int64.
+
+    Examples
+    --------
+    >>> needs_i8_conversion(str)
+    False
+    >>> needs_i8_conversion(np.int64)
+    False
+    >>> needs_i8_conversion(np.datetime64)
+    False
+    >>> needs_i8_conversion(np.dtype(np.datetime64))
+    True
+    >>> needs_i8_conversion(np.array(['a', 'b']))
+    False
+    >>> needs_i8_conversion(pd.Series([1, 2]))
+    False
+    >>> needs_i8_conversion(pd.Series([], dtype="timedelta64[ns]"))
+    False
+    >>> needs_i8_conversion(pd.DatetimeIndex([1, 2, 3], tz="US/Eastern"))
+    False
+    >>> needs_i8_conversion(pd.DatetimeIndex([1, 2, 3], tz="US/Eastern").dtype)
+    True
+    """
+    if isinstance(dtype, np.dtype):
+        return dtype.kind in "mM"
+    return isinstance(dtype, (PeriodDtype, DatetimeTZDtype))
+
+
+def is_numeric_dtype(arr_or_dtype) -> bool:
+    """
+    Check whether the provided array or dtype is of a numeric dtype.
+
+    Parameters
+    ----------
+    arr_or_dtype : array-like or dtype
+        The array or dtype to check.
+
+    Returns
+    -------
+    boolean
+        Whether or not the array or dtype is of a numeric dtype.
+
+    Examples
+    --------
+    >>> from pandas.api.types import is_numeric_dtype
+    >>> is_numeric_dtype(str)
+    False
+    >>> is_numeric_dtype(int)
+    True
+    >>> is_numeric_dtype(float)
+    True
+    >>> is_numeric_dtype(np.uint64)
+    True
+    >>> is_numeric_dtype(np.datetime64)
+    False
+    >>> is_numeric_dtype(np.timedelta64)
+    False
+    >>> is_numeric_dtype(np.array(['a', 'b']))
+    False
+    >>> is_numeric_dtype(pd.Series([1, 2]))
+    True
+    >>> is_numeric_dtype(pd.Index([1, 2.]))
+    True
+    >>> is_numeric_dtype(np.array([], dtype=np.timedelta64))
+    False
+    """
+    return _is_dtype_type(
+        arr_or_dtype, _classes_and_not_datetimelike(np.number, np.bool_)
+    ) or _is_dtype(
+        arr_or_dtype, lambda typ: isinstance(typ, ExtensionDtype) and typ._is_numeric
+    )
+
+
+def is_any_real_numeric_dtype(arr_or_dtype) -> bool:
+    """
+    Check whether the provided array or dtype is of a real number dtype.
+
+    Parameters
+    ----------
+    arr_or_dtype : array-like or dtype
+        The array or dtype to check.
+
+    Returns
+    -------
+    boolean
+        Whether or not the array or dtype is of a real number dtype.
+
+    Examples
+    --------
+    >>> from pandas.api.types import is_any_real_numeric_dtype
+    >>> is_any_real_numeric_dtype(int)
+    True
+    >>> is_any_real_numeric_dtype(float)
+    True
+    >>> is_any_real_numeric_dtype(object)
+    False
+    >>> is_any_real_numeric_dtype(str)
+    False
+    >>> is_any_real_numeric_dtype(complex(1, 2))
+    False
+    >>> is_any_real_numeric_dtype(bool)
+    False
+    """
+    return (
+        is_numeric_dtype(arr_or_dtype)
+        and not is_complex_dtype(arr_or_dtype)
+        and not is_bool_dtype(arr_or_dtype)
+    )
+
+
+def is_float_dtype(arr_or_dtype) -> bool:
+    """
+    Check whether the provided array or dtype is of a float dtype.
+
+    Parameters
+    ----------
+    arr_or_dtype : array-like or dtype
+        The array or dtype to check.
+
+    Returns
+    -------
+    boolean
+        Whether or not the array or dtype is of a float dtype.
+
+    Examples
+    --------
+    >>> from pandas.api.types import is_float_dtype
+    >>> is_float_dtype(str)
+    False
+    >>> is_float_dtype(int)
+    False
+    >>> is_float_dtype(float)
+    True
+    >>> is_float_dtype(np.array(['a', 'b']))
+    False
+    >>> is_float_dtype(pd.Series([1, 2]))
+    False
+    >>> is_float_dtype(pd.Index([1, 2.]))
+    True
+    """
+    return _is_dtype_type(arr_or_dtype, classes(np.floating)) or _is_dtype(
+        arr_or_dtype, lambda typ: isinstance(typ, ExtensionDtype) and typ.kind in "f"
+    )
+
+
+def is_bool_dtype(arr_or_dtype) -> bool:
+    """
+    Check whether the provided array or dtype is of a boolean dtype.
+
+    Parameters
+    ----------
+    arr_or_dtype : array-like or dtype
+        The array or dtype to check.
+
+    Returns
+    -------
+    boolean
+        Whether or not the array or dtype is of a boolean dtype.
+
+    Notes
+    -----
+    An ExtensionArray is considered boolean when the ``_is_boolean``
+    attribute is set to True.
+
+    Examples
+    --------
+    >>> from pandas.api.types import is_bool_dtype
+    >>> is_bool_dtype(str)
+    False
+    >>> is_bool_dtype(int)
+    False
+    >>> is_bool_dtype(bool)
+    True
+    >>> is_bool_dtype(np.bool_)
+    True
+    >>> is_bool_dtype(np.array(['a', 'b']))
+    False
+    >>> is_bool_dtype(pd.Series([1, 2]))
+    False
+    >>> is_bool_dtype(np.array([True, False]))
+    True
+    >>> is_bool_dtype(pd.Categorical([True, False]))
+    True
+    >>> is_bool_dtype(pd.arrays.SparseArray([True, False]))
+    True
+    """
+    if arr_or_dtype is None:
+        return False
+    try:
+        dtype = _get_dtype(arr_or_dtype)
+    except (TypeError, ValueError):
+        return False
+
+    if isinstance(dtype, CategoricalDtype):
+        arr_or_dtype = dtype.categories
+        # now we use the special definition for Index
+
+    if isinstance(arr_or_dtype, ABCIndex):
+        # Allow Index[object] that is all-bools or Index["boolean"]
+        if arr_or_dtype.inferred_type == "boolean":
+            if not is_bool_dtype(arr_or_dtype.dtype):
+                # GH#52680
+                warnings.warn(
+                    "The behavior of is_bool_dtype with an object-dtype Index "
+                    "of bool objects is deprecated. In a future version, "
+                    "this will return False. Cast the Index to a bool dtype instead.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
+            return True
+        return False
+    elif isinstance(dtype, ExtensionDtype):
+        return getattr(dtype, "_is_boolean", False)
+
+    return issubclass(dtype.type, np.bool_)
+
+
+def is_1d_only_ea_dtype(dtype: DtypeObj | None) -> bool:
+    """
+    Analogue to is_extension_array_dtype but excluding DatetimeTZDtype.
+    """
+    return isinstance(dtype, ExtensionDtype) and not dtype._supports_2d
+
+
+def is_extension_array_dtype(arr_or_dtype) -> bool:
+    """
+    Check if an object is a pandas extension array type.
+
+    See the :ref:`Use Guide <extending.extension-types>` for more.
+
+    Parameters
+    ----------
+    arr_or_dtype : object
+        For array-like input, the ``.dtype`` attribute will
+        be extracted.
+
+    Returns
+    -------
+    bool
+        Whether the `arr_or_dtype` is an extension array type.
+
+    Notes
+    -----
+    This checks whether an object implements the pandas extension
+    array interface. In pandas, this includes:
+
+    * Categorical
+    * Sparse
+    * Interval
+    * Period
+    * DatetimeArray
+    * TimedeltaArray
+
+    Third-party libraries may implement arrays or types satisfying
+    this interface as well.
+
+    Examples
+    --------
+    >>> from pandas.api.types import is_extension_array_dtype
+    >>> arr = pd.Categorical(['a', 'b'])
+    >>> is_extension_array_dtype(arr)
+    True
+    >>> is_extension_array_dtype(arr.dtype)
+    True
+
+    >>> arr = np.array(['a', 'b'])
+    >>> is_extension_array_dtype(arr.dtype)
+    False
+    """
+    dtype = getattr(arr_or_dtype, "dtype", arr_or_dtype)
+    if isinstance(dtype, ExtensionDtype):
+        return True
+    elif isinstance(dtype, np.dtype):
+        return False
+    else:
+        try:
+            with warnings.catch_warnings():
+                # pandas_dtype(..) can raise UserWarning for class input
+                warnings.simplefilter("ignore", UserWarning)
+                dtype = pandas_dtype(dtype)
+        except (TypeError, ValueError):
+            # np.dtype(..) can raise ValueError
+            return False
+        return isinstance(dtype, ExtensionDtype)
+
+
+def is_ea_or_datetimelike_dtype(dtype: DtypeObj | None) -> bool:
+    """
+    Check for ExtensionDtype, datetime64 dtype, or timedelta64 dtype.
+
+    Notes
+    -----
+    Checks only for dtype objects, not dtype-castable strings or types.
+    """
+    return isinstance(dtype, ExtensionDtype) or (lib.is_np_dtype(dtype, "mM"))
+
+
+def is_complex_dtype(arr_or_dtype) -> bool:
+    """
+    Check whether the provided array or dtype is of a complex dtype.
+
+    Parameters
+    ----------
+    arr_or_dtype : array-like or dtype
+        The array or dtype to check.
+
+    Returns
+    -------
+    boolean
+        Whether or not the array or dtype is of a complex dtype.
+
+    Examples
+    --------
+    >>> from pandas.api.types import is_complex_dtype
+    >>> is_complex_dtype(str)
+    False
+    >>> is_complex_dtype(int)
+    False
+    >>> is_complex_dtype(np.complex128)
+    True
+    >>> is_complex_dtype(np.array(['a', 'b']))
+    False
+    >>> is_complex_dtype(pd.Series([1, 2]))
+    False
+    >>> is_complex_dtype(np.array([1 + 1j, 5]))
+    True
+    """
+    return _is_dtype_type(arr_or_dtype, classes(np.complexfloating))
+
+
+def _is_dtype(arr_or_dtype, condition) -> bool:
+    """
+    Return true if the condition is satisfied for the arr_or_dtype.
+
+    Parameters
+    ----------
+    arr_or_dtype : array-like, str, np.dtype, or ExtensionArrayType
+        The array-like or dtype object whose dtype we want to extract.
+    condition : callable[Union[np.dtype, ExtensionDtype]]
+
+    Returns
+    -------
+    bool
+
+    """
+    if arr_or_dtype is None:
+        return False
+    try:
+        dtype = _get_dtype(arr_or_dtype)
+    except (TypeError, ValueError):
+        return False
+    return condition(dtype)
+
+
+def _get_dtype(arr_or_dtype) -> DtypeObj:
+    """
+    Get the dtype instance associated with an array
+    or dtype object.
+
+    Parameters
+    ----------
+    arr_or_dtype : array-like or dtype
+        The array-like or dtype object whose dtype we want to extract.
+
+    Returns
+    -------
+    obj_dtype : The extract dtype instance from the
+                passed in array or dtype object.
+
+    Raises
+    ------
+    TypeError : The passed in object is None.
+    """
+    if arr_or_dtype is None:
+        raise TypeError("Cannot deduce dtype from null object")
+
+    # fastpath
+    if isinstance(arr_or_dtype, np.dtype):
+        return arr_or_dtype
+    elif isinstance(arr_or_dtype, type):
+        return np.dtype(arr_or_dtype)
+
+    # if we have an array-like
+    elif hasattr(arr_or_dtype, "dtype"):
+        arr_or_dtype = arr_or_dtype.dtype
+
+    return pandas_dtype(arr_or_dtype)
+
+
+def _is_dtype_type(arr_or_dtype, condition) -> bool:
+    """
+    Return true if the condition is satisfied for the arr_or_dtype.
+
+    Parameters
+    ----------
+    arr_or_dtype : array-like or dtype
+        The array-like or dtype object whose dtype we want to extract.
+    condition : callable[Union[np.dtype, ExtensionDtypeType]]
+
+    Returns
+    -------
+    bool : if the condition is satisfied for the arr_or_dtype
+    """
+    if arr_or_dtype is None:
+        return condition(type(None))
+
+    # fastpath
+    if isinstance(arr_or_dtype, np.dtype):
+        return condition(arr_or_dtype.type)
+    elif isinstance(arr_or_dtype, type):
+        if issubclass(arr_or_dtype, ExtensionDtype):
+            arr_or_dtype = arr_or_dtype.type
+        return condition(np.dtype(arr_or_dtype).type)
+
+    # if we have an array-like
+    if hasattr(arr_or_dtype, "dtype"):
+        arr_or_dtype = arr_or_dtype.dtype
+
+    # we are not possibly a dtype
+    elif is_list_like(arr_or_dtype):
+        return condition(type(None))
+
+    try:
+        tipo = pandas_dtype(arr_or_dtype).type
+    except (TypeError, ValueError):
+        if is_scalar(arr_or_dtype):
+            return condition(type(None))
+
+        return False
+
+    return condition(tipo)
+
+
+def infer_dtype_from_object(dtype) -> type:
+    """
+    Get a numpy dtype.type-style object for a dtype object.
+
+    This methods also includes handling of the datetime64[ns] and
+    datetime64[ns, TZ] objects.
+
+    If no dtype can be found, we return ``object``.
+
+    Parameters
+    ----------
+    dtype : dtype, type
+        The dtype object whose numpy dtype.type-style
+        object we want to extract.
+
+    Returns
+    -------
+    type
+    """
+    if isinstance(dtype, type) and issubclass(dtype, np.generic):
+        # Type object from a dtype
+
+        return dtype
+    elif isinstance(dtype, (np.dtype, ExtensionDtype)):
+        # dtype object
+        try:
+            _validate_date_like_dtype(dtype)
+        except TypeError:
+            # Should still pass if we don't have a date-like
+            pass
+        if hasattr(dtype, "numpy_dtype"):
+            # TODO: Implement this properly
+            # https://github.com/pandas-dev/pandas/issues/52576
+            return dtype.numpy_dtype.type
+        return dtype.type
+
+    try:
+        dtype = pandas_dtype(dtype)
+    except TypeError:
+        pass
+
+    if isinstance(dtype, ExtensionDtype):
+        return dtype.type
+    elif isinstance(dtype, str):
+        # TODO(jreback)
+        # should deprecate these
+        if dtype in ["datetimetz", "datetime64tz"]:
+            return DatetimeTZDtype.type
+        elif dtype in ["period"]:
+            raise NotImplementedError
+
+        if dtype in ["datetime", "timedelta"]:
+            dtype += "64"
+        try:
+            return infer_dtype_from_object(getattr(np, dtype))
+        except (AttributeError, TypeError):
+            # Handles cases like _get_dtype(int) i.e.,
+            # Python objects that are valid dtypes
+            # (unlike user-defined types, in general)
+            #
+            # TypeError handles the float16 type code of 'e'
+            # further handle internal types
+            pass
+
+    return infer_dtype_from_object(np.dtype(dtype))
+
+
+def _validate_date_like_dtype(dtype) -> None:
+    """
+    Check whether the dtype is a date-like dtype. Raises an error if invalid.
+
+    Parameters
+    ----------
+    dtype : dtype, type
+        The dtype to check.
+
+    Raises
+    ------
+    TypeError : The dtype could not be casted to a date-like dtype.
+    ValueError : The dtype is an illegal date-like dtype (e.g. the
+                 frequency provided is too specific)
+    """
+    try:
+        typ = np.datetime_data(dtype)[0]
+    except ValueError as e:
+        raise TypeError(e) from e
+    if typ not in ["generic", "ns"]:
+        raise ValueError(
+            f"{repr(dtype.name)} is too specific of a frequency, "
+            f"try passing {repr(dtype.type.__name__)}"
+        )
+
+
+def validate_all_hashable(*args, error_name: str | None = None) -> None:
+    """
+    Return None if all args are hashable, else raise a TypeError.
+
+    Parameters
+    ----------
+    *args
+        Arguments to validate.
+    error_name : str, optional
+        The name to use if error
+
+    Raises
+    ------
+    TypeError : If an argument is not hashable
+
+    Returns
+    -------
+    None
+    """
+    if not all(is_hashable(arg) for arg in args):
+        if error_name:
+            raise TypeError(f"{error_name} must be a hashable type")
+        raise TypeError("All elements must be hashable")
+
+
+def pandas_dtype(dtype) -> DtypeObj:
+    """
+    Convert input into a pandas only dtype object or a numpy dtype object.
+
+    Parameters
+    ----------
+    dtype : object to be converted
+
+    Returns
+    -------
+    np.dtype or a pandas dtype
+
+    Raises
+    ------
+    TypeError if not a dtype
+
+    Examples
+    --------
+    >>> pd.api.types.pandas_dtype(int)
+    dtype('int64')
+    """
+    # short-circuit
+    if isinstance(dtype, np.ndarray):
+        return dtype.dtype
+    elif isinstance(dtype, (np.dtype, ExtensionDtype)):
+        return dtype
+
+    # builtin aliases
+    if dtype is str and using_string_dtype():
+        from pandas.core.arrays.string_ import StringDtype
+
+        return StringDtype(na_value=np.nan)
+
+    # registered extension types
+    result = registry.find(dtype)
+    if result is not None:
+        if isinstance(result, type):
+            # GH 31356, GH 54592
+            warnings.warn(
+                f"Instantiating {result.__name__} without any arguments."
+                f"Pass a {result.__name__} instance to silence this warning.",
+                UserWarning,
+                stacklevel=find_stack_level(),
+            )
+            result = result()
+        return result
+
+    # try a numpy dtype
+    # raise a consistent TypeError if failed
+    try:
+        with warnings.catch_warnings():
+            # TODO: warnings.catch_warnings can be removed when numpy>2.3.0
+            # is the minimum version
+            # GH#51523 - Series.astype(np.integer) doesn't show
+            # numpy deprecation warning of np.integer
+            # Hence enabling DeprecationWarning
+            warnings.simplefilter("always", DeprecationWarning)
+            npdtype = np.dtype(dtype)
+    except SyntaxError as err:
+        # np.dtype uses `eval` which can raise SyntaxError
+        raise TypeError(f"data type '{dtype}' not understood") from err
+
+    # Any invalid dtype (such as pd.Timestamp) should raise an error.
+    # np.dtype(invalid_type).kind = 0 for such objects. However, this will
+    # also catch some valid dtypes such as object, np.object_ and 'object'
+    # which we safeguard against by catching them earlier and returning
+    # np.dtype(valid_dtype) before this condition is evaluated.
+    if is_hashable(dtype) and dtype in [
+        object,
+        np.object_,
+        "object",
+        "O",
+        "object_",
+    ]:
+        # check hashability to avoid errors/DeprecationWarning when we get
+        # here and `dtype` is an array
+        return npdtype
+    elif npdtype.kind == "O":
+        raise TypeError(f"dtype '{dtype}' not understood")
+
+    return npdtype
+
+
+def is_all_strings(value: ArrayLike) -> bool:
+    """
+    Check if this is an array of strings that we should try parsing.
+
+    Includes object-dtype ndarray containing all-strings, StringArray,
+    and Categorical with all-string categories.
+    Does not include numpy string dtypes.
+    """
+    dtype = value.dtype
+
+    if isinstance(dtype, np.dtype):
+        if len(value) == 0:
+            return dtype == np.dtype("object")
+        else:
+            return dtype == np.dtype("object") and lib.is_string_array(
+                np.asarray(value), skipna=False
+            )
+    elif isinstance(dtype, CategoricalDtype):
+        return dtype.categories.inferred_type == "string"
+    return dtype == "string"
+
+
+__all__ = [
+    "classes",
+    "DT64NS_DTYPE",
+    "ensure_float64",
+    "ensure_python_int",
+    "ensure_str",
+    "infer_dtype_from_object",
+    "INT64_DTYPE",
+    "is_1d_only_ea_dtype",
+    "is_all_strings",
+    "is_any_real_numeric_dtype",
+    "is_array_like",
+    "is_bool",
+    "is_bool_dtype",
+    "is_categorical_dtype",
+    "is_complex",
+    "is_complex_dtype",
+    "is_dataclass",
+    "is_datetime64_any_dtype",
+    "is_datetime64_dtype",
+    "is_datetime64_ns_dtype",
+    "is_datetime64tz_dtype",
+    "is_decimal",
+    "is_dict_like",
+    "is_dtype_equal",
+    "is_ea_or_datetimelike_dtype",
+    "is_extension_array_dtype",
+    "is_file_like",
+    "is_float_dtype",
+    "is_int64_dtype",
+    "is_integer_dtype",
+    "is_interval",
+    "is_interval_dtype",
+    "is_iterator",
+    "is_named_tuple",
+    "is_nested_list_like",
+    "is_number",
+    "is_numeric_dtype",
+    "is_object_dtype",
+    "is_period_dtype",
+    "is_re",
+    "is_re_compilable",
+    "is_scipy_sparse",
+    "is_sequence",
+    "is_signed_integer_dtype",
+    "is_sparse",
+    "is_string_dtype",
+    "is_string_or_object_np_dtype",
+    "is_timedelta64_dtype",
+    "is_timedelta64_ns_dtype",
+    "is_unsigned_integer_dtype",
+    "needs_i8_conversion",
+    "pandas_dtype",
+    "TD64NS_DTYPE",
+    "validate_all_hashable",
+]
+ """
+Boilerplate functions used in defining binary operations.
+"""
+from __future__ import annotations
+
+from functools import wraps
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+)
+
+from pandas._libs.lib import item_from_zerodim
+from pandas._libs.missing import is_matching_na
+
+from pandas.core.dtypes.generic import (
+    ABCIndex,
+    ABCSeries,
+)
+
+if TYPE_CHECKING:
+    from pandas._typing import F
+
+
+def unpack_zerodim_and_defer(name: str) -> Callable[[F], F]:
+    """
+    Boilerplate for pandas conventions in arithmetic and comparison methods.
+
+    Parameters
+    ----------
+    name : str
+
+    Returns
+    -------
+    decorator
+    """
+
+    def wrapper(method: F) -> F:
+        return _unpack_zerodim_and_defer(method, name)
+
+    return wrapper
+
+
+def _unpack_zerodim_and_defer(method, name: str):
+    """
+    Boilerplate for pandas conventions in arithmetic and comparison methods.
+
+    Ensure method returns NotImplemented when operating against "senior"
+    classes.  Ensure zero-dimensional ndarrays are always unpacked.
+
+    Parameters
+    ----------
+    method : binary method
+    name : str
+
+    Returns
+    -------
+    method
+    """
+    stripped_name = name.removeprefix("__").removesuffix("__")
+    is_cmp = stripped_name in {"eq", "ne", "lt", "le", "gt", "ge"}
+
+    @wraps(method)
+    def new_method(self, other):
+        if is_cmp and isinstance(self, ABCIndex) and isinstance(other, ABCSeries):
+            # For comparison ops, Index does *not* defer to Series
+            pass
+        else:
+            prio = getattr(other, "__pandas_priority__", None)
+            if prio is not None:
+                if prio > self.__pandas_priority__:
+                    # e.g. other is DataFrame while self is Index/Series/EA
+                    return NotImplemented
+
+        other = item_from_zerodim(other)
+
+        return method(self, other)
+
+    return new_method
+
+
+def get_op_result_name(left, right):
+    """
+    Find the appropriate name to pin to an operation result.  This result
+    should always be either an Index or a Series.
+
+    Parameters
+    ----------
+    left : {Series, Index}
+    right : object
+
+    Returns
+    -------
+    name : object
+        Usually a string
+    """
+    if isinstance(right, (ABCSeries, ABCIndex)):
+        name = _maybe_match_name(left, right)
+    else:
+        name = left.name
+    return name
+
+
+def _maybe_match_name(a, b):
+    """
+    Try to find a name to attach to the result of an operation between
+    a and b.  If only one of these has a `name` attribute, return that
+    name.  Otherwise return a consensus name if they match or None if
+    they have different names.
+
+    Parameters
+    ----------
+    a : object
+    b : object
+
+    Returns
+    -------
+    name : str or None
+
+    See Also
+    --------
+    pandas.core.common.consensus_name_attr
+    """
+    a_has = hasattr(a, "name")
+    b_has = hasattr(b, "name")
+    if a_has and b_has:
+        try:
+            if a.name == b.name:
+                return a.name
+            elif is_matching_na(a.name, b.name):
+                # e.g. both are np.nan
+                return a.name
+            else:
+                return None
+        except TypeError:
+            # pd.NA
+            if is_matching_na(a.name, b.name):
+                return a.name
+            return None
+        except ValueError:
+            # e.g. np.int64(1) vs (np.int64(1), np.int64(2))
+            return None
+    elif a_has:
+        return a.name
+    elif b_has:
+        return b.name
+    return None
+ """Common utility functions for rolling operations"""
+from __future__ import annotations
+
+from collections import defaultdict
+from typing import cast
+
+import numpy as np
+
+from pandas.core.dtypes.generic import (
+    ABCDataFrame,
+    ABCSeries,
+)
+
+from pandas.core.indexes.api import MultiIndex
+
+
+def flex_binary_moment(arg1, arg2, f, pairwise: bool = False):
+    if isinstance(arg1, ABCSeries) and isinstance(arg2, ABCSeries):
+        X, Y = prep_binary(arg1, arg2)
+        return f(X, Y)
+
+    elif isinstance(arg1, ABCDataFrame):
+        from pandas import DataFrame
+
+        def dataframe_from_int_dict(data, frame_template) -> DataFrame:
+            result = DataFrame(data, index=frame_template.index)
+            if len(result.columns) > 0:
+                result.columns = frame_template.columns[result.columns]
+            else:
+                result.columns = frame_template.columns.copy()
+            return result
+
+        results = {}
+        if isinstance(arg2, ABCDataFrame):
+            if pairwise is False:
+                if arg1 is arg2:
+                    # special case in order to handle duplicate column names
+                    for i in range(len(arg1.columns)):
+                        results[i] = f(arg1.iloc[:, i], arg2.iloc[:, i])
+                    return dataframe_from_int_dict(results, arg1)
+                else:
+                    if not arg1.columns.is_unique:
+                        raise ValueError("'arg1' columns are not unique")
+                    if not arg2.columns.is_unique:
+                        raise ValueError("'arg2' columns are not unique")
+                    X, Y = arg1.align(arg2, join="outer")
+                    X, Y = prep_binary(X, Y)
+                    res_columns = arg1.columns.union(arg2.columns)
+                    for col in res_columns:
+                        if col in X and col in Y:
+                            results[col] = f(X[col], Y[col])
+                    return DataFrame(results, index=X.index, columns=res_columns)
+            elif pairwise is True:
+                results = defaultdict(dict)
+                for i in range(len(arg1.columns)):
+                    for j in range(len(arg2.columns)):
+                        if j < i and arg2 is arg1:
+                            # Symmetric case
+                            results[i][j] = results[j][i]
+                        else:
+                            results[i][j] = f(
+                                *prep_binary(arg1.iloc[:, i], arg2.iloc[:, j])
+                            )
+
+                from pandas import concat
+
+                result_index = arg1.index.union(arg2.index)
+                if len(result_index):
+                    # construct result frame
+                    result = concat(
+                        [
+                            concat(
+                                [results[i][j] for j in range(len(arg2.columns))],
+                                ignore_index=True,
+                            )
+                            for i in range(len(arg1.columns))
+                        ],
+                        ignore_index=True,
+                        axis=1,
+                    )
+                    result.columns = arg1.columns
+
+                    # set the index and reorder
+                    if arg2.columns.nlevels > 1:
+                        # mypy needs to know columns is a MultiIndex, Index doesn't
+                        # have levels attribute
+                        arg2.columns = cast(MultiIndex, arg2.columns)
+                        # GH 21157: Equivalent to MultiIndex.from_product(
+                        #  [result_index], <unique combinations of arg2.columns.levels>,
+                        # )
+                        # A normal MultiIndex.from_product will produce too many
+                        # combinations.
+                        result_level = np.tile(
+                            result_index, len(result) // len(result_index)
+                        )
+                        arg2_levels = (
+                            np.repeat(
+                                arg2.columns.get_level_values(i),
+                                len(result) // len(arg2.columns),
+                            )
+                            for i in range(arg2.columns.nlevels)
+                        )
+                        result_names = list(arg2.columns.names) + [result_index.name]
+                        result.index = MultiIndex.from_arrays(
+                            [*arg2_levels, result_level], names=result_names
+                        )
+                        # GH 34440
+                        num_levels = len(result.index.levels)
+                        new_order = [num_levels - 1] + list(range(num_levels - 1))
+                        result = result.reorder_levels(new_order).sort_index()
+                    else:
+                        result.index = MultiIndex.from_product(
+                            [range(len(arg2.columns)), range(len(result_index))]
+                        )
+                        result = result.swaplevel(1, 0).sort_index()
+                        result.index = MultiIndex.from_product(
+                            [result_index] + [arg2.columns]
+                        )
+                else:
+                    # empty result
+                    result = DataFrame(
+                        index=MultiIndex(
+                            levels=[arg1.index, arg2.columns], codes=[[], []]
+                        ),
+                        columns=arg2.columns,
+                        dtype="float64",
+                    )
+
+                # reset our index names to arg1 names
+                # reset our column names to arg2 names
+                # careful not to mutate the original names
+                result.columns = result.columns.set_names(arg1.columns.names)
+                result.index = result.index.set_names(
+                    result_index.names + arg2.columns.names
+                )
+
+                return result
+        else:
+            results = {
+                i: f(*prep_binary(arg1.iloc[:, i], arg2))
+                for i in range(len(arg1.columns))
+            }
+            return dataframe_from_int_dict(results, arg1)
+
+    else:
+        return flex_binary_moment(arg2, arg1, f)
+
+
+def zsqrt(x):
+    with np.errstate(all="ignore"):
+        result = np.sqrt(x)
+        mask = x < 0
+
+    if isinstance(x, ABCDataFrame):
+        if mask._values.any():
+            result[mask] = 0
+    else:
+        if mask.any():
+            result[mask] = 0
+
+    return result
+
+
+def prep_binary(arg1, arg2):
+    # mask out values, this also makes a common index...
+    X = arg1 + 0 * arg2
+    Y = arg2 + 0 * arg1
+
+    return X, Y
+ """Common IO api utilities"""
+from __future__ import annotations
+
+from abc import (
+    ABC,
+    abstractmethod,
+)
+import codecs
+from collections import defaultdict
+from collections.abc import (
+    Hashable,
+    Mapping,
+    Sequence,
+)
+import dataclasses
+import functools
+import gzip
+from io import (
+    BufferedIOBase,
+    BytesIO,
+    RawIOBase,
+    StringIO,
+    TextIOBase,
+    TextIOWrapper,
+)
+import mmap
+import os
+from pathlib import Path
+import re
+import tarfile
+from typing import (
+    IO,
+    TYPE_CHECKING,
+    Any,
+    AnyStr,
+    DefaultDict,
+    Generic,
+    Literal,
+    TypeVar,
+    cast,
+    overload,
+)
+from urllib.parse import (
+    urljoin,
+    urlparse as parse_url,
+    uses_netloc,
+    uses_params,
+    uses_relative,
+)
+import warnings
+import zipfile
+
+from pandas._typing import (
+    BaseBuffer,
+    ReadCsvBuffer,
+)
+from pandas.compat import (
+    get_bz2_file,
+    get_lzma_file,
+)
+from pandas.compat._optional import import_optional_dependency
+from pandas.util._decorators import doc
+from pandas.util._exceptions import find_stack_level
+
+from pandas.core.dtypes.common import (
+    is_bool,
+    is_file_like,
+    is_integer,
+    is_list_like,
+)
+from pandas.core.dtypes.generic import ABCMultiIndex
+
+from pandas.core.shared_docs import _shared_docs
+
+_VALID_URLS = set(uses_relative + uses_netloc + uses_params)
+_VALID_URLS.discard("")
+_RFC_3986_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9+\-+.]*://")
+
+BaseBufferT = TypeVar("BaseBufferT", bound=BaseBuffer)
+
+
+if TYPE_CHECKING:
+    from types import TracebackType
+
+    from pandas._typing import (
+        CompressionDict,
+        CompressionOptions,
+        FilePath,
+        ReadBuffer,
+        StorageOptions,
+        WriteBuffer,
+    )
+
+    from pandas import MultiIndex
+
+
+@dataclasses.dataclass
+class IOArgs:
+    """
+    Return value of io/common.py:_get_filepath_or_buffer.
+    """
+
+    filepath_or_buffer: str | BaseBuffer
+    encoding: str
+    mode: str
+    compression: CompressionDict
+    should_close: bool = False
+
+
+@dataclasses.dataclass
+class IOHandles(Generic[AnyStr]):
+    """
+    Return value of io/common.py:get_handle
+
+    Can be used as a context manager.
+
+    This is used to easily close created buffers and to handle corner cases when
+    TextIOWrapper is inserted.
+
+    handle: The file handle to be used.
+    created_handles: All file handles that are created by get_handle
+    is_wrapped: Whether a TextIOWrapper needs to be detached.
+    """
+
+    # handle might not implement the IO-interface
+    handle: IO[AnyStr]
+    compression: CompressionDict
+    created_handles: list[IO[bytes] | IO[str]] = dataclasses.field(default_factory=list)
+    is_wrapped: bool = False
+
+    def close(self) -> None:
+        """
+        Close all created buffers.
+
+        Note: If a TextIOWrapper was inserted, it is flushed and detached to
+        avoid closing the potentially user-created buffer.
+        """
+        if self.is_wrapped:
+            assert isinstance(self.handle, TextIOWrapper)
+            self.handle.flush()
+            self.handle.detach()
+            self.created_handles.remove(self.handle)
+        for handle in self.created_handles:
+            handle.close()
+        self.created_handles = []
+        self.is_wrapped = False
+
+    def __enter__(self) -> IOHandles[AnyStr]:
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        self.close()
+
+
+def is_url(url: object) -> bool:
+    """
+    Check to see if a URL has a valid protocol.
+
+    Parameters
+    ----------
+    url : str or unicode
+
+    Returns
+    -------
+    isurl : bool
+        If `url` has a valid protocol return True otherwise False.
+    """
+    if not isinstance(url, str):
+        return False
+    return parse_url(url).scheme in _VALID_URLS
+
+
+@overload
+def _expand_user(filepath_or_buffer: str) -> str:
+    ...
+
+
+@overload
+def _expand_user(filepath_or_buffer: BaseBufferT) -> BaseBufferT:
+    ...
+
+
+def _expand_user(filepath_or_buffer: str | BaseBufferT) -> str | BaseBufferT:
+    """
+    Return the argument with an initial component of ~ or ~user
+    replaced by that user's home directory.
+
+    Parameters
+    ----------
+    filepath_or_buffer : object to be converted if possible
+
+    Returns
+    -------
+    expanded_filepath_or_buffer : an expanded filepath or the
+                                  input if not expandable
+    """
+    if isinstance(filepath_or_buffer, str):
+        return os.path.expanduser(filepath_or_buffer)
+    return filepath_or_buffer
+
+
+def validate_header_arg(header: object) -> None:
+    if header is None:
+        return
+    if is_integer(header):
+        header = cast(int, header)
+        if header < 0:
+            # GH 27779
+            raise ValueError(
+                "Passing negative integer to header is invalid. "
+                "For no header, use header=None instead"
+            )
+        return
+    if is_list_like(header, allow_sets=False):
+        header = cast(Sequence, header)
+        if not all(map(is_integer, header)):
+            raise ValueError("header must be integer or list of integers")
+        if any(i < 0 for i in header):
+            raise ValueError("cannot specify multi-index header with negative integers")
+        return
+    if is_bool(header):
+        raise TypeError(
+            "Passing a bool to header is invalid. Use header=None for no header or "
+            "header=int or list-like of ints to specify "
+            "the row(s) making up the column names"
+        )
+    # GH 16338
+    raise ValueError("header must be integer or list of integers")
+
+
+@overload
+def stringify_path(filepath_or_buffer: FilePath, convert_file_like: bool = ...) -> str:
+    ...
+
+
+@overload
+def stringify_path(
+    filepath_or_buffer: BaseBufferT, convert_file_like: bool = ...
+) -> BaseBufferT:
+    ...
+
+
+def stringify_path(
+    filepath_or_buffer: FilePath | BaseBufferT,
+    convert_file_like: bool = False,
+) -> str | BaseBufferT:
+    """
+    Attempt to convert a path-like object to a string.
+
+    Parameters
+    ----------
+    filepath_or_buffer : object to be converted
+
+    Returns
+    -------
+    str_filepath_or_buffer : maybe a string version of the object
+
+    Notes
+    -----
+    Objects supporting the fspath protocol are coerced
+    according to its __fspath__ method.
+
+    Any other object is passed through unchanged, which includes bytes,
+    strings, buffers, or anything else that's not even path-like.
+    """
+    if not convert_file_like and is_file_like(filepath_or_buffer):
+        # GH 38125: some fsspec objects implement os.PathLike but have already opened a
+        # file. This prevents opening the file a second time. infer_compression calls
+        # this function with convert_file_like=True to infer the compression.
+        return cast(BaseBufferT, filepath_or_buffer)
+
+    if isinstance(filepath_or_buffer, os.PathLike):
+        filepath_or_buffer = filepath_or_buffer.__fspath__()
+    return _expand_user(filepath_or_buffer)
+
+
+def urlopen(*args, **kwargs):
+    """
+    Lazy-import wrapper for stdlib urlopen, as that imports a big chunk of
+    the stdlib.
+    """
+    import urllib.request
+
+    return urllib.request.urlopen(*args, **kwargs)
+
+
+def is_fsspec_url(url: FilePath | BaseBuffer) -> bool:
+    """
+    Returns true if the given URL looks like
+    something fsspec can handle
+    """
+    return (
+        isinstance(url, str)
+        and bool(_RFC_3986_PATTERN.match(url))
+        and not url.startswith(("http://", "https://"))
+    )
+
+
+@doc(
+    storage_options=_shared_docs["storage_options"],
+    compression_options=_shared_docs["compression_options"] % "filepath_or_buffer",
+)
+def _get_filepath_or_buffer(
+    filepath_or_buffer: FilePath | BaseBuffer,
+    encoding: str = "utf-8",
+    compression: CompressionOptions | None = None,
+    mode: str = "r",
+    storage_options: StorageOptions | None = None,
+) -> IOArgs:
+    """
+    If the filepath_or_buffer is a url, translate and return the buffer.
+    Otherwise passthrough.
+
+    Parameters
+    ----------
+    filepath_or_buffer : a url, filepath (str, py.path.local or pathlib.Path),
+                         or buffer
+    {compression_options}
+
+        .. versionchanged:: 1.4.0 Zstandard support.
+
+    encoding : the encoding to use to decode bytes, default is 'utf-8'
+    mode : str, optional
+
+    {storage_options}
+
+
+    Returns the dataclass IOArgs.
+    """
+    filepath_or_buffer = stringify_path(filepath_or_buffer)
+
+    # handle compression dict
+    compression_method, compression = get_compression_method(compression)
+    compression_method = infer_compression(filepath_or_buffer, compression_method)
+
+    # GH21227 internal compression is not used for non-binary handles.
+    if compression_method and hasattr(filepath_or_buffer, "write") and "b" not in mode:
+        warnings.warn(
+            "compression has no effect when passing a non-binary object as input.",
+            RuntimeWarning,
+            stacklevel=find_stack_level(),
+        )
+        compression_method = None
+
+    compression = dict(compression, method=compression_method)
+
+    # bz2 and xz do not write the byte order mark for utf-16 and utf-32
+    # print a warning when writing such files
+    if (
+        "w" in mode
+        and compression_method in ["bz2", "xz"]
+        and encoding in ["utf-16", "utf-32"]
+    ):
+        warnings.warn(
+            f"{compression} will not write the byte order mark for {encoding}",
+            UnicodeWarning,
+            stacklevel=find_stack_level(),
+        )
+
+    # Use binary mode when converting path-like objects to file-like objects (fsspec)
+    # except when text mode is explicitly requested. The original mode is returned if
+    # fsspec is not used.
+    fsspec_mode = mode
+    if "t" not in fsspec_mode and "b" not in fsspec_mode:
+        fsspec_mode += "b"
+
+    if isinstance(filepath_or_buffer, str) and is_url(filepath_or_buffer):
+        # TODO: fsspec can also handle HTTP via requests, but leaving this
+        # unchanged. using fsspec appears to break the ability to infer if the
+        # server responded with gzipped data
+        storage_options = storage_options or {}
+
+        # waiting until now for importing to match intended lazy logic of
+        # urlopen function defined elsewhere in this module
+        import urllib.request
+
+        # assuming storage_options is to be interpreted as headers
+        req_info = urllib.request.Request(filepath_or_buffer, headers=storage_options)
+        with urlopen(req_info) as req:
+            content_encoding = req.headers.get("Content-Encoding", None)
+            if content_encoding == "gzip":
+                # Override compression based on Content-Encoding header
+                compression = {"method": "gzip"}
+            reader = BytesIO(req.read())
+        return IOArgs(
+            filepath_or_buffer=reader,
+            encoding=encoding,
+            compression=compression,
+            should_close=True,
+            mode=fsspec_mode,
+        )
+
+    if is_fsspec_url(filepath_or_buffer):
+        assert isinstance(
+            filepath_or_buffer, str
+        )  # just to appease mypy for this branch
+        # two special-case s3-like protocols; these have special meaning in Hadoop,
+        # but are equivalent to just "s3" from fsspec's point of view
+        # cc #11071
+        if filepath_or_buffer.startswith("s3a://"):
+            filepath_or_buffer = filepath_or_buffer.replace("s3a://", "s3://")
+        if filepath_or_buffer.startswith("s3n://"):
+            filepath_or_buffer = filepath_or_buffer.replace("s3n://", "s3://")
+        fsspec = import_optional_dependency("fsspec")
+
+        # If botocore is installed we fallback to reading with anon=True
+        # to allow reads from public buckets
+        err_types_to_retry_with_anon: list[Any] = []
+        try:
+            import_optional_dependency("botocore")
+            from botocore.exceptions import (
+                ClientError,
+                NoCredentialsError,
+            )
+
+            err_types_to_retry_with_anon = [
+                ClientError,
+                NoCredentialsError,
+                PermissionError,
+            ]
+        except ImportError:
+            pass
+
+        try:
+            file_obj = fsspec.open(
+                filepath_or_buffer, mode=fsspec_mode, **(storage_options or {})
+            ).open()
+        # GH 34626 Reads from Public Buckets without Credentials needs anon=True
+        except tuple(err_types_to_retry_with_anon):
+            if storage_options is None:
+                storage_options = {"anon": True}
+            else:
+                # don't mutate user input.
+                storage_options = dict(storage_options)
+                storage_options["anon"] = True
+            file_obj = fsspec.open(
+                filepath_or_buffer, mode=fsspec_mode, **(storage_options or {})
+            ).open()
+
+        return IOArgs(
+            filepath_or_buffer=file_obj,
+            encoding=encoding,
+            compression=compression,
+            should_close=True,
+            mode=fsspec_mode,
+        )
+    elif storage_options:
+        raise ValueError(
+            "storage_options passed with file object or non-fsspec file path"
+        )
+
+    if isinstance(filepath_or_buffer, (str, bytes, mmap.mmap)):
+        return IOArgs(
+            filepath_or_buffer=_expand_user(filepath_or_buffer),
+            encoding=encoding,
+            compression=compression,
+            should_close=False,
+            mode=mode,
+        )
+
+    # is_file_like requires (read | write) & __iter__ but __iter__ is only
+    # needed for read_csv(engine=python)
+    if not (
+        hasattr(filepath_or_buffer, "read") or hasattr(filepath_or_buffer, "write")
+    ):
+        msg = f"Invalid file path or buffer object type: {type(filepath_or_buffer)}"
+        raise ValueError(msg)
+
+    return IOArgs(
+        filepath_or_buffer=filepath_or_buffer,
+        encoding=encoding,
+        compression=compression,
+        should_close=False,
+        mode=mode,
+    )
+
+
+def file_path_to_url(path: str) -> str:
+    """
+    converts an absolute native path to a FILE URL.
+
+    Parameters
+    ----------
+    path : a path in native format
+
+    Returns
+    -------
+    a valid FILE URL
+    """
+    # lazify expensive import (~30ms)
+    from urllib.request import pathname2url
+
+    return urljoin("file:", pathname2url(path))
+
+
+extension_to_compression = {
+    ".tar": "tar",
+    ".tar.gz": "tar",
+    ".tar.bz2": "tar",
+    ".tar.xz": "tar",
+    ".gz": "gzip",
+    ".bz2": "bz2",
+    ".zip": "zip",
+    ".xz": "xz",
+    ".zst": "zstd",
+}
+_supported_compressions = set(extension_to_compression.values())
+
+
+def get_compression_method(
+    compression: CompressionOptions,
+) -> tuple[str | None, CompressionDict]:
+    """
+    Simplifies a compression argument to a compression method string and
+    a mapping containing additional arguments.
+
+    Parameters
+    ----------
+    compression : str or mapping
+        If string, specifies the compression method. If mapping, value at key
+        'method' specifies compression method.
+
+    Returns
+    -------
+    tuple of ({compression method}, Optional[str]
+              {compression arguments}, Dict[str, Any])
+
+    Raises
+    ------
+    ValueError on mapping missing 'method' key
+    """
+    compression_method: str | None
+    if isinstance(compression, Mapping):
+        compression_args = dict(compression)
+        try:
+            compression_method = compression_args.pop("method")
+        except KeyError as err:
+            raise ValueError("If mapping, compression must have key 'method'") from err
+    else:
+        compression_args = {}
+        compression_method = compression
+    return compression_method, compression_args
+
+
+@doc(compression_options=_shared_docs["compression_options"] % "filepath_or_buffer")
+def infer_compression(
+    filepath_or_buffer: FilePath | BaseBuffer, compression: str | None
+) -> str | None:
+    """
+    Get the compression method for filepath_or_buffer. If compression='infer',
+    the inferred compression method is returned. Otherwise, the input
+    compression method is returned unchanged, unless it's invalid, in which
+    case an error is raised.
+
+    Parameters
+    ----------
+    filepath_or_buffer : str or file handle
+        File path or object.
+    {compression_options}
+
+        .. versionchanged:: 1.4.0 Zstandard support.
+
+    Returns
+    -------
+    string or None
+
+    Raises
+    ------
+    ValueError on invalid compression specified.
+    """
+    if compression is None:
+        return None
+
+    # Infer compression
+    if compression == "infer":
+        # Convert all path types (e.g. pathlib.Path) to strings
+        filepath_or_buffer = stringify_path(filepath_or_buffer, convert_file_like=True)
+        if not isinstance(filepath_or_buffer, str):
+            # Cannot infer compression of a buffer, assume no compression
+            return None
+
+        # Infer compression from the filename/URL extension
+        for extension, compression in extension_to_compression.items():
+            if filepath_or_buffer.lower().endswith(extension):
+                return compression
+        return None
+
+    # Compression has been specified. Check that it's valid
+    if compression in _supported_compressions:
+        return compression
+
+    valid = ["infer", None] + sorted(_supported_compressions)
+    msg = (
+        f"Unrecognized compression type: {compression}\n"
+        f"Valid compression types are {valid}"
+    )
+    raise ValueError(msg)
+
+
+def check_parent_directory(path: Path | str) -> None:
+    """
+    Check if parent directory of a file exists, raise OSError if it does not
+
+    Parameters
+    ----------
+    path: Path or str
+        Path to check parent directory of
+    """
+    parent = Path(path).parent
+    if not parent.is_dir():
+        raise OSError(rf"Cannot save file into a non-existent directory: '{parent}'")
+
+
+@overload
+def get_handle(
+    path_or_buf: FilePath | BaseBuffer,
+    mode: str,
+    *,
+    encoding: str | None = ...,
+    compression: CompressionOptions = ...,
+    memory_map: bool = ...,
+    is_text: Literal[False],
+    errors: str | None = ...,
+    storage_options: StorageOptions = ...,
+) -> IOHandles[bytes]:
+    ...
+
+
+@overload
+def get_handle(
+    path_or_buf: FilePath | BaseBuffer,
+    mode: str,
+    *,
+    encoding: str | None = ...,
+    compression: CompressionOptions = ...,
+    memory_map: bool = ...,
+    is_text: Literal[True] = ...,
+    errors: str | None = ...,
+    storage_options: StorageOptions = ...,
+) -> IOHandles[str]:
+    ...
+
+
+@overload
+def get_handle(
+    path_or_buf: FilePath | BaseBuffer,
+    mode: str,
+    *,
+    encoding: str | None = ...,
+    compression: CompressionOptions = ...,
+    memory_map: bool = ...,
+    is_text: bool = ...,
+    errors: str | None = ...,
+    storage_options: StorageOptions = ...,
+) -> IOHandles[str] | IOHandles[bytes]:
+    ...
+
+
+@doc(compression_options=_shared_docs["compression_options"] % "path_or_buf")
+def get_handle(
+    path_or_buf: FilePath | BaseBuffer,
+    mode: str,
+    *,
+    encoding: str | None = None,
+    compression: CompressionOptions | None = None,
+    memory_map: bool = False,
+    is_text: bool = True,
+    errors: str | None = None,
+    storage_options: StorageOptions | None = None,
+) -> IOHandles[str] | IOHandles[bytes]:
+    """
+    Get file handle for given path/buffer and mode.
+
+    Parameters
+    ----------
+    path_or_buf : str or file handle
+        File path or object.
+    mode : str
+        Mode to open path_or_buf with.
+    encoding : str or None
+        Encoding to use.
+    {compression_options}
+
+           May be a dict with key 'method' as compression mode
+           and other keys as compression options if compression
+           mode is 'zip'.
+
+           Passing compression options as keys in dict is
+           supported for compression modes 'gzip', 'bz2', 'zstd' and 'zip'.
+
+        .. versionchanged:: 1.4.0 Zstandard support.
+
+    memory_map : bool, default False
+        See parsers._parser_params for more information. Only used by read_csv.
+    is_text : bool, default True
+        Whether the type of the content passed to the file/buffer is string or
+        bytes. This is not the same as `"b" not in mode`. If a string content is
+        passed to a binary file/buffer, a wrapper is inserted.
+    errors : str, default 'strict'
+        Specifies how encoding and decoding errors are to be handled.
+        See the errors argument for :func:`open` for a full list
+        of options.
+    storage_options: StorageOptions = None
+        Passed to _get_filepath_or_buffer
+
+    Returns the dataclass IOHandles
+    """
+    # Windows does not default to utf-8. Set to utf-8 for a consistent behavior
+    encoding = encoding or "utf-8"
+
+    errors = errors or "strict"
+
+    # read_csv does not know whether the buffer is opened in binary/text mode
+    if _is_binary_mode(path_or_buf, mode) and "b" not in mode:
+        mode += "b"
+
+    # validate encoding and errors
+    codecs.lookup(encoding)
+    if isinstance(errors, str):
+        codecs.lookup_error(errors)
+
+    # open URLs
+    ioargs = _get_filepath_or_buffer(
+        path_or_buf,
+        encoding=encoding,
+        compression=compression,
+        mode=mode,
+        storage_options=storage_options,
+    )
+
+    handle = ioargs.filepath_or_buffer
+    handles: list[BaseBuffer]
+
+    # memory mapping needs to be the first step
+    # only used for read_csv
+    handle, memory_map, handles = _maybe_memory_map(handle, memory_map)
+
+    is_path = isinstance(handle, str)
+    compression_args = dict(ioargs.compression)
+    compression = compression_args.pop("method")
+
+    # Only for write methods
+    if "r" not in mode and is_path:
+        check_parent_directory(str(handle))
+
+    if compression:
+        if compression != "zstd":
+            # compression libraries do not like an explicit text-mode
+            ioargs.mode = ioargs.mode.replace("t", "")
+        elif compression == "zstd" and "b" not in ioargs.mode:
+            # python-zstandard defaults to text mode, but we always expect
+            # compression libraries to use binary mode.
+            ioargs.mode += "b"
+
+        # GZ Compression
+        if compression == "gzip":
+            if isinstance(handle, str):
+                # error: Incompatible types in assignment (expression has type
+                # "GzipFile", variable has type "Union[str, BaseBuffer]")
+                handle = gzip.GzipFile(  # type: ignore[assignment]
+                    filename=handle,
+                    mode=ioargs.mode,
+                    **compression_args,
+                )
+            else:
+                handle = gzip.GzipFile(
+                    # No overload variant of "GzipFile" matches argument types
+                    # "Union[str, BaseBuffer]", "str", "Dict[str, Any]"
+                    fileobj=handle,  # type: ignore[call-overload]
+                    mode=ioargs.mode,
+                    **compression_args,
+                )
+
+        # BZ Compression
+        elif compression == "bz2":
+            # Overload of "BZ2File" to handle pickle protocol 5
+            # "Union[str, BaseBuffer]", "str", "Dict[str, Any]"
+            handle = get_bz2_file()(  # type: ignore[call-overload]
+                handle,
+                mode=ioargs.mode,
+                **compression_args,
+            )
+
+        # ZIP Compression
+        elif compression == "zip":
+            # error: Argument 1 to "_BytesZipFile" has incompatible type
+            # "Union[str, BaseBuffer]"; expected "Union[Union[str, PathLike[str]],
+            # ReadBuffer[bytes], WriteBuffer[bytes]]"
+            handle = _BytesZipFile(
+                handle, ioargs.mode, **compression_args  # type: ignore[arg-type]
+            )
+            if handle.buffer.mode == "r":
+                handles.append(handle)
+                zip_names = handle.buffer.namelist()
+                if len(zip_names) == 1:
+                    handle = handle.buffer.open(zip_names.pop())
+                elif not zip_names:
+                    raise ValueError(f"Zero files found in ZIP file {path_or_buf}")
+                else:
+                    raise ValueError(
+                        "Multiple files found in ZIP file. "
+                        f"Only one file per ZIP: {zip_names}"
+                    )
+
+        # TAR Encoding
+        elif compression == "tar":
+            compression_args.setdefault("mode", ioargs.mode)
+            if isinstance(handle, str):
+                handle = _BytesTarFile(name=handle, **compression_args)
+            else:
+                # error: Argument "fileobj" to "_BytesTarFile" has incompatible
+                # type "BaseBuffer"; expected "Union[ReadBuffer[bytes],
+                # WriteBuffer[bytes], None]"
+                handle = _BytesTarFile(
+                    fileobj=handle, **compression_args  # type: ignore[arg-type]
+                )
+            assert isinstance(handle, _BytesTarFile)
+            if "r" in handle.buffer.mode:
+                handles.append(handle)
+                files = handle.buffer.getnames()
+                if len(files) == 1:
+                    file = handle.buffer.extractfile(files[0])
+                    assert file is not None
+                    handle = file
+                elif not files:
+                    raise ValueError(f"Zero files found in TAR archive {path_or_buf}")
+                else:
+                    raise ValueError(
+                        "Multiple files found in TAR archive. "
+                        f"Only one file per TAR archive: {files}"
+                    )
+
+        # XZ Compression
+        elif compression == "xz":
+            # error: Argument 1 to "LZMAFile" has incompatible type "Union[str,
+            # BaseBuffer]"; expected "Optional[Union[Union[str, bytes, PathLike[str],
+            # PathLike[bytes]], IO[bytes]], None]"
+            handle = get_lzma_file()(
+                handle, ioargs.mode, **compression_args  # type: ignore[arg-type]
+            )
+
+        # Zstd Compression
+        elif compression == "zstd":
+            zstd = import_optional_dependency("zstandard")
+            if "r" in ioargs.mode:
+                open_args = {"dctx": zstd.ZstdDecompressor(**compression_args)}
+            else:
+                open_args = {"cctx": zstd.ZstdCompressor(**compression_args)}
+            handle = zstd.open(
+                handle,
+                mode=ioargs.mode,
+                **open_args,
+            )
+
+        # Unrecognized Compression
+        else:
+            msg = f"Unrecognized compression type: {compression}"
+            raise ValueError(msg)
+
+        assert not isinstance(handle, str)
+        handles.append(handle)
+
+    elif isinstance(handle, str):
+        # Check whether the filename is to be opened in binary mode.
+        # Binary mode does not support 'encoding' and 'newline'.
+        if ioargs.encoding and "b" not in ioargs.mode:
+            # Encoding
+            handle = open(
+                handle,
+                ioargs.mode,
+                encoding=ioargs.encoding,
+                errors=errors,
+                newline="",
+            )
+        else:
+            # Binary mode
+            handle = open(handle, ioargs.mode)
+        handles.append(handle)
+
+    # Convert BytesIO or file objects passed with an encoding
+    is_wrapped = False
+    if not is_text and ioargs.mode == "rb" and isinstance(handle, TextIOBase):
+        # not added to handles as it does not open/buffer resources
+        handle = _BytesIOWrapper(
+            handle,
+            encoding=ioargs.encoding,
+        )
+    elif is_text and (
+        compression or memory_map or _is_binary_mode(handle, ioargs.mode)
+    ):
+        if (
+            not hasattr(handle, "readable")
+            or not hasattr(handle, "writable")
+            or not hasattr(handle, "seekable")
+        ):
+            handle = _IOWrapper(handle)
+        # error: Argument 1 to "TextIOWrapper" has incompatible type
+        # "_IOWrapper"; expected "IO[bytes]"
+        handle = TextIOWrapper(
+            handle,  # type: ignore[arg-type]
+            encoding=ioargs.encoding,
+            errors=errors,
+            newline="",
+        )
+        handles.append(handle)
+        # only marked as wrapped when the caller provided a handle
+        is_wrapped = not (
+            isinstance(ioargs.filepath_or_buffer, str) or ioargs.should_close
+        )
+
+    if "r" in ioargs.mode and not hasattr(handle, "read"):
+        raise TypeError(
+            "Expected file path name or file-like object, "
+            f"got {type(ioargs.filepath_or_buffer)} type"
+        )
+
+    handles.reverse()  # close the most recently added buffer first
+    if ioargs.should_close:
+        assert not isinstance(ioargs.filepath_or_buffer, str)
+        handles.append(ioargs.filepath_or_buffer)
+
+    return IOHandles(
+        # error: Argument "handle" to "IOHandles" has incompatible type
+        # "Union[TextIOWrapper, GzipFile, BaseBuffer, typing.IO[bytes],
+        # typing.IO[Any]]"; expected "pandas._typing.IO[Any]"
+        handle=handle,  # type: ignore[arg-type]
+        # error: Argument "created_handles" to "IOHandles" has incompatible type
+        # "List[BaseBuffer]"; expected "List[Union[IO[bytes], IO[str]]]"
+        created_handles=handles,  # type: ignore[arg-type]
+        is_wrapped=is_wrapped,
+        compression=ioargs.compression,
+    )
+
+
+# error: Definition of "__enter__" in base class "IOBase" is incompatible
+# with definition in base class "BinaryIO"
+class _BufferedWriter(BytesIO, ABC):  # type: ignore[misc]
+    """
+    Some objects do not support multiple .write() calls (TarFile and ZipFile).
+    This wrapper writes to the underlying buffer on close.
+    """
+
+    buffer = BytesIO()
+
+    @abstractmethod
+    def write_to_buffer(self) -> None:
+        ...
+
+    def close(self) -> None:
+        if self.closed:
+            # already closed
+            return
+        if self.getbuffer().nbytes:
+            # write to buffer
+            self.seek(0)
+            with self.buffer:
+                self.write_to_buffer()
+        else:
+            self.buffer.close()
+        super().close()
+
+
+class _BytesTarFile(_BufferedWriter):
+    def __init__(
+        self,
+        name: str | None = None,
+        mode: Literal["r", "a", "w", "x"] = "r",
+        fileobj: ReadBuffer[bytes] | WriteBuffer[bytes] | None = None,
+        archive_name: str | None = None,
+        **kwargs,
+    ) -> None:
+        super().__init__()
+        self.archive_name = archive_name
+        self.name = name
+        # error: Incompatible types in assignment (expression has type "TarFile",
+        # base class "_BufferedWriter" defined the type as "BytesIO")
+        self.buffer: tarfile.TarFile = tarfile.TarFile.open(  # type: ignore[assignment]
+            name=name,
+            mode=self.extend_mode(mode),
+            fileobj=fileobj,
+            **kwargs,
+        )
+
+    def extend_mode(self, mode: str) -> str:
+        mode = mode.replace("b", "")
+        if mode != "w":
+            return mode
+        if self.name is not None:
+            suffix = Path(self.name).suffix
+            if suffix in (".gz", ".xz", ".bz2"):
+                mode = f"{mode}:{suffix[1:]}"
+        return mode
+
+    def infer_filename(self) -> str | None:
+        """
+        If an explicit archive_name is not given, we still want the file inside the zip
+        file not to be named something.tar, because that causes confusion (GH39465).
+        """
+        if self.name is None:
+            return None
+
+        filename = Path(self.name)
+        if filename.suffix == ".tar":
+            return filename.with_suffix("").name
+        elif filename.suffix in (".tar.gz", ".tar.bz2", ".tar.xz"):
+            return filename.with_suffix("").with_suffix("").name
+        return filename.name
+
+    def write_to_buffer(self) -> None:
+        # TarFile needs a non-empty string
+        archive_name = self.archive_name or self.infer_filename() or "tar"
+        tarinfo = tarfile.TarInfo(name=archive_name)
+        tarinfo.size = len(self.getvalue())
+        self.buffer.addfile(tarinfo, self)
+
+
+class _BytesZipFile(_BufferedWriter):
+    def __init__(
+        self,
+        file: FilePath | ReadBuffer[bytes] | WriteBuffer[bytes],
+        mode: str,
+        archive_name: str | None = None,
+        **kwargs,
+    ) -> None:
+        super().__init__()
+        mode = mode.replace("b", "")
+        self.archive_name = archive_name
+
+        kwargs.setdefault("compression", zipfile.ZIP_DEFLATED)
+        # error: Incompatible types in assignment (expression has type "ZipFile",
+        # base class "_BufferedWriter" defined the type as "BytesIO")
+        self.buffer: zipfile.ZipFile = zipfile.ZipFile(  # type: ignore[assignment]
+            file, mode, **kwargs
+        )
+
+    def infer_filename(self) -> str | None:
+        """
+        If an explicit archive_name is not given, we still want the file inside the zip
+        file not to be named something.zip, because that causes confusion (GH39465).
+        """
+        if isinstance(self.buffer.filename, (os.PathLike, str)):
+            filename = Path(self.buffer.filename)
+            if filename.suffix == ".zip":
+                return filename.with_suffix("").name
+            return filename.name
+        return None
+
+    def write_to_buffer(self) -> None:
+        # ZipFile needs a non-empty string
+        archive_name = self.archive_name or self.infer_filename() or "zip"
+        self.buffer.writestr(archive_name, self.getvalue())
+
+
+class _IOWrapper:
+    # TextIOWrapper is overly strict: it request that the buffer has seekable, readable,
+    # and writable. If we have a read-only buffer, we shouldn't need writable and vice
+    # versa. Some buffers, are seek/read/writ-able but they do not have the "-able"
+    # methods, e.g., tempfile.SpooledTemporaryFile.
+    # If a buffer does not have the above "-able" methods, we simple assume they are
+    # seek/read/writ-able.
+    def __init__(self, buffer: BaseBuffer) -> None:
+        self.buffer = buffer
+
+    def __getattr__(self, name: str):
+        return getattr(self.buffer, name)
+
+    def readable(self) -> bool:
+        if hasattr(self.buffer, "readable"):
+            return self.buffer.readable()
+        return True
+
+    def seekable(self) -> bool:
+        if hasattr(self.buffer, "seekable"):
+            return self.buffer.seekable()
+        return True
+
+    def writable(self) -> bool:
+        if hasattr(self.buffer, "writable"):
+            return self.buffer.writable()
+        return True
+
+
+class _BytesIOWrapper:
+    # Wrapper that wraps a StringIO buffer and reads bytes from it
+    # Created for compat with pyarrow read_csv
+    def __init__(self, buffer: StringIO | TextIOBase, encoding: str = "utf-8") -> None:
+        self.buffer = buffer
+        self.encoding = encoding
+        # Because a character can be represented by more than 1 byte,
+        # it is possible that reading will produce more bytes than n
+        # We store the extra bytes in this overflow variable, and append the
+        # overflow to the front of the bytestring the next time reading is performed
+        self.overflow = b""
+
+    def __getattr__(self, attr: str):
+        return getattr(self.buffer, attr)
+
+    def read(self, n: int | None = -1) -> bytes:
+        assert self.buffer is not None
+        bytestring = self.buffer.read(n).encode(self.encoding)
+        # When n=-1/n greater than remaining bytes: Read entire file/rest of file
+        combined_bytestring = self.overflow + bytestring
+        if n is None or n < 0 or n >= len(combined_bytestring):
+            self.overflow = b""
+            return combined_bytestring
+        else:
+            to_return = combined_bytestring[:n]
+            self.overflow = combined_bytestring[n:]
+            return to_return
+
+
+def _maybe_memory_map(
+    handle: str | BaseBuffer, memory_map: bool
+) -> tuple[str | BaseBuffer, bool, list[BaseBuffer]]:
+    """Try to memory map file/buffer."""
+    handles: list[BaseBuffer] = []
+    memory_map &= hasattr(handle, "fileno") or isinstance(handle, str)
+    if not memory_map:
+        return handle, memory_map, handles
+
+    # mmap used by only read_csv
+    handle = cast(ReadCsvBuffer, handle)
+
+    # need to open the file first
+    if isinstance(handle, str):
+        handle = open(handle, "rb")
+        handles.append(handle)
+
+    try:
+        # open mmap and adds *-able
+        # error: Argument 1 to "_IOWrapper" has incompatible type "mmap";
+        # expected "BaseBuffer"
+        wrapped = _IOWrapper(
+            mmap.mmap(
+                handle.fileno(), 0, access=mmap.ACCESS_READ  # type: ignore[arg-type]
+            )
+        )
+    finally:
+        for handle in reversed(handles):
+            # error: "BaseBuffer" has no attribute "close"
+            handle.close()  # type: ignore[attr-defined]
+
+    return wrapped, memory_map, [wrapped]
+
+
+def file_exists(filepath_or_buffer: FilePath | BaseBuffer) -> bool:
+    """Test whether file exists."""
+    exists = False
+    filepath_or_buffer = stringify_path(filepath_or_buffer)
+    if not isinstance(filepath_or_buffer, str):
+        return exists
+    try:
+        exists = os.path.exists(filepath_or_buffer)
+        # gh-5874: if the filepath is too long will raise here
+    except (TypeError, ValueError):
+        pass
+    return exists
+
+
+def _is_binary_mode(handle: FilePath | BaseBuffer, mode: str) -> bool:
+    """Whether the handle is opened in binary mode"""
+    # specified by user
+    if "t" in mode or "b" in mode:
+        return "b" in mode
+
+    # exceptions
+    text_classes = (
+        # classes that expect string but have 'b' in mode
+        codecs.StreamWriter,
+        codecs.StreamReader,
+        codecs.StreamReaderWriter,
+    )
+    if issubclass(type(handle), text_classes):
+        return False
+
+    return isinstance(handle, _get_binary_io_classes()) or "b" in getattr(
+        handle, "mode", mode
+    )
+
+
+@functools.lru_cache
+def _get_binary_io_classes() -> tuple[type, ...]:
+    """IO classes that that expect bytes"""
+    binary_classes: tuple[type, ...] = (BufferedIOBase, RawIOBase)
+
+    # python-zstandard doesn't use any of the builtin base classes; instead we
+    # have to use the `zstd.ZstdDecompressionReader` class for isinstance checks.
+    # Unfortunately `zstd.ZstdDecompressionReader` isn't exposed by python-zstandard
+    # so we have to get it from a `zstd.ZstdDecompressor` instance.
+    # See also https://github.com/indygreg/python-zstandard/pull/165.
+    zstd = import_optional_dependency("zstandard", errors="ignore")
+    if zstd is not None:
+        with zstd.ZstdDecompressor().stream_reader(b"") as reader:
+            binary_classes += (type(reader),)
+
+    return binary_classes
+
+
+def is_potential_multi_index(
+    columns: Sequence[Hashable] | MultiIndex,
+    index_col: bool | Sequence[int] | None = None,
+) -> bool:
+    """
+    Check whether or not the `columns` parameter
+    could be converted into a MultiIndex.
+
+    Parameters
+    ----------
+    columns : array-like
+        Object which may or may not be convertible into a MultiIndex
+    index_col : None, bool or list, optional
+        Column or columns to use as the (possibly hierarchical) index
+
+    Returns
+    -------
+    bool : Whether or not columns could become a MultiIndex
+    """
+    if index_col is None or isinstance(index_col, bool):
+        index_col = []
+
+    return bool(
+        len(columns)
+        and not isinstance(columns, ABCMultiIndex)
+        and all(isinstance(c, tuple) for c in columns if c not in list(index_col))
+    )
+
+
+def dedup_names(
+    names: Sequence[Hashable], is_potential_multiindex: bool
+) -> Sequence[Hashable]:
+    """
+    Rename column names if duplicates exist.
+
+    Currently the renaming is done by appending a period and an autonumeric,
+    but a custom pattern may be supported in the future.
+
+    Examples
+    --------
+    >>> dedup_names(["x", "y", "x", "x"], is_potential_multiindex=False)
+    ['x', 'y', 'x.1', 'x.2']
+    """
+    names = list(names)  # so we can index
+    counts: DefaultDict[Hashable, int] = defaultdict(int)
+
+    for i, col in enumerate(names):
+        cur_count = counts[col]
+
+        while cur_count > 0:
+            counts[col] = cur_count + 1
+
+            if is_potential_multiindex:
+                # for mypy
+                assert isinstance(col, tuple)
+                col = col[:-1] + (f"{col[-1]}.{cur_count}",)
+            else:
+                col = f"{col}.{cur_count}"
+            cur_count = counts[col]
+
+        names[i] = col
+        counts[col] = cur_count + 1
+
+    return names
+ from pandas.core.groupby.base import transformation_kernels
+
+# There is no Series.cumcount or DataFrame.cumcount
+series_transform_kernels = [
+    x for x in sorted(transformation_kernels) if x != "cumcount"
+]
+frame_transform_kernels = [x for x in sorted(transformation_kernels) if x != "cumcount"]
+ """
+Assertion helpers for arithmetic tests.
+"""
+import numpy as np
+import pytest
+
+from pandas import (
+    DataFrame,
+    Index,
+    Series,
+    array,
+)
+import pandas._testing as tm
+from pandas.core.arrays import (
+    BooleanArray,
+    NumpyExtensionArray,
+)
+
+
+def assert_cannot_add(left, right, msg="cannot add"):
+    """
+    Helper to assert that left and right cannot be added.
+
+    Parameters
+    ----------
+    left : object
+    right : object
+    msg : str, default "cannot add"
+    """
+    with pytest.raises(TypeError, match=msg):
+        left + right
+    with pytest.raises(TypeError, match=msg):
+        right + left
+
+
+def assert_invalid_addsub_type(left, right, msg=None):
+    """
+    Helper to assert that left and right can be neither added nor subtracted.
+
+    Parameters
+    ----------
+    left : object
+    right : object
+    msg : str or None, default None
+    """
+    with pytest.raises(TypeError, match=msg):
+        left + right
+    with pytest.raises(TypeError, match=msg):
+        right + left
+    with pytest.raises(TypeError, match=msg):
+        left - right
+    with pytest.raises(TypeError, match=msg):
+        right - left
+
+
+def get_upcast_box(left, right, is_cmp: bool = False):
+    """
+    Get the box to use for 'expected' in an arithmetic or comparison operation.
+
+    Parameters
+    left : Any
+    right : Any
+    is_cmp : bool, default False
+        Whether the operation is a comparison method.
+    """
+
+    if isinstance(left, DataFrame) or isinstance(right, DataFrame):
+        return DataFrame
+    if isinstance(left, Series) or isinstance(right, Series):
+        if is_cmp and isinstance(left, Index):
+            # Index does not defer for comparisons
+            return np.array
+        return Series
+    if isinstance(left, Index) or isinstance(right, Index):
+        if is_cmp:
+            return np.array
+        return Index
+    return tm.to_array
+
+
+def assert_invalid_comparison(left, right, box):
+    """
+    Assert that comparison operations with mismatched types behave correctly.
+
+    Parameters
+    ----------
+    left : np.ndarray, ExtensionArray, Index, or Series
+    right : object
+    box : {pd.DataFrame, pd.Series, pd.Index, pd.array, tm.to_array}
+    """
+    # Not for tznaive-tzaware comparison
+
+    # Note: not quite the same as how we do this for tm.box_expected
+    xbox = box if box not in [Index, array] else np.array
+
+    def xbox2(x):
+        # Eventually we'd like this to be tighter, but for now we'll
+        #  just exclude NumpyExtensionArray[bool]
+        if isinstance(x, NumpyExtensionArray):
+            return x._ndarray
+        if isinstance(x, BooleanArray):
+            # NB: we are assuming no pd.NAs for now
+            return x.astype(bool)
+        return x
+
+    # rev_box: box to use for reversed comparisons
+    rev_box = xbox
+    if isinstance(right, Index) and isinstance(left, Series):
+        rev_box = np.array
+
+    result = xbox2(left == right)
+    expected = xbox(np.zeros(result.shape, dtype=np.bool_))
+
+    tm.assert_equal(result, expected)
+
+    result = xbox2(right == left)
+    tm.assert_equal(result, rev_box(expected))
+
+    result = xbox2(left != right)
+    tm.assert_equal(result, ~expected)
+
+    result = xbox2(right != left)
+    tm.assert_equal(result, rev_box(~expected))
+
+    msg = "|".join(
+        [
+            "Invalid comparison between",
+            "Cannot compare type",
+            "not supported between",
+            "invalid type promotion",
+            (
+                # GH#36706 npdev 1.20.0 2020-09-28
+                r"The DTypes <class 'numpy.dtype\[datetime64\]'> and "
+                r"<class 'numpy.dtype\[int64\]'> do not have a common DType. "
+                "For example they cannot be stored in a single array unless the "
+                "dtype is `object`."
+            ),
+        ]
+    )
+    with pytest.raises(TypeError, match=msg):
+        left < right
+    with pytest.raises(TypeError, match=msg):
+        left <= right
+    with pytest.raises(TypeError, match=msg):
+        left > right
+    with pytest.raises(TypeError, match=msg):
+        left >= right
+    with pytest.raises(TypeError, match=msg):
+        right < left
+    with pytest.raises(TypeError, match=msg):
+        right <= left
+    with pytest.raises(TypeError, match=msg):
+        right > left
+    with pytest.raises(TypeError, match=msg):
+        right >= left
+ from typing import Any
+
+from pandas import Index
+
+
+def allow_na_ops(obj: Any) -> bool:
+    """Whether to skip test cases including NaN"""
+    is_bool_index = isinstance(obj, Index) and obj.inferred_type == "boolean"
+    return not is_bool_index and obj._can_hold_na
+ from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from pandas import (
+    DataFrame,
+    concat,
+)
+
+if TYPE_CHECKING:
+    from pandas._typing import AxisInt
+
+
+def _check_mixed_float(df, dtype=None):
+    # float16 are most likely to be upcasted to float32
+    dtypes = {"A": "float32", "B": "float32", "C": "float16", "D": "float64"}
+    if isinstance(dtype, str):
+        dtypes = {k: dtype for k, v in dtypes.items()}
+    elif isinstance(dtype, dict):
+        dtypes.update(dtype)
+    if dtypes.get("A"):
+        assert df.dtypes["A"] == dtypes["A"]
+    if dtypes.get("B"):
+        assert df.dtypes["B"] == dtypes["B"]
+    if dtypes.get("C"):
+        assert df.dtypes["C"] == dtypes["C"]
+    if dtypes.get("D"):
+        assert df.dtypes["D"] == dtypes["D"]
+
+
+def _check_mixed_int(df, dtype=None):
+    dtypes = {"A": "int32", "B": "uint64", "C": "uint8", "D": "int64"}
+    if isinstance(dtype, str):
+        dtypes = {k: dtype for k, v in dtypes.items()}
+    elif isinstance(dtype, dict):
+        dtypes.update(dtype)
+    if dtypes.get("A"):
+        assert df.dtypes["A"] == dtypes["A"]
+    if dtypes.get("B"):
+        assert df.dtypes["B"] == dtypes["B"]
+    if dtypes.get("C"):
+        assert df.dtypes["C"] == dtypes["C"]
+    if dtypes.get("D"):
+        assert df.dtypes["D"] == dtypes["D"]
+
+
+def zip_frames(frames: list[DataFrame], axis: AxisInt = 1) -> DataFrame:
+    """
+    take a list of frames, zip them together under the
+    assumption that these all have the first frames' index/columns.
+
+    Returns
+    -------
+    new_frame : DataFrame
+    """
+    if axis == 1:
+        columns = frames[0].columns
+        zipped = [f.loc[:, c] for c in columns for f in frames]
+        return concat(zipped, axis=1)
+    else:
+        index = frames[0].index
+        zipped = [f.loc[i, :] for i in index for f in frames]
+        return DataFrame(zipped)
+ """ common utilities """
+from __future__ import annotations
+
+from typing import (
+    Any,
+    Literal,
+)
+
+
+def _mklbl(prefix: str, n: int):
+    return [f"{prefix}{i}" for i in range(n)]
+
+
+def check_indexing_smoketest_or_raises(
+    obj,
+    method: Literal["iloc", "loc"],
+    key: Any,
+    axes: Literal[0, 1] | None = None,
+    fails=None,
+) -> None:
+    if axes is None:
+        axes_list = [0, 1]
+    else:
+        assert axes in [0, 1]
+        axes_list = [axes]
+
+    for ax in axes_list:
+        if ax < obj.ndim:
+            # create a tuple accessor
+            new_axes = [slice(None)] * obj.ndim
+            new_axes[ax] = key
+            axified = tuple(new_axes)
+            try:
+                getattr(obj, method).__getitem__(axified)
+            except (IndexError, TypeError, KeyError) as detail:
+                # if we are in fails, the ok, otherwise raise it
+                if fails is not None:
+                    if isinstance(detail, fails):
+                        return
+                raise
+ from collections.abc import Generator
+from contextlib import contextmanager
+import pathlib
+import tempfile
+
+import pytest
+
+from pandas.io.pytables import HDFStore
+
+tables = pytest.importorskip("tables")
+# set these parameters so we don't have file sharing
+tables.parameters.MAX_NUMEXPR_THREADS = 1
+tables.parameters.MAX_BLOSC_THREADS = 1
+tables.parameters.MAX_THREADS = 1
+
+
+def safe_close(store):
+    try:
+        if store is not None:
+            store.close()
+    except OSError:
+        pass
+
+
+# contextmanager to ensure the file cleanup
+@contextmanager
+def ensure_clean_store(
+    path, mode="a", complevel=None, complib=None, fletcher32=False
+) -> Generator[HDFStore, None, None]:
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        tmp_path = pathlib.Path(tmpdirname, path)
+        with HDFStore(
+            tmp_path,
+            mode=mode,
+            complevel=complevel,
+            complib=complib,
+            fletcher32=fletcher32,
+        ) as store:
+            yield store
+
+
+def _maybe_remove(store, key):
+    """
+    For tests using tables, try removing the table to be sure there is
+    no content from previous tests using the same table name.
+    """
+    try:
+        store.remove(key)
+    except (ValueError, KeyError):
+        pass
+ """
+Module consolidating common testing functions for checking plotting.
+"""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+import numpy as np
+
+from pandas.core.dtypes.api import is_list_like
+
+import pandas as pd
+from pandas import Series
+import pandas._testing as tm
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from matplotlib.axes import Axes
+
+
+def _check_legend_labels(axes, labels=None, visible=True):
+    """
+    Check each axes has expected legend labels
+
+    Parameters
+    ----------
+    axes : matplotlib Axes object, or its list-like
+    labels : list-like
+        expected legend labels
+    visible : bool
+        expected legend visibility. labels are checked only when visible is
+        True
+    """
+    if visible and (labels is None):
+        raise ValueError("labels must be specified when visible is True")
+    axes = _flatten_visible(axes)
+    for ax in axes:
+        if visible:
+            assert ax.get_legend() is not None
+            _check_text_labels(ax.get_legend().get_texts(), labels)
+        else:
+            assert ax.get_legend() is None
+
+
+def _check_legend_marker(ax, expected_markers=None, visible=True):
+    """
+    Check ax has expected legend markers
+
+    Parameters
+    ----------
+    ax : matplotlib Axes object
+    expected_markers : list-like
+        expected legend markers
+    visible : bool
+        expected legend visibility. labels are checked only when visible is
+        True
+    """
+    if visible and (expected_markers is None):
+        raise ValueError("Markers must be specified when visible is True")
+    if visible:
+        handles, _ = ax.get_legend_handles_labels()
+        markers = [handle.get_marker() for handle in handles]
+        assert markers == expected_markers
+    else:
+        assert ax.get_legend() is None
+
+
+def _check_data(xp, rs):
+    """
+    Check each axes has identical lines
+
+    Parameters
+    ----------
+    xp : matplotlib Axes object
+    rs : matplotlib Axes object
+    """
+    import matplotlib.pyplot as plt
+
+    xp_lines = xp.get_lines()
+    rs_lines = rs.get_lines()
+
+    assert len(xp_lines) == len(rs_lines)
+    for xpl, rsl in zip(xp_lines, rs_lines):
+        xpdata = xpl.get_xydata()
+        rsdata = rsl.get_xydata()
+        tm.assert_almost_equal(xpdata, rsdata)
+
+    plt.close("all")
+
+
+def _check_visible(collections, visible=True):
+    """
+    Check each artist is visible or not
+
+    Parameters
+    ----------
+    collections : matplotlib Artist or its list-like
+        target Artist or its list or collection
+    visible : bool
+        expected visibility
+    """
+    from matplotlib.collections import Collection
+
+    if not isinstance(collections, Collection) and not is_list_like(collections):
+        collections = [collections]
+
+    for patch in collections:
+        assert patch.get_visible() == visible
+
+
+def _check_patches_all_filled(axes: Axes | Sequence[Axes], filled: bool = True) -> None:
+    """
+    Check for each artist whether it is filled or not
+
+    Parameters
+    ----------
+    axes : matplotlib Axes object, or its list-like
+    filled : bool
+        expected filling
+    """
+
+    axes = _flatten_visible(axes)
+    for ax in axes:
+        for patch in ax.patches:
+            assert patch.fill == filled
+
+
+def _get_colors_mapped(series, colors):
+    unique = series.unique()
+    # unique and colors length can be differed
+    # depending on slice value
+    mapped = dict(zip(unique, colors))
+    return [mapped[v] for v in series.values]
+
+
+def _check_colors(collections, linecolors=None, facecolors=None, mapping=None):
+    """
+    Check each artist has expected line colors and face colors
+
+    Parameters
+    ----------
+    collections : list-like
+        list or collection of target artist
+    linecolors : list-like which has the same length as collections
+        list of expected line colors
+    facecolors : list-like which has the same length as collections
+        list of expected face colors
+    mapping : Series
+        Series used for color grouping key
+        used for andrew_curves, parallel_coordinates, radviz test
+    """
+    from matplotlib import colors
+    from matplotlib.collections import (
+        Collection,
+        LineCollection,
+        PolyCollection,
+    )
+    from matplotlib.lines import Line2D
+
+    conv = colors.ColorConverter
+    if linecolors is not None:
+        if mapping is not None:
+            linecolors = _get_colors_mapped(mapping, linecolors)
+            linecolors = linecolors[: len(collections)]
+
+        assert len(collections) == len(linecolors)
+        for patch, color in zip(collections, linecolors):
+            if isinstance(patch, Line2D):
+                result = patch.get_color()
+                # Line2D may contains string color expression
+                result = conv.to_rgba(result)
+            elif isinstance(patch, (PolyCollection, LineCollection)):
+                result = tuple(patch.get_edgecolor()[0])
+            else:
+                result = patch.get_edgecolor()
+
+            expected = conv.to_rgba(color)
+            assert result == expected
+
+    if facecolors is not None:
+        if mapping is not None:
+            facecolors = _get_colors_mapped(mapping, facecolors)
+            facecolors = facecolors[: len(collections)]
+
+        assert len(collections) == len(facecolors)
+        for patch, color in zip(collections, facecolors):
+            if isinstance(patch, Collection):
+                # returned as list of np.array
+                result = patch.get_facecolor()[0]
+            else:
+                result = patch.get_facecolor()
+
+            if isinstance(result, np.ndarray):
+                result = tuple(result)
+
+            expected = conv.to_rgba(color)
+            assert result == expected
+
+
+def _check_text_labels(texts, expected):
+    """
+    Check each text has expected labels
+
+    Parameters
+    ----------
+    texts : matplotlib Text object, or its list-like
+        target text, or its list
+    expected : str or list-like which has the same length as texts
+        expected text label, or its list
+    """
+    if not is_list_like(texts):
+        assert texts.get_text() == expected
+    else:
+        labels = [t.get_text() for t in texts]
+        assert len(labels) == len(expected)
+        for label, e in zip(labels, expected):
+            assert label == e
+
+
+def _check_ticks_props(axes, xlabelsize=None, xrot=None, ylabelsize=None, yrot=None):
+    """
+    Check each axes has expected tick properties
+
+    Parameters
+    ----------
+    axes : matplotlib Axes object, or its list-like
+    xlabelsize : number
+        expected xticks font size
+    xrot : number
+        expected xticks rotation
+    ylabelsize : number
+        expected yticks font size
+    yrot : number
+        expected yticks rotation
+    """
+    from matplotlib.ticker import NullFormatter
+
+    axes = _flatten_visible(axes)
+    for ax in axes:
+        if xlabelsize is not None or xrot is not None:
+            if isinstance(ax.xaxis.get_minor_formatter(), NullFormatter):
+                # If minor ticks has NullFormatter, rot / fontsize are not
+                # retained
+                labels = ax.get_xticklabels()
+            else:
+                labels = ax.get_xticklabels() + ax.get_xticklabels(minor=True)
+
+            for label in labels:
+                if xlabelsize is not None:
+                    tm.assert_almost_equal(label.get_fontsize(), xlabelsize)
+                if xrot is not None:
+                    tm.assert_almost_equal(label.get_rotation(), xrot)
+
+        if ylabelsize is not None or yrot is not None:
+            if isinstance(ax.yaxis.get_minor_formatter(), NullFormatter):
+                labels = ax.get_yticklabels()
+            else:
+                labels = ax.get_yticklabels() + ax.get_yticklabels(minor=True)
+
+            for label in labels:
+                if ylabelsize is not None:
+                    tm.assert_almost_equal(label.get_fontsize(), ylabelsize)
+                if yrot is not None:
+                    tm.assert_almost_equal(label.get_rotation(), yrot)
+
+
+def _check_ax_scales(axes, xaxis="linear", yaxis="linear"):
+    """
+    Check each axes has expected scales
+
+    Parameters
+    ----------
+    axes : matplotlib Axes object, or its list-like
+    xaxis : {'linear', 'log'}
+        expected xaxis scale
+    yaxis : {'linear', 'log'}
+        expected yaxis scale
+    """
+    axes = _flatten_visible(axes)
+    for ax in axes:
+        assert ax.xaxis.get_scale() == xaxis
+        assert ax.yaxis.get_scale() == yaxis
+
+
+def _check_axes_shape(axes, axes_num=None, layout=None, figsize=None):
+    """
+    Check expected number of axes is drawn in expected layout
+
+    Parameters
+    ----------
+    axes : matplotlib Axes object, or its list-like
+    axes_num : number
+        expected number of axes. Unnecessary axes should be set to
+        invisible.
+    layout : tuple
+        expected layout, (expected number of rows , columns)
+    figsize : tuple
+        expected figsize. default is matplotlib default
+    """
+    from pandas.plotting._matplotlib.tools import flatten_axes
+
+    if figsize is None:
+        figsize = (6.4, 4.8)
+    visible_axes = _flatten_visible(axes)
+
+    if axes_num is not None:
+        assert len(visible_axes) == axes_num
+        for ax in visible_axes:
+            # check something drawn on visible axes
+            assert len(ax.get_children()) > 0
+
+    if layout is not None:
+        x_set = set()
+        y_set = set()
+        for ax in flatten_axes(axes):
+            # check axes coordinates to estimate layout
+            points = ax.get_position().get_points()
+            x_set.add(points[0][0])
+            y_set.add(points[0][1])
+        result = (len(y_set), len(x_set))
+        assert result == layout
+
+    tm.assert_numpy_array_equal(
+        visible_axes[0].figure.get_size_inches(),
+        np.array(figsize, dtype=np.float64),
+    )
+
+
+def _flatten_visible(axes: Axes | Sequence[Axes]) -> Sequence[Axes]:
+    """
+    Flatten axes, and filter only visible
+
+    Parameters
+    ----------
+    axes : matplotlib Axes object, or its list-like
+
+    """
+    from pandas.plotting._matplotlib.tools import flatten_axes
+
+    axes_ndarray = flatten_axes(axes)
+    axes = [ax for ax in axes_ndarray if ax.get_visible()]
+    return axes
+
+
+def _check_has_errorbars(axes, xerr=0, yerr=0):
+    """
+    Check axes has expected number of errorbars
+
+    Parameters
+    ----------
+    axes : matplotlib Axes object, or its list-like
+    xerr : number
+        expected number of x errorbar
+    yerr : number
+        expected number of y errorbar
+    """
+    axes = _flatten_visible(axes)
+    for ax in axes:
+        containers = ax.containers
+        xerr_count = 0
+        yerr_count = 0
+        for c in containers:
+            has_xerr = getattr(c, "has_xerr", False)
+            has_yerr = getattr(c, "has_yerr", False)
+            if has_xerr:
+                xerr_count += 1
+            if has_yerr:
+                yerr_count += 1
+        assert xerr == xerr_count
+        assert yerr == yerr_count
+
+
+def _check_box_return_type(
+    returned, return_type, expected_keys=None, check_ax_title=True
+):
+    """
+    Check box returned type is correct
+
+    Parameters
+    ----------
+    returned : object to be tested, returned from boxplot
+    return_type : str
+        return_type passed to boxplot
+    expected_keys : list-like, optional
+        group labels in subplot case. If not passed,
+        the function checks assuming boxplot uses single ax
+    check_ax_title : bool
+        Whether to check the ax.title is the same as expected_key
+        Intended to be checked by calling from ``boxplot``.
+        Normal ``plot`` doesn't attach ``ax.title``, it must be disabled.
+    """
+    from matplotlib.axes import Axes
+
+    types = {"dict": dict, "axes": Axes, "both": tuple}
+    if expected_keys is None:
+        # should be fixed when the returning default is changed
+        if return_type is None:
+            return_type = "dict"
+
+        assert isinstance(returned, types[return_type])
+        if return_type == "both":
+            assert isinstance(returned.ax, Axes)
+            assert isinstance(returned.lines, dict)
+    else:
+        # should be fixed when the returning default is changed
+        if return_type is None:
+            for r in _flatten_visible(returned):
+                assert isinstance(r, Axes)
+            return
+
+        assert isinstance(returned, Series)
+
+        assert sorted(returned.keys()) == sorted(expected_keys)
+        for key, value in returned.items():
+            assert isinstance(value, types[return_type])
+            # check returned dict has correct mapping
+            if return_type == "axes":
+                if check_ax_title:
+                    assert value.get_title() == key
+            elif return_type == "both":
+                if check_ax_title:
+                    assert value.ax.get_title() == key
+                assert isinstance(value.ax, Axes)
+                assert isinstance(value.lines, dict)
+            elif return_type == "dict":
+                line = value["medians"][0]
+                axes = line.axes
+                if check_ax_title:
+                    assert axes.get_title() == key
+            else:
+                raise AssertionError
+
+
+def _check_grid_settings(obj, kinds, kws={}):
+    # Make sure plot defaults to rcParams['axes.grid'] setting, GH 9792
+
+    import matplotlib as mpl
+
+    def is_grid_on():
+        xticks = mpl.pyplot.gca().xaxis.get_major_ticks()
+        yticks = mpl.pyplot.gca().yaxis.get_major_ticks()
+        xoff = all(not g.gridline.get_visible() for g in xticks)
+        yoff = all(not g.gridline.get_visible() for g in yticks)
+
+        return not (xoff and yoff)
+
+    spndx = 1
+    for kind in kinds:
+        mpl.pyplot.subplot(1, 4 * len(kinds), spndx)
+        spndx += 1
+        mpl.rc("axes", grid=False)
+        obj.plot(kind=kind, **kws)
+        assert not is_grid_on()
+        mpl.pyplot.clf()
+
+        mpl.pyplot.subplot(1, 4 * len(kinds), spndx)
+        spndx += 1
+        mpl.rc("axes", grid=True)
+        obj.plot(kind=kind, grid=False, **kws)
+        assert not is_grid_on()
+        mpl.pyplot.clf()
+
+        if kind not in ["pie", "hexbin", "scatter"]:
+            mpl.pyplot.subplot(1, 4 * len(kinds), spndx)
+            spndx += 1
+            mpl.rc("axes", grid=True)
+            obj.plot(kind=kind, **kws)
+            assert is_grid_on()
+            mpl.pyplot.clf()
+
+            mpl.pyplot.subplot(1, 4 * len(kinds), spndx)
+            spndx += 1
+            mpl.rc("axes", grid=False)
+            obj.plot(kind=kind, grid=True, **kws)
+            assert is_grid_on()
+            mpl.pyplot.clf()
+
+
+def _unpack_cycler(rcParams, field="color"):
+    """
+    Auxiliary function for correctly unpacking cycler after MPL >= 1.5
+    """
+    return [v[field] for v in rcParams["axes.prop_cycle"]]
+
+
+def get_x_axis(ax):
+    return ax._shared_axes["x"]
+
+
+def get_y_axis(ax):
+    return ax._shared_axes["y"]
+
+
+def _check_plot_works(f, default_axes=False, **kwargs):
+    """
+    Create plot and ensure that plot return object is valid.
+
+    Parameters
+    ----------
+    f : func
+        Plotting function.
+    default_axes : bool, optional
+        If False (default):
+            - If `ax` not in `kwargs`, then create subplot(211) and plot there
+            - Create new subplot(212) and plot there as well
+            - Mind special corner case for bootstrap_plot (see `_gen_two_subplots`)
+        If True:
+            - Simply run plotting function with kwargs provided
+            - All required axes instances will be created automatically
+            - It is recommended to use it when the plotting function
+            creates multiple axes itself. It helps avoid warnings like
+            'UserWarning: To output multiple subplots,
+            the figure containing the passed axes is being cleared'
+    **kwargs
+        Keyword arguments passed to the plotting function.
+
+    Returns
+    -------
+    Plot object returned by the last plotting.
+    """
+    import matplotlib.pyplot as plt
+
+    if default_axes:
+        gen_plots = _gen_default_plot
+    else:
+        gen_plots = _gen_two_subplots
+
+    ret = None
+    try:
+        fig = kwargs.get("figure", plt.gcf())
+        plt.clf()
+
+        for ret in gen_plots(f, fig, **kwargs):
+            tm.assert_is_valid_plot_return_object(ret)
+
+    finally:
+        plt.close(fig)
+
+    return ret
+
+
+def _gen_default_plot(f, fig, **kwargs):
+    """
+    Create plot in a default way.
+    """
+    yield f(**kwargs)
+
+
+def _gen_two_subplots(f, fig, **kwargs):
+    """
+    Create plot on two subplots forcefully created.
+    """
+    if "ax" not in kwargs:
+        fig.add_subplot(211)
+    yield f(**kwargs)
+
+    if f is pd.plotting.bootstrap_plot:
+        assert "ax" not in kwargs
+    else:
+        kwargs["ax"] = fig.add_subplot(212)
+    yield f(**kwargs)
+ """
+Assertion helpers and base class for offsets tests
+"""
+from __future__ import annotations
+
+
+def assert_offset_equal(offset, base, expected):
+    actual = offset + base
+    actual_swapped = base + offset
+    actual_apply = offset._apply(base)
+    try:
+        assert actual == expected
+        assert actual_swapped == expected
+        assert actual_apply == expected
+    except AssertionError as err:
+        raise AssertionError(
+            f"\nExpected: {expected}\nActual: {actual}\nFor Offset: {offset})"
+            f"\nAt Date: {base}"
+        ) from err
+
+
+def assert_is_on_offset(offset, date, expected):
+    actual = offset.is_on_offset(date)
+    assert actual == expected, (
+        f"\nExpected: {expected}\nActual: {actual}\nFor Offset: {offset})"
+        f"\nAt Date: {date}"
+    )
+
+
+class WeekDay:
+    MON = 0
+    TUE = 1
+    WED = 2
+    THU = 3
+    FRI = 4
+    SAT = 5
+    SUN = 6
+ #
+# Copyright (c) 1996-2000 Tyler C. Sarna <tsarna@sarna.org>
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+# 3. All advertising materials mentioning features or use of this software
+#    must display the following acknowledgement:
+#      This product includes software developed by Tyler C. Sarna.
+# 4. Neither the name of the author nor the names of contributors
+#    may be used to endorse or promote products derived from this software
+#    without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS
+# BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+
+from reportlab.platypus.flowables import Flowable
+from reportlab.lib.units import inch
+from string import ascii_lowercase, ascii_uppercase, digits as string_digits
+
+class Barcode(Flowable):
+    """Abstract Base for barcodes. Includes implementations of
+    some methods suitable for the more primitive barcode types"""
+
+    fontName = 'Courier'
+    fontSize = 12
+    humanReadable = 0
+
+    def _humanText(self):
+        return self.encoded
+
+    def __init__(self, value='',**kwd):
+        self.value = str(value)
+
+        self._setKeywords(**kwd)
+        if not hasattr(self, 'gap'):
+            self.gap = None
+
+
+    def _calculate(self):
+        self.validate()
+        self.encode()
+        self.decompose()
+        self.computeSize()
+
+    def _setKeywords(self,**kwd):
+        for (k, v) in kwd.items():
+            setattr(self, k, v)
+
+    def validate(self):
+        self.valid = 1
+        self.validated = self.value
+
+    def encode(self):
+        self.encoded = self.validated
+
+    def decompose(self):
+        self.decomposed = self.encoded
+
+    def computeSize(self, *args):
+        barWidth = self.barWidth
+        wx = barWidth * self.ratio
+
+        if self.gap == None:
+            self.gap = barWidth
+
+        w = 0.0
+
+        for c in self.decomposed:
+            if c in 'sb':
+                w = w + barWidth
+            elif c in 'SB':
+                w = w + wx
+            else: # 'i'
+                w = w + self.gap
+
+        if self.barHeight is None:
+            self.barHeight = w * 0.15
+            self.barHeight = max(0.25 * inch, self.barHeight)
+            if self.bearers:
+                self.barHeight = self.barHeight + self.bearers * 2.0 * barWidth
+
+        if self.quiet:
+            w += self.lquiet + self.rquiet
+
+
+        self._height = self.barHeight
+        self._width = w
+
+    @property
+    def width(self):
+        self._calculate()
+        return self._width
+    @width.setter
+    def width(self,v):
+        pass
+
+    @property
+    def height(self):
+        self._calculate()
+        return self._height
+    @height.setter
+    def height(self,v):
+        pass
+
+    def draw(self):
+        self._calculate()
+        barWidth = self.barWidth
+        wx = barWidth * self.ratio
+
+        left = self.quiet and self.lquiet or 0
+        b = self.bearers * barWidth
+        bb = b * 0.5
+        tb = self.barHeight - (b * 1.5)
+
+        for c in self.decomposed:
+            if c == 'i':
+                left = left + self.gap
+            elif c == 's':
+                left = left + barWidth
+            elif c == 'S':
+                left = left + wx
+            elif c == 'b':
+                self.rect(left, bb, barWidth, tb)
+                left = left + barWidth
+            elif c == 'B':
+                self.rect(left, bb, wx, tb)
+                left = left + wx
+
+        if self.bearers:
+            if getattr(self,'bearerBox', None):
+                canv = self.canv
+                if hasattr(canv,'_Gadd'):
+                    #this is a widget rect takes other arguments
+                    canv.rect(bb, bb, self.width, self.barHeight-b,
+                            strokeWidth=b, strokeColor=self.barFillColor or self.barStrokeColor, fillColor=None)
+                else:
+                    canv.saveState()
+                    canv.setLineWidth(b)
+                    canv.rect(bb, bb, self.width, self.barHeight-b, stroke=1, fill=0)
+                    canv.restoreState()
+            else:
+                w = self._width - (self.lquiet + self.rquiet)
+                self.rect(self.lquiet, 0, w, b)
+                self.rect(self.lquiet, self.barHeight - b, w, b)
+
+        self.drawHumanReadable()
+
+    def drawHumanReadable(self):
+        if self.humanReadable:
+            #we have text
+            from reportlab.pdfbase.pdfmetrics import getAscent, stringWidth
+            s = str(self._humanText())
+            fontSize = self.fontSize
+            fontName = self.fontName
+            w = stringWidth(s,fontName,fontSize)
+            width = self._width
+            if self.quiet:
+                width -= self.lquiet+self.rquiet
+                x = self.lquiet
+            else:
+                x = 0
+            if w>width: fontSize *= width/float(w)
+            y = 1.07*getAscent(fontName)*fontSize/1000.
+            self.annotate(x+width/2.,-y,s,fontName,fontSize)
+
+    def rect(self, x, y, w, h):
+        self.canv.rect(x, y, w, h, stroke=0, fill=1)
+
+    def annotate(self,x,y,text,fontName,fontSize,anchor='middle'):
+        canv = self.canv
+        canv.saveState()
+        canv.setFont(self.fontName,fontSize)
+        if anchor=='middle': func = 'drawCentredString'
+        elif anchor=='end': func = 'drawRightString'
+        else: func = 'drawString'
+        getattr(canv,func)(x,y,text)
+        canv.restoreState()
+
+    def _checkVal(self, name, v, allowed):
+        if v not in allowed:
+            raise ValueError('%s attribute %s is invalid %r\nnot in allowed %r' % (
+                self.__class__.__name__, name, v, allowed))
+        return v
+
+class MultiWidthBarcode(Barcode):
+    """Base for variable-bar-width codes like Code93 and Code128"""
+
+    def computeSize(self, *args):
+        barWidth = self.barWidth
+        oa, oA = ord('a') - 1, ord('A') - 1
+
+        w = 0.0
+
+        for c in self.decomposed:
+            oc = ord(c)
+            if c in ascii_lowercase:
+                w = w + barWidth * (oc - oa)
+            elif c in ascii_uppercase:
+                w = w + barWidth * (oc - oA)
+
+        if self.barHeight is None:
+            self.barHeight = w * 0.15
+            self.barHeight = max(0.25 * inch, self.barHeight)
+
+        if self.quiet:
+            w += self.lquiet + self.rquiet
+
+        self._height = self.barHeight
+        self._width = w
+
+    def draw(self):
+        self._calculate()
+        oa, oA = ord('a') - 1, ord('A') - 1
+        barWidth = self.barWidth
+        left = self.quiet and self.lquiet or 0
+
+        for c in self.decomposed:
+            oc = ord(c)
+            if c in ascii_lowercase:
+                left = left + (oc - oa) * barWidth
+            elif c in ascii_uppercase:
+                w = (oc - oA) * barWidth
+                self.rect(left, 0, w, self.barHeight)
+                left += w
+        self.drawHumanReadable()
+
+class I2of5(Barcode):
+    """
+    Interleaved 2 of 5 is a numeric-only barcode.  It encodes an even
+    number of digits; if an odd number is given, a 0 is prepended.
+
+    Options that may be passed to constructor:
+
+        value (int, or numeric string required.):
+            The value to encode.
+
+        barWidth (float, default .0075):
+            X-Dimension, or width of the smallest element
+            Minumum is .0075 inch (7.5 mils).
+
+        ratio (float, default 2.2):
+            The ratio of wide elements to narrow elements.
+            Must be between 2.0 and 3.0 (or 2.2 and 3.0 if the
+            barWidth is greater than 20 mils (.02 inch))
+
+        gap (float or None, default None):
+            width of intercharacter gap. None means "use barWidth".
+
+        barHeight (float, see default below):
+            Height of the symbol.  Default is the height of the two
+            bearer bars (if they exist) plus the greater of .25 inch
+            or .15 times the symbol's length.
+
+        checksum (bool, default 1):
+            Whether to compute and include the check digit
+
+        bearers (float, in units of barWidth. default 3.0):
+            Height of bearer bars (horizontal bars along the top and
+            bottom of the barcode). Default is 3 x-dimensions.
+            Set to zero for no bearer bars. (Bearer bars help detect
+            misscans, so it is suggested to leave them on).
+
+        bearerBox (bool default False)
+            if true draw a  true rectangle of width bearers around the barcode.
+
+        quiet (bool, default 1):
+            Whether to include quiet zones in the symbol.
+
+        lquiet (float, see default below):
+            Quiet zone size to left of code, if quiet is true.
+            Default is the greater of .25 inch, or .15 times the symbol's
+            length.
+
+        rquiet (float, defaults as above):
+            Quiet zone size to right left of code, if quiet is true.
+
+        stop (bool, default 1):
+            Whether to include start/stop symbols.
+
+    Sources of Information on Interleaved 2 of 5:
+
+    http://www.semiconductor.agilent.com/barcode/sg/Misc/i_25.html
+    http://www.adams1.com/pub/russadam/i25code.html
+
+    Official Spec, "ANSI/AIM BC2-1995, USS" is available for US$45 from
+    http://www.aimglobal.org/aimstore/
+    """
+
+    patterns = {
+        'start' : 'bsbs',
+        'stop' : 'Bsb',
+
+        'B0' : 'bbBBb',     'S0' : 'ssSSs',
+        'B1' : 'BbbbB',     'S1' : 'SsssS',
+        'B2' : 'bBbbB',     'S2' : 'sSssS',
+        'B3' : 'BBbbb',     'S3' : 'SSsss',
+        'B4' : 'bbBbB',     'S4' : 'ssSsS',
+        'B5' : 'BbBbb',     'S5' : 'SsSss',
+        'B6' : 'bBBbb',     'S6' : 'sSSss',
+        'B7' : 'bbbBB',     'S7' : 'sssSS',
+        'B8' : 'BbbBb',     'S8' : 'SssSs',
+        'B9' : 'bBbBb',     'S9' : 'sSsSs'
+    }
+
+    barHeight = None
+    barWidth = inch * 0.0075
+    ratio = 2.2
+    checksum = 1
+    bearers = 3.0
+    bearerBox = False
+    quiet = 1
+    lquiet = None
+    rquiet = None
+    stop = 1
+
+    def __init__(self, value='', **args):
+
+        if type(value) == type(1):
+            value = str(value)
+
+        for k, v in args.items():
+            setattr(self, k, v)
+
+        if self.quiet:
+            if self.lquiet is None:
+                self.lquiet = min(inch * 0.25, self.barWidth * 10.0)
+                self.rquiet = min(inch * 0.25, self.barWidth * 10.0)
+        else:
+            self.lquiet = self.rquiet = 0.0
+
+        Barcode.__init__(self, value)
+
+    def validate(self):
+        vval = ""
+        self.valid = 1
+        for c in self.value.strip():
+            if c not in string_digits:
+                self.valid = 0
+                continue
+            vval = vval + c
+        self.validated = vval
+        return vval
+
+    def encode(self):
+        s = self.validated
+        cs = self.checksum
+        c = len(s)
+
+        #ensure len(result)%2 == 0, checksum included
+        if ((c % 2 == 0) and cs) or ((c % 2 == 1) and not cs):
+            s = '0' + s
+            c += 1
+
+        if cs:
+            c = 3*sum([int(s[i]) for i in range(0,c,2)])+sum([int(s[i]) for i in range(1,c,2)])
+            s += str((10 - c) % 10)
+
+        self.encoded = s
+
+    def decompose(self):
+        dval = self.stop and [self.patterns['start']] or []
+        a = dval.append
+
+        for i in range(0, len(self.encoded), 2):
+            b = self.patterns['B' + self.encoded[i]]
+            s = self.patterns['S' + self.encoded[i+1]]
+
+            for i in range(0, len(b)):
+                a(b[i] + s[i])
+
+        if self.stop: a(self.patterns['stop'])
+        self.decomposed = ''.join(dval)
+        return self.decomposed
+
+class MSI(Barcode):
+    """
+    MSI is a numeric-only barcode.
+
+    Options that may be passed to constructor:
+
+        value (int, or numeric string required.):
+            The value to encode.
+
+        barWidth (float, default .0075):
+            X-Dimension, or width of the smallest element
+
+        ratio (float, default 2.2):
+            The ratio of wide elements to narrow elements.
+
+        gap (float or None, default None):
+            width of intercharacter gap. None means "use barWidth".
+
+        barHeight (float, see default below):
+            Height of the symbol.  Default is the height of the two
+            bearer bars (if they exist) plus the greater of .25 inch
+            or .15 times the symbol's length.
+
+        checksum (bool, default 1):
+            Wether to compute and include the check digit
+
+        bearers (float, in units of barWidth. default 0):
+            Height of bearer bars (horizontal bars along the top and
+            bottom of the barcode). Default is 0 (no bearers).
+
+        lquiet (float, see default below):
+            Quiet zone size to left of code, if quiet is true.
+            Default is the greater of .25 inch, or 10 barWidths.
+
+        rquiet (float, defaults as above):
+            Quiet zone size to right left of code, if quiet is true.
+
+        stop (bool, default 1):
+            Whether to include start/stop symbols.
+
+    Sources of Information on MSI Bar Code:
+
+    http://www.semiconductor.agilent.com/barcode/sg/Misc/msi_code.html
+    http://www.adams1.com/pub/russadam/plessy.html
+    """
+
+    patterns = {
+        'start' : 'Bs',          'stop' : 'bSb',
+
+        '0' : 'bSbSbSbS',        '1' : 'bSbSbSBs',
+        '2' : 'bSbSBsbS',        '3' : 'bSbSBsBs',
+        '4' : 'bSBsbSbS',        '5' : 'bSBsbSBs',
+        '6' : 'bSBsBsbS',        '7' : 'bSBsBsBs',
+        '8' : 'BsbSbSbS',        '9' : 'BsbSbSBs'
+    }
+
+    stop = 1
+    barHeight = None
+    barWidth = inch * 0.0075
+    ratio = 2.2
+    checksum = 1
+    bearers = 0.0
+    quiet = 1
+    lquiet = None
+    rquiet = None
+
+    def __init__(self, value="", **args):
+
+        if type(value) == type(1):
+            value = str(value)
+
+        for k, v in args.items():
+            setattr(self, k, v)
+
+        if self.quiet:
+            if self.lquiet is None:
+                self.lquiet = max(inch * 0.25, self.barWidth * 10.0)
+                self.rquiet = max(inch * 0.25, self.barWidth * 10.0)
+        else:
+            self.lquiet = self.rquiet = 0.0
+
+        Barcode.__init__(self, value)
+
+    def validate(self):
+        vval = ""
+        self.valid = 1
+        for c in self.value.strip():
+            if c not in string_digits:
+                self.valid = 0
+                continue
+            vval = vval + c
+        self.validated = vval
+        return vval
+
+    def encode(self):
+        s = self.validated
+
+        if self.checksum:
+            c = ''
+            for i in range(1, len(s), 2):
+                c = c + s[i]
+            d = str(int(c) * 2)
+            t = 0
+            for c in d:
+                t = t + int(c)
+            for i in range(0, len(s), 2):
+                t = t + int(s[i])
+            c = 10 - (t % 10)
+
+            s = s + str(c)
+
+        self.encoded = s
+
+    def decompose(self):
+        dval = self.stop and [self.patterns['start']] or [] 
+        dval += [self.patterns[c] for c in self.encoded]
+        if self.stop: dval.append(self.patterns['stop'])
+        self.decomposed = ''.join(dval)
+        return self.decomposed
+
+class Codabar(Barcode):
+    """
+    Codabar is a numeric plus some puntuation ("-$:/.+") barcode
+    with four start/stop characters (A, B, C, and D).
+
+    Options that may be passed to constructor:
+
+        value (string required.):
+            The value to encode.
+
+        barWidth (float, default .0065):
+            X-Dimension, or width of the smallest element
+            minimum is 6.5 mils (.0065 inch)
+
+        ratio (float, default 2.0):
+            The ratio of wide elements to narrow elements.
+
+        gap (float or None, default None):
+            width of intercharacter gap. None means "use barWidth".
+
+        barHeight (float, see default below):
+            Height of the symbol.  Default is the height of the two
+            bearer bars (if they exist) plus the greater of .25 inch
+            or .15 times the symbol's length.
+
+        checksum (bool, default 0):
+            Whether to compute and include the check digit
+
+        bearers (float, in units of barWidth. default 0):
+            Height of bearer bars (horizontal bars along the top and
+            bottom of the barcode). Default is 0 (no bearers).
+
+        quiet (bool, default 1):
+            Whether to include quiet zones in the symbol.
+
+        stop (bool, default 1):
+            Whether to include start/stop symbols.
+
+        lquiet (float, see default below):
+            Quiet zone size to left of code, if quiet is true.
+            Default is the greater of .25 inch, or 10 barWidth
+
+        rquiet (float, defaults as above):
+            Quiet zone size to right left of code, if quiet is true.
+
+    Sources of Information on Codabar
+
+    http://www.semiconductor.agilent.com/barcode/sg/Misc/codabar.html
+    http://www.barcodeman.com/codabar.html
+
+    Official Spec, "ANSI/AIM BC3-1995, USS" is available for US$45 from
+    http://www.aimglobal.org/aimstore/
+    """
+
+    patterns = {
+        '0':    'bsbsbSB',        '1':    'bsbsBSb',        '2':    'bsbSbsB',
+        '3':    'BSbsbsb',        '4':    'bsBsbSb',        '5':    'BsbsbSb',
+        '6':    'bSbsbsB',        '7':    'bSbsBsb',        '8':    'bSBsbsb',
+        '9':    'BsbSbsb',        '-':    'bsbSBsb',        '$':    'bsBSbsb',
+        ':':    'BsbsBsB',        '/':    'BsBsbsB',        '.':    'BsBsBsb',
+        '+':    'bsBsBsB',        'A':    'bsBSbSb',        'B':    'bSbSbsB',
+        'C':    'bsbSbSB',        'D':    'bsbSBSb'
+    }
+
+    values = {
+        '0' : 0,    '1' : 1,    '2' : 2,    '3' : 3,    '4' : 4,
+        '5' : 5,    '6' : 6,    '7' : 7,    '8' : 8,    '9' : 9,
+        '-' : 10,   '$' : 11,   ':' : 12,   '/' : 13,   '.' : 14,
+        '+' : 15,   'A' : 16,   'B' : 17,   'C' : 18,   'D' : 19
+        }
+
+    chars = string_digits + "-$:/.+"
+
+    stop = 1
+    barHeight = None
+    barWidth = inch * 0.0065
+    ratio = 2.0 # XXX ?
+    checksum = 0
+    bearers = 0.0
+    quiet = 1
+    lquiet = None
+    rquiet = None
+
+    def __init__(self, value='', **args):
+        if type(value) == type(1):
+            value = str(value)
+
+        for k, v in args.items():
+            setattr(self, k, v)
+
+        if self.quiet:
+            if self.lquiet is None:
+                self.lquiet = min(inch * 0.25, self.barWidth * 10.0)
+                self.rquiet = min(inch * 0.25, self.barWidth * 10.0)
+        else:
+            self.lquiet = self.rquiet = 0.0
+
+        Barcode.__init__(self, value)
+
+    def validate(self):
+        vval = ""
+        self.valid = 1
+        s = self.value.strip()
+        for i in range(0, len(s)):
+            c = s[i]
+            if c not in self.chars:
+                if ((i != 0) and (i != len(s) - 1)) or (c not in 'ABCD'):
+                    self.Valid = 0
+                    continue
+            vval = vval + c
+
+        if self.stop:
+            if vval[0] not in 'ABCD':
+                vval = 'A' + vval
+            if vval[-1] not in 'ABCD':
+                vval = vval + vval[0]
+
+        self.validated = vval
+        return vval
+
+    def encode(self):
+        s = self.validated
+
+        if self.checksum:
+            v = sum([self.values[c] for c in s])
+            s += self.chars[v % 16]
+
+        self.encoded = s
+
+    def decompose(self):
+        dval = ''.join([self.patterns[c]+'i' for c in self.encoded])
+        self.decomposed = dval[:-1]
+        return self.decomposed
+
+class Code11(Barcode):
+    """
+    Code 11 is an almost-numeric barcode. It encodes the digits 0-9 plus
+    dash ("-"). 11 characters total, hence the name.
+
+        value (int or string required.):
+            The value to encode.
+
+        barWidth (float, default .0075):
+            X-Dimension, or width of the smallest element
+
+        ratio (float, default 2.2):
+            The ratio of wide elements to narrow elements.
+
+        gap (float or None, default None):
+            width of intercharacter gap. None means "use barWidth".
+
+        barHeight (float, see default below):
+            Height of the symbol.  Default is the height of the two
+            bearer bars (if they exist) plus the greater of .25 inch
+            or .15 times the symbol's length.
+
+        checksum (0 none, 1 1-digit, 2 2-digit, -1 auto, default -1):
+            How many checksum digits to include. -1 ("auto") means
+            1 if the number of digits is 10 or less, else 2.
+
+        bearers (float, in units of barWidth. default 0):
+            Height of bearer bars (horizontal bars along the top and
+            bottom of the barcode). Default is 0 (no bearers).
+
+        quiet (bool, default 1):
+            Wether to include quiet zones in the symbol.
+
+        lquiet (float, see default below):
+            Quiet zone size to left of code, if quiet is true.
+            Default is the greater of .25 inch, or 10 barWidth
+
+        rquiet (float, defaults as above):
+            Quiet zone size to right left of code, if quiet is true.
+
+    Sources of Information on Code 11:
+
+    http://www.cwi.nl/people/dik/english/codes/barcodes.html
+    """
+
+    chars = '0123456789-'
+
+    patterns = {
+        '0' : 'bsbsB',        '1' : 'BsbsB',        '2' : 'bSbsB',
+        '3' : 'BSbsb',        '4' : 'bsBsB',        '5' : 'BsBsb',
+        '6' : 'bSBsb',        '7' : 'bsbSB',        '8' : 'BsbSb',
+        '9' : 'Bsbsb',        '-' : 'bsBsb',        'S' : 'bsBSb' # Start/Stop
+    }
+
+    values = {
+        '0' : 0,    '1' : 1,    '2' : 2,    '3' : 3,    '4' : 4,
+        '5' : 5,    '6' : 6,    '7' : 7,    '8' : 8,    '9' : 9,
+        '-' : 10,
+    }
+
+    stop = 1
+    barHeight = None
+    barWidth = inch * 0.0075
+    ratio = 2.2 # XXX ?
+    checksum = -1 # Auto
+    bearers = 0.0
+    quiet = 1
+    lquiet = None
+    rquiet = None
+    def __init__(self, value='', **args):
+        if type(value) == type(1):
+            value = str(value)
+
+        for k, v in args.items():
+            setattr(self, k, v)
+
+        if self.quiet:
+            if self.lquiet is None:
+                self.lquiet = min(inch * 0.25, self.barWidth * 10.0)
+                self.rquiet = min(inch * 0.25, self.barWidth * 10.0)
+        else:
+            self.lquiet = self.rquiet = 0.0
+
+        Barcode.__init__(self, value)
+
+    def validate(self):
+        vval = ""
+        self.valid = 1
+        s = self.value.strip()
+        for i in range(0, len(s)):
+            c = s[i]
+            if c not in self.chars:
+                self.Valid = 0
+                continue
+            vval = vval + c
+
+        self.validated = vval
+        return vval
+
+    def _addCSD(self,s,m):
+        # compute first checksum
+        i = c = 0
+        v = 1
+        V = self.values
+        while i < len(s):
+            c += v * V[s[-(i+1)]]
+            i += 1
+            v += 1
+            if v==m:
+                v = 1
+        return s+self.chars[c % 11]
+
+    def encode(self):
+        s = self.validated
+
+        tcs = self.checksum
+        if tcs<0:
+            self.checksum = tcs = 1+int(len(s)>10)
+
+        if tcs > 0: s = self._addCSD(s,11)
+        if tcs > 1: s = self._addCSD(s,10)
+
+        self.encoded = self.stop and ('S' + s + 'S') or s
+
+    def decompose(self):
+        self.decomposed = ''.join([(self.patterns[c]+'i') for c in self.encoded])[:-1]
+        return self.decomposed
+
+    def _humanText(self):
+        return self.stop and self.encoded[1:-1] or self.encoded
+

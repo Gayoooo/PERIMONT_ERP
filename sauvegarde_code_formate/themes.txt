@@ -1,0 +1,13 @@
+#!/usr/bin/env python3
+"""
+Script de themes pour PERIMONT_ERP
+Module: venv.Lib.site-packages.pip._vendor.rich.themes.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+from .default_styles import DEFAULT_STYLES
+from .theme import Theme
+
+
+DEFAULT = Theme(DEFAULT_STYLES)
+

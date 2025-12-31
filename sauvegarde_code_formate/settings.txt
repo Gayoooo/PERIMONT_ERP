@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+"""
+Script de settings pour PERIMONT_ERP
+Module: config.settings.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DB_PATH = os.path.join(BASE_DIR, "database", "perimont.db")
+
+# Design System Ultra Moderne
+COLOR_MAIN_BG = "#0F172A"      
+COLOR_CARD_BG = "#1E293B"      
+COLOR_ACCENT = "#38BDF8"       
+COLOR_TEXT_MAIN = "#F8FAFC"    
+COLOR_TEXT_DIM = "#94A3B8"     
+COLOR_ERROR = "#F87171"        
+
+WINDOW_WIDTH = 1200
+WINDOW_HEIGHT = 750

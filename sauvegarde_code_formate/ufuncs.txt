@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+"""
+Script de ufuncs pour PERIMONT_ERP
+Module: venv.Lib.site-packages.numpy.typing.tests.data.pass.ufuncs.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+import numpy as np
+
+np.sin(1)
+np.sin([1, 2, 3])
+np.sin(1, out=np.empty(1))
+np.matmul(np.ones((2, 2, 2)), np.ones((2, 2, 2)), axes=[(0, 1), (0, 1), (0, 1)])
+np.sin(1, signature="D->D")
+# NOTE: `np.generic` subclasses are not guaranteed to support addition;
+# re-enable this we can infer the exact return type of `np.sin(...)`.
+#
+# np.sin(1) + np.sin(1)
+np.sin.types[0]
+np.sin.__name__
+np.sin.__doc__
+
+np.abs(np.array([1]))
+

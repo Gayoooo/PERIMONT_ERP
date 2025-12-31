@@ -1,0 +1,3255 @@
+// Chemin: C:\PERIMONT_ERP\venv\Lib\site-packages\numpy\_core\tests\test_api.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\api\test_api.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\arrays\categorical\test_api.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\frame\test_api.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\groupby\test_api.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\internals\test_api.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\series\test_api.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\strings\test_api.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\tslibs\test_api.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\window\test_api.py
+
+import sys
+
+import pytest
+
+import numpy as np
+import numpy._core.umath as ncu
+from numpy._core._rational_tests import rational
+from numpy.lib import stride_tricks
+from numpy.testing import (
+    HAS_REFCOUNT,
+    assert_,
+    assert_array_equal,
+    assert_equal,
+    assert_raises,
+)
+
+
+def test_array_array():
+    tobj = type(object)
+    ones11 = np.ones((1, 1), np.float64)
+    tndarray = type(ones11)
+    # Test is_ndarray
+    assert_equal(np.array(ones11, dtype=np.float64), ones11)
+    if HAS_REFCOUNT:
+        old_refcount = sys.getrefcount(tndarray)
+        np.array(ones11)
+        assert_equal(old_refcount, sys.getrefcount(tndarray))
+
+    # test None
+    assert_equal(np.array(None, dtype=np.float64),
+                 np.array(np.nan, dtype=np.float64))
+    if HAS_REFCOUNT:
+        old_refcount = sys.getrefcount(tobj)
+        np.array(None, dtype=np.float64)
+        assert_equal(old_refcount, sys.getrefcount(tobj))
+
+    # test scalar
+    assert_equal(np.array(1.0, dtype=np.float64),
+                 np.ones((), dtype=np.float64))
+    if HAS_REFCOUNT:
+        old_refcount = sys.getrefcount(np.float64)
+        np.array(np.array(1.0, dtype=np.float64), dtype=np.float64)
+        assert_equal(old_refcount, sys.getrefcount(np.float64))
+
+    # test string
+    S2 = np.dtype((bytes, 2))
+    S3 = np.dtype((bytes, 3))
+    S5 = np.dtype((bytes, 5))
+    assert_equal(np.array(b"1.0", dtype=np.float64),
+                 np.ones((), dtype=np.float64))
+    assert_equal(np.array(b"1.0").dtype, S3)
+    assert_equal(np.array(b"1.0", dtype=bytes).dtype, S3)
+    assert_equal(np.array(b"1.0", dtype=S2), np.array(b"1."))
+    assert_equal(np.array(b"1", dtype=S5), np.ones((), dtype=S5))
+
+    # test string
+    U2 = np.dtype((str, 2))
+    U3 = np.dtype((str, 3))
+    U5 = np.dtype((str, 5))
+    assert_equal(np.array("1.0", dtype=np.float64),
+                 np.ones((), dtype=np.float64))
+    assert_equal(np.array("1.0").dtype, U3)
+    assert_equal(np.array("1.0", dtype=str).dtype, U3)
+    assert_equal(np.array("1.0", dtype=U2), np.array("1."))
+    assert_equal(np.array("1", dtype=U5), np.ones((), dtype=U5))
+
+    builtins = getattr(__builtins__, '__dict__', __builtins__)
+    assert_(hasattr(builtins, 'get'))
+
+    # test memoryview
+    dat = np.array(memoryview(b'1.0'), dtype=np.float64)
+    assert_equal(dat, [49.0, 46.0, 48.0])
+    assert_(dat.dtype.type is np.float64)
+
+    dat = np.array(memoryview(b'1.0'))
+    assert_equal(dat, [49, 46, 48])
+    assert_(dat.dtype.type is np.uint8)
+
+    # test array interface
+    a = np.array(100.0, dtype=np.float64)
+    o = type("o", (object,),
+             {"__array_interface__": a.__array_interface__})
+    assert_equal(np.array(o, dtype=np.float64), a)
+
+    # test array_struct interface
+    a = np.array([(1, 4.0, 'Hello'), (2, 6.0, 'World')],
+                 dtype=[('f0', int), ('f1', float), ('f2', str)])
+    o = type("o", (object,),
+             {"__array_struct__": a.__array_struct__})
+    # wasn't what I expected... is np.array(o) supposed to equal a ?
+    # instead we get an array([...], dtype=">V18")
+    assert_equal(bytes(np.array(o).data), bytes(a.data))
+
+    # test __array__
+    def custom__array__(self, dtype=None, copy=None):
+        return np.array(100.0, dtype=dtype, copy=copy)
+
+    o = type("o", (object,), {"__array__": custom__array__})()
+    assert_equal(np.array(o, dtype=np.float64), np.array(100.0, np.float64))
+
+    # test recursion
+    nested = 1.5
+    for i in range(ncu.MAXDIMS):
+        nested = [nested]
+
+    # no error
+    np.array(nested)
+
+    # Exceeds recursion limit
+    assert_raises(ValueError, np.array, [nested], dtype=np.float64)
+
+    # Try with lists...
+    # float32
+    assert_equal(np.array([None] * 10, dtype=np.float32),
+                 np.full((10,), np.nan, dtype=np.float32))
+    assert_equal(np.array([[None]] * 10, dtype=np.float32),
+                 np.full((10, 1), np.nan, dtype=np.float32))
+    assert_equal(np.array([[None] * 10], dtype=np.float32),
+                 np.full((1, 10), np.nan, dtype=np.float32))
+    assert_equal(np.array([[None] * 10] * 10, dtype=np.float32),
+                 np.full((10, 10), np.nan, dtype=np.float32))
+    # float64
+    assert_equal(np.array([None] * 10, dtype=np.float64),
+                 np.full((10,), np.nan, dtype=np.float64))
+    assert_equal(np.array([[None]] * 10, dtype=np.float64),
+                 np.full((10, 1), np.nan, dtype=np.float64))
+    assert_equal(np.array([[None] * 10], dtype=np.float64),
+                 np.full((1, 10), np.nan, dtype=np.float64))
+    assert_equal(np.array([[None] * 10] * 10, dtype=np.float64),
+                 np.full((10, 10), np.nan, dtype=np.float64))
+
+    assert_equal(np.array([1.0] * 10, dtype=np.float64),
+                 np.ones((10,), dtype=np.float64))
+    assert_equal(np.array([[1.0]] * 10, dtype=np.float64),
+                 np.ones((10, 1), dtype=np.float64))
+    assert_equal(np.array([[1.0] * 10], dtype=np.float64),
+                 np.ones((1, 10), dtype=np.float64))
+    assert_equal(np.array([[1.0] * 10] * 10, dtype=np.float64),
+                 np.ones((10, 10), dtype=np.float64))
+
+    # Try with tuples
+    assert_equal(np.array((None,) * 10, dtype=np.float64),
+                 np.full((10,), np.nan, dtype=np.float64))
+    assert_equal(np.array([(None,)] * 10, dtype=np.float64),
+                 np.full((10, 1), np.nan, dtype=np.float64))
+    assert_equal(np.array([(None,) * 10], dtype=np.float64),
+                 np.full((1, 10), np.nan, dtype=np.float64))
+    assert_equal(np.array([(None,) * 10] * 10, dtype=np.float64),
+                 np.full((10, 10), np.nan, dtype=np.float64))
+
+    assert_equal(np.array((1.0,) * 10, dtype=np.float64),
+                 np.ones((10,), dtype=np.float64))
+    assert_equal(np.array([(1.0,)] * 10, dtype=np.float64),
+                 np.ones((10, 1), dtype=np.float64))
+    assert_equal(np.array([(1.0,) * 10], dtype=np.float64),
+                 np.ones((1, 10), dtype=np.float64))
+    assert_equal(np.array([(1.0,) * 10] * 10, dtype=np.float64),
+                 np.ones((10, 10), dtype=np.float64))
+
+
+@pytest.mark.skipif(not HAS_REFCOUNT, reason="Python lacks refcounts")
+def test___array___refcount():
+    class MyArray:
+        def __init__(self, dtype):
+            self.val = np.array(-1, dtype=dtype)
+
+        def __array__(self, dtype=None, copy=None):
+            return self.val.__array__(dtype=dtype, copy=copy)
+
+    # test all possible scenarios:
+    # dtype(none | same | different) x copy(true | false | none)
+    dt = np.dtype(np.int32)
+    old_refcount = sys.getrefcount(dt)
+    np.array(MyArray(dt))
+    assert_equal(old_refcount, sys.getrefcount(dt))
+    np.array(MyArray(dt), dtype=dt)
+    assert_equal(old_refcount, sys.getrefcount(dt))
+    np.array(MyArray(dt), copy=None)
+    assert_equal(old_refcount, sys.getrefcount(dt))
+    np.array(MyArray(dt), dtype=dt, copy=None)
+    assert_equal(old_refcount, sys.getrefcount(dt))
+    dt2 = np.dtype(np.int16)
+    old_refcount2 = sys.getrefcount(dt2)
+    np.array(MyArray(dt), dtype=dt2)
+    assert_equal(old_refcount2, sys.getrefcount(dt2))
+    np.array(MyArray(dt), dtype=dt2, copy=None)
+    assert_equal(old_refcount2, sys.getrefcount(dt2))
+    with pytest.raises(ValueError):
+        np.array(MyArray(dt), dtype=dt2, copy=False)
+    assert_equal(old_refcount2, sys.getrefcount(dt2))
+
+
+@pytest.mark.parametrize("array", [True, False])
+def test_array_impossible_casts(array):
+    # All builtin types can be forcibly cast, at least theoretically,
+    # but user dtypes cannot necessarily.
+    rt = rational(1, 2)
+    if array:
+        rt = np.array(rt)
+    with assert_raises(TypeError):
+        np.array(rt, dtype="M8")
+
+
+def test_array_astype():
+    a = np.arange(6, dtype='f4').reshape(2, 3)
+    # Default behavior: allows unsafe casts, keeps memory layout,
+    #                   always copies.
+    b = a.astype('i4')
+    assert_equal(a, b)
+    assert_equal(b.dtype, np.dtype('i4'))
+    assert_equal(a.strides, b.strides)
+    b = a.T.astype('i4')
+    assert_equal(a.T, b)
+    assert_equal(b.dtype, np.dtype('i4'))
+    assert_equal(a.T.strides, b.strides)
+    b = a.astype('f4')
+    assert_equal(a, b)
+    assert_(not (a is b))
+
+    # copy=False parameter skips a copy
+    b = a.astype('f4', copy=False)
+    assert_(a is b)
+
+    # order parameter allows overriding of the memory layout,
+    # forcing a copy if the layout is wrong
+    b = a.astype('f4', order='F', copy=False)
+    assert_equal(a, b)
+    assert_(not (a is b))
+    assert_(b.flags.f_contiguous)
+
+    b = a.astype('f4', order='C', copy=False)
+    assert_equal(a, b)
+    assert_(a is b)
+    assert_(b.flags.c_contiguous)
+
+    # casting parameter allows catching bad casts
+    b = a.astype('c8', casting='safe')
+    assert_equal(a, b)
+    assert_equal(b.dtype, np.dtype('c8'))
+
+    assert_raises(TypeError, a.astype, 'i4', casting='safe')
+
+    # subok=False passes through a non-subclassed array
+    b = a.astype('f4', subok=0, copy=False)
+    assert_(a is b)
+
+    class MyNDArray(np.ndarray):
+        pass
+
+    a = np.array([[0, 1, 2], [3, 4, 5]], dtype='f4').view(MyNDArray)
+
+    # subok=True passes through a subclass
+    b = a.astype('f4', subok=True, copy=False)
+    assert_(a is b)
+
+    # subok=True is default, and creates a subtype on a cast
+    b = a.astype('i4', copy=False)
+    assert_equal(a, b)
+    assert_equal(type(b), MyNDArray)
+
+    # subok=False never returns a subclass
+    b = a.astype('f4', subok=False, copy=False)
+    assert_equal(a, b)
+    assert_(not (a is b))
+    assert_(type(b) is not MyNDArray)
+
+    # Make sure converting from string object to fixed length string
+    # does not truncate.
+    a = np.array([b'a' * 100], dtype='O')
+    b = a.astype('S')
+    assert_equal(a, b)
+    assert_equal(b.dtype, np.dtype('S100'))
+    a = np.array(['a' * 100], dtype='O')
+    b = a.astype('U')
+    assert_equal(a, b)
+    assert_equal(b.dtype, np.dtype('U100'))
+
+    # Same test as above but for strings shorter than 64 characters
+    a = np.array([b'a' * 10], dtype='O')
+    b = a.astype('S')
+    assert_equal(a, b)
+    assert_equal(b.dtype, np.dtype('S10'))
+    a = np.array(['a' * 10], dtype='O')
+    b = a.astype('U')
+    assert_equal(a, b)
+    assert_equal(b.dtype, np.dtype('U10'))
+
+    a = np.array(123456789012345678901234567890, dtype='O').astype('S')
+    assert_array_equal(a, np.array(b'1234567890' * 3, dtype='S30'))
+    a = np.array(123456789012345678901234567890, dtype='O').astype('U')
+    assert_array_equal(a, np.array('1234567890' * 3, dtype='U30'))
+
+    a = np.array([123456789012345678901234567890], dtype='O').astype('S')
+    assert_array_equal(a, np.array(b'1234567890' * 3, dtype='S30'))
+    a = np.array([123456789012345678901234567890], dtype='O').astype('U')
+    assert_array_equal(a, np.array('1234567890' * 3, dtype='U30'))
+
+    a = np.array(123456789012345678901234567890, dtype='S')
+    assert_array_equal(a, np.array(b'1234567890' * 3, dtype='S30'))
+    a = np.array(123456789012345678901234567890, dtype='U')
+    assert_array_equal(a, np.array('1234567890' * 3, dtype='U30'))
+
+    a = np.array('a\u0140', dtype='U')
+    b = np.ndarray(buffer=a, dtype='uint32', shape=2)
+    assert_(b.size == 2)
+
+    a = np.array([1000], dtype='i4')
+    assert_raises(TypeError, a.astype, 'S1', casting='safe')
+
+    a = np.array(1000, dtype='i4')
+    assert_raises(TypeError, a.astype, 'U1', casting='safe')
+
+    # gh-24023
+    assert_raises(TypeError, a.astype)
+
+@pytest.mark.parametrize("dt", ["S", "U"])
+def test_array_astype_to_string_discovery_empty(dt):
+    # See also gh-19085
+    arr = np.array([""], dtype=object)
+    # Note, the itemsize is the `0 -> 1` logic, which should change.
+    # The important part the test is rather that it does not error.
+    assert arr.astype(dt).dtype.itemsize == np.dtype(f"{dt}1").itemsize
+
+    # check the same thing for `np.can_cast` (since it accepts arrays)
+    assert np.can_cast(arr, dt, casting="unsafe")
+    assert not np.can_cast(arr, dt, casting="same_kind")
+    # as well as for the object as a descriptor:
+    assert np.can_cast("O", dt, casting="unsafe")
+
+@pytest.mark.parametrize("dt", ["d", "f", "S13", "U32"])
+def test_array_astype_to_void(dt):
+    dt = np.dtype(dt)
+    arr = np.array([], dtype=dt)
+    assert arr.astype("V").dtype.itemsize == dt.itemsize
+
+def test_object_array_astype_to_void():
+    # This is different to `test_array_astype_to_void` as object arrays
+    # are inspected.  The default void is "V8" (8 is the length of double)
+    arr = np.array([], dtype="O").astype("V")
+    assert arr.dtype == "V8"
+
+@pytest.mark.parametrize("t",
+    np._core.sctypes['uint'] +
+    np._core.sctypes['int'] +
+    np._core.sctypes['float']
+)
+def test_array_astype_warning(t):
+    # test ComplexWarning when casting from complex to float or int
+    a = np.array(10, dtype=np.complex128)
+    pytest.warns(np.exceptions.ComplexWarning, a.astype, t)
+
+@pytest.mark.parametrize(["dtype", "out_dtype"],
+        [(np.bytes_, np.bool),
+         (np.str_, np.bool),
+         (np.dtype("S10,S9"), np.dtype("?,?")),
+         # The following also checks unaligned unicode access:
+         (np.dtype("S7,U9"), np.dtype("?,?"))])
+def test_string_to_boolean_cast(dtype, out_dtype):
+    # Only the last two (empty) strings are falsy (the `\0` is stripped):
+    arr = np.array(
+            ["10", "10\0\0\0", "0\0\0", "0", "False", " ", "", "\0"],
+            dtype=dtype)
+    expected = np.array(
+            [True, True, True, True, True, True, False, False],
+            dtype=out_dtype)
+    assert_array_equal(arr.astype(out_dtype), expected)
+    # As it's similar, check that nonzero behaves the same (structs are
+    # nonzero if all entries are)
+    assert_array_equal(np.nonzero(arr), np.nonzero(expected))
+
+@pytest.mark.parametrize("str_type", [str, bytes, np.str_])
+@pytest.mark.parametrize("scalar_type",
+        [np.complex64, np.complex128, np.clongdouble])
+def test_string_to_complex_cast(str_type, scalar_type):
+    value = scalar_type(b"1+3j")
+    assert scalar_type(value) == 1 + 3j
+    assert np.array([value], dtype=object).astype(scalar_type)[()] == 1 + 3j
+    assert np.array(value).astype(scalar_type)[()] == 1 + 3j
+    arr = np.zeros(1, dtype=scalar_type)
+    arr[0] = value
+    assert arr[0] == 1 + 3j
+
+@pytest.mark.parametrize("dtype", np.typecodes["AllFloat"])
+def test_none_to_nan_cast(dtype):
+    # Note that at the time of writing this test, the scalar constructors
+    # reject None
+    arr = np.zeros(1, dtype=dtype)
+    arr[0] = None
+    assert np.isnan(arr)[0]
+    assert np.isnan(np.array(None, dtype=dtype))[()]
+    assert np.isnan(np.array([None], dtype=dtype))[0]
+    assert np.isnan(np.array(None).astype(dtype))[()]
+
+def test_copyto_fromscalar():
+    a = np.arange(6, dtype='f4').reshape(2, 3)
+
+    # Simple copy
+    np.copyto(a, 1.5)
+    assert_equal(a, 1.5)
+    np.copyto(a.T, 2.5)
+    assert_equal(a, 2.5)
+
+    # Where-masked copy
+    mask = np.array([[0, 1, 0], [0, 0, 1]], dtype='?')
+    np.copyto(a, 3.5, where=mask)
+    assert_equal(a, [[2.5, 3.5, 2.5], [2.5, 2.5, 3.5]])
+    mask = np.array([[0, 1], [1, 1], [1, 0]], dtype='?')
+    np.copyto(a.T, 4.5, where=mask)
+    assert_equal(a, [[2.5, 4.5, 4.5], [4.5, 4.5, 3.5]])
+
+def test_copyto():
+    a = np.arange(6, dtype='i4').reshape(2, 3)
+
+    # Simple copy
+    np.copyto(a, [[3, 1, 5], [6, 2, 1]])
+    assert_equal(a, [[3, 1, 5], [6, 2, 1]])
+
+    # Overlapping copy should work
+    np.copyto(a[:, :2], a[::-1, 1::-1])
+    assert_equal(a, [[2, 6, 5], [1, 3, 1]])
+
+    # Defaults to 'same_kind' casting
+    assert_raises(TypeError, np.copyto, a, 1.5)
+
+    # Force a copy with 'unsafe' casting, truncating 1.5 to 1
+    np.copyto(a, 1.5, casting='unsafe')
+    assert_equal(a, 1)
+
+    # Copying with a mask
+    np.copyto(a, 3, where=[True, False, True])
+    assert_equal(a, [[3, 1, 3], [3, 1, 3]])
+
+    # Casting rule still applies with a mask
+    assert_raises(TypeError, np.copyto, a, 3.5, where=[True, False, True])
+
+    # Lists of integer 0's and 1's is ok too
+    np.copyto(a, 4.0, casting='unsafe', where=[[0, 1, 1], [1, 0, 0]])
+    assert_equal(a, [[3, 4, 4], [4, 1, 3]])
+
+    # Overlapping copy with mask should work
+    np.copyto(a[:, :2], a[::-1, 1::-1], where=[[0, 1], [1, 1]])
+    assert_equal(a, [[3, 4, 4], [4, 3, 3]])
+
+    # 'dst' must be an array
+    assert_raises(TypeError, np.copyto, [1, 2, 3], [2, 3, 4])
+
+
+def test_copyto_cast_safety():
+    with pytest.raises(TypeError):
+        np.copyto(np.arange(3), 3., casting="safe")
+
+    # Can put integer and float scalars safely (and equiv):
+    np.copyto(np.arange(3), 3, casting="equiv")
+    np.copyto(np.arange(3.), 3., casting="equiv")
+    # And also with less precision safely:
+    np.copyto(np.arange(3, dtype="uint8"), 3, casting="safe")
+    np.copyto(np.arange(3., dtype="float32"), 3., casting="safe")
+
+    # But not equiv:
+    with pytest.raises(TypeError):
+        np.copyto(np.arange(3, dtype="uint8"), 3, casting="equiv")
+
+    with pytest.raises(TypeError):
+        np.copyto(np.arange(3., dtype="float32"), 3., casting="equiv")
+
+    # As a special thing, object is equiv currently:
+    np.copyto(np.arange(3, dtype=object), 3, casting="equiv")
+
+    # The following raises an overflow error/gives a warning but not
+    # type error (due to casting), though:
+    with pytest.raises(OverflowError):
+        np.copyto(np.arange(3), 2**80, casting="safe")
+
+    with pytest.warns(RuntimeWarning):
+        np.copyto(np.arange(3, dtype=np.float32), 2e300, casting="safe")
+
+
+def test_copyto_permut():
+    # test explicit overflow case
+    pad = 500
+    l = [True] * pad + [True, True, True, True]
+    r = np.zeros(len(l) - pad)
+    d = np.ones(len(l) - pad)
+    mask = np.array(l)[pad:]
+    np.copyto(r, d, where=mask[::-1])
+
+    # test all permutation of possible masks, 9 should be sufficient for
+    # current 4 byte unrolled code
+    power = 9
+    d = np.ones(power)
+    for i in range(2**power):
+        r = np.zeros(power)
+        l = [(i & x) != 0 for x in range(power)]
+        mask = np.array(l)
+        np.copyto(r, d, where=mask)
+        assert_array_equal(r == 1, l)
+        assert_equal(r.sum(), sum(l))
+
+        r = np.zeros(power)
+        np.copyto(r, d, where=mask[::-1])
+        assert_array_equal(r == 1, l[::-1])
+        assert_equal(r.sum(), sum(l))
+
+        r = np.zeros(power)
+        np.copyto(r[::2], d[::2], where=mask[::2])
+        assert_array_equal(r[::2] == 1, l[::2])
+        assert_equal(r[::2].sum(), sum(l[::2]))
+
+        r = np.zeros(power)
+        np.copyto(r[::2], d[::2], where=mask[::-2])
+        assert_array_equal(r[::2] == 1, l[::-2])
+        assert_equal(r[::2].sum(), sum(l[::-2]))
+
+        for c in [0xFF, 0x7F, 0x02, 0x10]:
+            r = np.zeros(power)
+            mask = np.array(l)
+            imask = np.array(l).view(np.uint8)
+            imask[mask != 0] = c
+            np.copyto(r, d, where=mask)
+            assert_array_equal(r == 1, l)
+            assert_equal(r.sum(), sum(l))
+
+    r = np.zeros(power)
+    np.copyto(r, d, where=True)
+    assert_equal(r.sum(), r.size)
+    r = np.ones(power)
+    d = np.zeros(power)
+    np.copyto(r, d, where=False)
+    assert_equal(r.sum(), r.size)
+
+def test_copy_order():
+    a = np.arange(24).reshape(2, 1, 3, 4)
+    b = a.copy(order='F')
+    c = np.arange(24).reshape(2, 1, 4, 3).swapaxes(2, 3)
+
+    def check_copy_result(x, y, ccontig, fcontig, strides=False):
+        assert_(not (x is y))
+        assert_equal(x, y)
+        assert_equal(res.flags.c_contiguous, ccontig)
+        assert_equal(res.flags.f_contiguous, fcontig)
+
+    # Validate the initial state of a, b, and c
+    assert_(a.flags.c_contiguous)
+    assert_(not a.flags.f_contiguous)
+    assert_(not b.flags.c_contiguous)
+    assert_(b.flags.f_contiguous)
+    assert_(not c.flags.c_contiguous)
+    assert_(not c.flags.f_contiguous)
+
+    # Copy with order='C'
+    res = a.copy(order='C')
+    check_copy_result(res, a, ccontig=True, fcontig=False, strides=True)
+    res = b.copy(order='C')
+    check_copy_result(res, b, ccontig=True, fcontig=False, strides=False)
+    res = c.copy(order='C')
+    check_copy_result(res, c, ccontig=True, fcontig=False, strides=False)
+    res = np.copy(a, order='C')
+    check_copy_result(res, a, ccontig=True, fcontig=False, strides=True)
+    res = np.copy(b, order='C')
+    check_copy_result(res, b, ccontig=True, fcontig=False, strides=False)
+    res = np.copy(c, order='C')
+    check_copy_result(res, c, ccontig=True, fcontig=False, strides=False)
+
+    # Copy with order='F'
+    res = a.copy(order='F')
+    check_copy_result(res, a, ccontig=False, fcontig=True, strides=False)
+    res = b.copy(order='F')
+    check_copy_result(res, b, ccontig=False, fcontig=True, strides=True)
+    res = c.copy(order='F')
+    check_copy_result(res, c, ccontig=False, fcontig=True, strides=False)
+    res = np.copy(a, order='F')
+    check_copy_result(res, a, ccontig=False, fcontig=True, strides=False)
+    res = np.copy(b, order='F')
+    check_copy_result(res, b, ccontig=False, fcontig=True, strides=True)
+    res = np.copy(c, order='F')
+    check_copy_result(res, c, ccontig=False, fcontig=True, strides=False)
+
+    # Copy with order='K'
+    res = a.copy(order='K')
+    check_copy_result(res, a, ccontig=True, fcontig=False, strides=True)
+    res = b.copy(order='K')
+    check_copy_result(res, b, ccontig=False, fcontig=True, strides=True)
+    res = c.copy(order='K')
+    check_copy_result(res, c, ccontig=False, fcontig=False, strides=True)
+    res = np.copy(a, order='K')
+    check_copy_result(res, a, ccontig=True, fcontig=False, strides=True)
+    res = np.copy(b, order='K')
+    check_copy_result(res, b, ccontig=False, fcontig=True, strides=True)
+    res = np.copy(c, order='K')
+    check_copy_result(res, c, ccontig=False, fcontig=False, strides=True)
+
+def test_contiguous_flags():
+    a = np.ones((4, 4, 1))[::2, :, :]
+    a = stride_tricks.as_strided(a, strides=a.strides[:2] + (-123,))
+    b = np.ones((2, 2, 1, 2, 2)).swapaxes(3, 4)
+
+    def check_contig(a, ccontig, fcontig):
+        assert_(a.flags.c_contiguous == ccontig)
+        assert_(a.flags.f_contiguous == fcontig)
+
+    # Check if new arrays are correct:
+    check_contig(a, False, False)
+    check_contig(b, False, False)
+    check_contig(np.empty((2, 2, 0, 2, 2)), True, True)
+    check_contig(np.array([[[1], [2]]], order='F'), True, True)
+    check_contig(np.empty((2, 2)), True, False)
+    check_contig(np.empty((2, 2), order='F'), False, True)
+
+    # Check that np.array creates correct contiguous flags:
+    check_contig(np.array(a, copy=None), False, False)
+    check_contig(np.array(a, copy=None, order='C'), True, False)
+    check_contig(np.array(a, ndmin=4, copy=None, order='F'), False, True)
+
+    # Check slicing update of flags and :
+    check_contig(a[0], True, True)
+    check_contig(a[None, ::4, ..., None], True, True)
+    check_contig(b[0, 0, ...], False, True)
+    check_contig(b[:, :, 0:0, :, :], True, True)
+
+    # Test ravel and squeeze.
+    check_contig(a.ravel(), True, True)
+    check_contig(np.ones((1, 3, 1)).squeeze(), True, True)
+
+def test_broadcast_arrays():
+    # Test user defined dtypes
+    dtype = 'u4,u4,u4'
+    a = np.array([(1, 2, 3)], dtype=dtype)
+    b = np.array([(1, 2, 3), (4, 5, 6), (7, 8, 9)], dtype=dtype)
+    result = np.broadcast_arrays(a, b)
+    assert_equal(result[0], np.array([(1, 2, 3), (1, 2, 3), (1, 2, 3)], dtype=dtype))
+    assert_equal(result[1], np.array([(1, 2, 3), (4, 5, 6), (7, 8, 9)], dtype=dtype))
+
+@pytest.mark.parametrize(["shape", "fill_value", "expected_output"],
+        [((2, 2), [5.0,  6.0], np.array([[5.0, 6.0], [5.0, 6.0]])),
+         ((3, 2), [1.0,  2.0], np.array([[1.0, 2.0], [1.0, 2.0], [1.0,  2.0]]))])
+def test_full_from_list(shape, fill_value, expected_output):
+    output = np.full(shape, fill_value)
+    assert_equal(output, expected_output)
+
+def test_astype_copyflag():
+    # test the various copyflag options
+    arr = np.arange(10, dtype=np.intp)
+
+    res_true = arr.astype(np.intp, copy=True)
+    assert not np.shares_memory(arr, res_true)
+
+    res_false = arr.astype(np.intp, copy=False)
+    assert np.shares_memory(arr, res_false)
+
+    res_false_float = arr.astype(np.float64, copy=False)
+    assert not np.shares_memory(arr, res_false_float)
+
+    # _CopyMode enum isn't allowed
+    assert_raises(ValueError, arr.astype, np.float64,
+                  copy=np._CopyMode.NEVER)
+ from __future__ import annotations
+
+import pytest
+
+import pandas as pd
+from pandas import api
+import pandas._testing as tm
+from pandas.api import (
+    extensions as api_extensions,
+    indexers as api_indexers,
+    interchange as api_interchange,
+    types as api_types,
+    typing as api_typing,
+)
+
+
+class Base:
+    def check(self, namespace, expected, ignored=None):
+        # see which names are in the namespace, minus optional
+        # ignored ones
+        # compare vs the expected
+
+        result = sorted(
+            f for f in dir(namespace) if not f.startswith("__") and f != "annotations"
+        )
+        if ignored is not None:
+            result = sorted(set(result) - set(ignored))
+
+        expected = sorted(expected)
+        tm.assert_almost_equal(result, expected)
+
+
+class TestPDApi(Base):
+    # these are optionally imported based on testing
+    # & need to be ignored
+    ignored = ["tests", "locale", "conftest", "_version_meson"]
+
+    # top-level sub-packages
+    public_lib = [
+        "api",
+        "arrays",
+        "options",
+        "test",
+        "testing",
+        "errors",
+        "plotting",
+        "io",
+        "tseries",
+    ]
+    private_lib = ["compat", "core", "pandas", "util", "_built_with_meson"]
+
+    # misc
+    misc = ["IndexSlice", "NaT", "NA"]
+
+    # top-level classes
+    classes = [
+        "ArrowDtype",
+        "Categorical",
+        "CategoricalIndex",
+        "DataFrame",
+        "DateOffset",
+        "DatetimeIndex",
+        "ExcelFile",
+        "ExcelWriter",
+        "Flags",
+        "Grouper",
+        "HDFStore",
+        "Index",
+        "MultiIndex",
+        "Period",
+        "PeriodIndex",
+        "RangeIndex",
+        "Series",
+        "SparseDtype",
+        "StringDtype",
+        "Timedelta",
+        "TimedeltaIndex",
+        "Timestamp",
+        "Interval",
+        "IntervalIndex",
+        "CategoricalDtype",
+        "PeriodDtype",
+        "IntervalDtype",
+        "DatetimeTZDtype",
+        "BooleanDtype",
+        "Int8Dtype",
+        "Int16Dtype",
+        "Int32Dtype",
+        "Int64Dtype",
+        "UInt8Dtype",
+        "UInt16Dtype",
+        "UInt32Dtype",
+        "UInt64Dtype",
+        "Float32Dtype",
+        "Float64Dtype",
+        "NamedAgg",
+    ]
+
+    # these are already deprecated; awaiting removal
+    deprecated_classes: list[str] = []
+
+    # external modules exposed in pandas namespace
+    modules: list[str] = []
+
+    # top-level functions
+    funcs = [
+        "array",
+        "bdate_range",
+        "concat",
+        "crosstab",
+        "cut",
+        "date_range",
+        "interval_range",
+        "eval",
+        "factorize",
+        "get_dummies",
+        "from_dummies",
+        "infer_freq",
+        "isna",
+        "isnull",
+        "lreshape",
+        "melt",
+        "notna",
+        "notnull",
+        "offsets",
+        "merge",
+        "merge_ordered",
+        "merge_asof",
+        "period_range",
+        "pivot",
+        "pivot_table",
+        "qcut",
+        "show_versions",
+        "timedelta_range",
+        "unique",
+        "value_counts",
+        "wide_to_long",
+    ]
+
+    # top-level option funcs
+    funcs_option = [
+        "reset_option",
+        "describe_option",
+        "get_option",
+        "option_context",
+        "set_option",
+        "set_eng_float_format",
+    ]
+
+    # top-level read_* funcs
+    funcs_read = [
+        "read_clipboard",
+        "read_csv",
+        "read_excel",
+        "read_fwf",
+        "read_gbq",
+        "read_hdf",
+        "read_html",
+        "read_xml",
+        "read_json",
+        "read_pickle",
+        "read_sas",
+        "read_sql",
+        "read_sql_query",
+        "read_sql_table",
+        "read_stata",
+        "read_table",
+        "read_feather",
+        "read_parquet",
+        "read_orc",
+        "read_spss",
+    ]
+
+    # top-level json funcs
+    funcs_json = ["json_normalize"]
+
+    # top-level to_* funcs
+    funcs_to = ["to_datetime", "to_numeric", "to_pickle", "to_timedelta"]
+
+    # top-level to deprecate in the future
+    deprecated_funcs_in_future: list[str] = []
+
+    # these are already deprecated; awaiting removal
+    deprecated_funcs: list[str] = []
+
+    # private modules in pandas namespace
+    private_modules = [
+        "_config",
+        "_libs",
+        "_is_numpy_dev",
+        "_pandas_datetime_CAPI",
+        "_pandas_parser_CAPI",
+        "_testing",
+        "_typing",
+    ]
+    if not pd._built_with_meson:
+        private_modules.append("_version")
+
+    def test_api(self):
+        checkthese = (
+            self.public_lib
+            + self.private_lib
+            + self.misc
+            + self.modules
+            + self.classes
+            + self.funcs
+            + self.funcs_option
+            + self.funcs_read
+            + self.funcs_json
+            + self.funcs_to
+            + self.private_modules
+        )
+        self.check(namespace=pd, expected=checkthese, ignored=self.ignored)
+
+    def test_api_all(self):
+        expected = set(
+            self.public_lib
+            + self.misc
+            + self.modules
+            + self.classes
+            + self.funcs
+            + self.funcs_option
+            + self.funcs_read
+            + self.funcs_json
+            + self.funcs_to
+        ) - set(self.deprecated_classes)
+        actual = set(pd.__all__)
+
+        extraneous = actual - expected
+        assert not extraneous
+
+        missing = expected - actual
+        assert not missing
+
+    def test_depr(self):
+        deprecated_list = (
+            self.deprecated_classes
+            + self.deprecated_funcs
+            + self.deprecated_funcs_in_future
+        )
+        for depr in deprecated_list:
+            with tm.assert_produces_warning(FutureWarning):
+                _ = getattr(pd, depr)
+
+
+class TestApi(Base):
+    allowed_api_dirs = [
+        "types",
+        "extensions",
+        "indexers",
+        "interchange",
+        "typing",
+    ]
+    allowed_typing = [
+        "DataFrameGroupBy",
+        "DatetimeIndexResamplerGroupby",
+        "Expanding",
+        "ExpandingGroupby",
+        "ExponentialMovingWindow",
+        "ExponentialMovingWindowGroupby",
+        "JsonReader",
+        "NaTType",
+        "NAType",
+        "PeriodIndexResamplerGroupby",
+        "Resampler",
+        "Rolling",
+        "RollingGroupby",
+        "SeriesGroupBy",
+        "StataReader",
+        "TimedeltaIndexResamplerGroupby",
+        "TimeGrouper",
+        "Window",
+    ]
+    allowed_api_types = [
+        "is_any_real_numeric_dtype",
+        "is_array_like",
+        "is_bool",
+        "is_bool_dtype",
+        "is_categorical_dtype",
+        "is_complex",
+        "is_complex_dtype",
+        "is_datetime64_any_dtype",
+        "is_datetime64_dtype",
+        "is_datetime64_ns_dtype",
+        "is_datetime64tz_dtype",
+        "is_dict_like",
+        "is_dtype_equal",
+        "is_extension_array_dtype",
+        "is_file_like",
+        "is_float",
+        "is_float_dtype",
+        "is_hashable",
+        "is_int64_dtype",
+        "is_integer",
+        "is_integer_dtype",
+        "is_interval",
+        "is_interval_dtype",
+        "is_iterator",
+        "is_list_like",
+        "is_named_tuple",
+        "is_number",
+        "is_numeric_dtype",
+        "is_object_dtype",
+        "is_period_dtype",
+        "is_re",
+        "is_re_compilable",
+        "is_scalar",
+        "is_signed_integer_dtype",
+        "is_sparse",
+        "is_string_dtype",
+        "is_timedelta64_dtype",
+        "is_timedelta64_ns_dtype",
+        "is_unsigned_integer_dtype",
+        "pandas_dtype",
+        "infer_dtype",
+        "union_categoricals",
+        "CategoricalDtype",
+        "DatetimeTZDtype",
+        "IntervalDtype",
+        "PeriodDtype",
+    ]
+    allowed_api_interchange = ["from_dataframe", "DataFrame"]
+    allowed_api_indexers = [
+        "check_array_indexer",
+        "BaseIndexer",
+        "FixedForwardWindowIndexer",
+        "VariableOffsetWindowIndexer",
+    ]
+    allowed_api_extensions = [
+        "no_default",
+        "ExtensionDtype",
+        "register_extension_dtype",
+        "register_dataframe_accessor",
+        "register_index_accessor",
+        "register_series_accessor",
+        "take",
+        "ExtensionArray",
+        "ExtensionScalarOpsMixin",
+    ]
+
+    def test_api(self):
+        self.check(api, self.allowed_api_dirs)
+
+    def test_api_typing(self):
+        self.check(api_typing, self.allowed_typing)
+
+    def test_api_types(self):
+        self.check(api_types, self.allowed_api_types)
+
+    def test_api_interchange(self):
+        self.check(api_interchange, self.allowed_api_interchange)
+
+    def test_api_indexers(self):
+        self.check(api_indexers, self.allowed_api_indexers)
+
+    def test_api_extensions(self):
+        self.check(api_extensions, self.allowed_api_extensions)
+
+
+class TestTesting(Base):
+    funcs = [
+        "assert_frame_equal",
+        "assert_series_equal",
+        "assert_index_equal",
+        "assert_extension_array_equal",
+    ]
+
+    def test_testing(self):
+        from pandas import testing
+
+        self.check(testing, self.funcs)
+
+    def test_util_in_top_level(self):
+        with pytest.raises(AttributeError, match="foo"):
+            pd.util.foo
+
+
+def test_pandas_array_alias():
+    msg = "PandasArray has been renamed NumpyExtensionArray"
+    with tm.assert_produces_warning(FutureWarning, match=msg):
+        res = pd.arrays.PandasArray
+
+    assert res is pd.arrays.NumpyExtensionArray
+ import re
+
+import numpy as np
+import pytest
+
+from pandas.compat import PY311
+
+from pandas import (
+    Categorical,
+    CategoricalIndex,
+    DataFrame,
+    Index,
+    Series,
+    StringDtype,
+)
+import pandas._testing as tm
+from pandas.core.arrays.categorical import recode_for_categories
+
+
+class TestCategoricalAPI:
+    def test_to_list_deprecated(self):
+        # GH#51254
+        cat1 = Categorical(list("acb"), ordered=False)
+        msg = "Categorical.to_list is deprecated and will be removed"
+        with tm.assert_produces_warning(FutureWarning, match=msg):
+            cat1.to_list()
+
+    def test_ordered_api(self):
+        # GH 9347
+        cat1 = Categorical(list("acb"), ordered=False)
+        tm.assert_index_equal(cat1.categories, Index(["a", "b", "c"]))
+        assert not cat1.ordered
+
+        cat2 = Categorical(list("acb"), categories=list("bca"), ordered=False)
+        tm.assert_index_equal(cat2.categories, Index(["b", "c", "a"]))
+        assert not cat2.ordered
+
+        cat3 = Categorical(list("acb"), ordered=True)
+        tm.assert_index_equal(cat3.categories, Index(["a", "b", "c"]))
+        assert cat3.ordered
+
+        cat4 = Categorical(list("acb"), categories=list("bca"), ordered=True)
+        tm.assert_index_equal(cat4.categories, Index(["b", "c", "a"]))
+        assert cat4.ordered
+
+    def test_set_ordered(self):
+        cat = Categorical(["a", "b", "c", "a"], ordered=True)
+        cat2 = cat.as_unordered()
+        assert not cat2.ordered
+        cat2 = cat.as_ordered()
+        assert cat2.ordered
+
+        assert cat2.set_ordered(True).ordered
+        assert not cat2.set_ordered(False).ordered
+
+        # removed in 0.19.0
+        msg = (
+            "property 'ordered' of 'Categorical' object has no setter"
+            if PY311
+            else "can't set attribute"
+        )
+        with pytest.raises(AttributeError, match=msg):
+            cat.ordered = True
+        with pytest.raises(AttributeError, match=msg):
+            cat.ordered = False
+
+    def test_rename_categories(self):
+        cat = Categorical(["a", "b", "c", "a"])
+
+        # inplace=False: the old one must not be changed
+        res = cat.rename_categories([1, 2, 3])
+        tm.assert_numpy_array_equal(
+            res.__array__(), np.array([1, 2, 3, 1], dtype=np.int64)
+        )
+        tm.assert_index_equal(res.categories, Index([1, 2, 3]))
+
+        exp_cat = np.array(["a", "b", "c", "a"], dtype=np.object_)
+        tm.assert_numpy_array_equal(cat.__array__(), exp_cat)
+
+        exp_cat = Index(["a", "b", "c"])
+        tm.assert_index_equal(cat.categories, exp_cat)
+
+        # GH18862 (let rename_categories take callables)
+        result = cat.rename_categories(lambda x: x.upper())
+        expected = Categorical(["A", "B", "C", "A"])
+        tm.assert_categorical_equal(result, expected)
+
+    @pytest.mark.parametrize("new_categories", [[1, 2, 3, 4], [1, 2]])
+    def test_rename_categories_wrong_length_raises(self, new_categories):
+        cat = Categorical(["a", "b", "c", "a"])
+        msg = (
+            "new categories need to have the same number of items as the "
+            "old categories!"
+        )
+        with pytest.raises(ValueError, match=msg):
+            cat.rename_categories(new_categories)
+
+    def test_rename_categories_series(self):
+        # https://github.com/pandas-dev/pandas/issues/17981
+        c = Categorical(["a", "b"])
+        result = c.rename_categories(Series([0, 1], index=["a", "b"]))
+        expected = Categorical([0, 1])
+        tm.assert_categorical_equal(result, expected)
+
+    def test_rename_categories_dict(self):
+        # GH 17336
+        cat = Categorical(["a", "b", "c", "d"])
+        res = cat.rename_categories({"a": 4, "b": 3, "c": 2, "d": 1})
+        expected = Index([4, 3, 2, 1])
+        tm.assert_index_equal(res.categories, expected)
+
+        # Test for dicts of smaller length
+        cat = Categorical(["a", "b", "c", "d"])
+        res = cat.rename_categories({"a": 1, "c": 3})
+
+        expected = Index([1, "b", 3, "d"])
+        tm.assert_index_equal(res.categories, expected)
+
+        # Test for dicts with bigger length
+        cat = Categorical(["a", "b", "c", "d"])
+        res = cat.rename_categories({"a": 1, "b": 2, "c": 3, "d": 4, "e": 5, "f": 6})
+        expected = Index([1, 2, 3, 4])
+        tm.assert_index_equal(res.categories, expected)
+
+        # Test for dicts with no items from old categories
+        cat = Categorical(["a", "b", "c", "d"])
+        res = cat.rename_categories({"f": 1, "g": 3})
+
+        expected = Index(["a", "b", "c", "d"])
+        tm.assert_index_equal(res.categories, expected)
+
+    def test_reorder_categories(self):
+        cat = Categorical(["a", "b", "c", "a"], ordered=True)
+        old = cat.copy()
+        new = Categorical(
+            ["a", "b", "c", "a"], categories=["c", "b", "a"], ordered=True
+        )
+
+        res = cat.reorder_categories(["c", "b", "a"])
+        # cat must be the same as before
+        tm.assert_categorical_equal(cat, old)
+        # only res is changed
+        tm.assert_categorical_equal(res, new)
+
+    @pytest.mark.parametrize(
+        "new_categories",
+        [
+            ["a"],  # not all "old" included in "new"
+            ["a", "b", "d"],  # still not all "old" in "new"
+            ["a", "b", "c", "d"],  # all "old" included in "new", but too long
+        ],
+    )
+    def test_reorder_categories_raises(self, new_categories):
+        cat = Categorical(["a", "b", "c", "a"], ordered=True)
+        msg = "items in new_categories are not the same as in old categories"
+        with pytest.raises(ValueError, match=msg):
+            cat.reorder_categories(new_categories)
+
+    def test_add_categories(self):
+        cat = Categorical(["a", "b", "c", "a"], ordered=True)
+        old = cat.copy()
+        new = Categorical(
+            ["a", "b", "c", "a"], categories=["a", "b", "c", "d"], ordered=True
+        )
+
+        res = cat.add_categories("d")
+        tm.assert_categorical_equal(cat, old)
+        tm.assert_categorical_equal(res, new)
+
+        res = cat.add_categories(["d"])
+        tm.assert_categorical_equal(cat, old)
+        tm.assert_categorical_equal(res, new)
+
+        # GH 9927
+        cat = Categorical(list("abc"), ordered=True)
+        expected = Categorical(list("abc"), categories=list("abcde"), ordered=True)
+        # test with Series, np.array, index, list
+        res = cat.add_categories(Series(["d", "e"]))
+        tm.assert_categorical_equal(res, expected)
+        res = cat.add_categories(np.array(["d", "e"]))
+        tm.assert_categorical_equal(res, expected)
+        res = cat.add_categories(Index(["d", "e"]))
+        tm.assert_categorical_equal(res, expected)
+        res = cat.add_categories(["d", "e"])
+        tm.assert_categorical_equal(res, expected)
+
+    def test_add_categories_existing_raises(self):
+        # new is in old categories
+        cat = Categorical(["a", "b", "c", "d"], ordered=True)
+        msg = re.escape("new categories must not include old categories: {'d'}")
+        with pytest.raises(ValueError, match=msg):
+            cat.add_categories(["d"])
+
+    def test_add_categories_losing_dtype_information(self):
+        # GH#48812
+        cat = Categorical(Series([1, 2], dtype="Int64"))
+        ser = Series([4], dtype="Int64")
+        result = cat.add_categories(ser)
+        expected = Categorical(
+            Series([1, 2], dtype="Int64"), categories=Series([1, 2, 4], dtype="Int64")
+        )
+        tm.assert_categorical_equal(result, expected)
+
+        cat = Categorical(Series(["a", "b", "a"], dtype=StringDtype()))
+        ser = Series(["d"], dtype=StringDtype())
+        result = cat.add_categories(ser)
+        expected = Categorical(
+            Series(["a", "b", "a"], dtype=StringDtype()),
+            categories=Series(["a", "b", "d"], dtype=StringDtype()),
+        )
+        tm.assert_categorical_equal(result, expected)
+
+    def test_set_categories(self):
+        cat = Categorical(["a", "b", "c", "a"], ordered=True)
+        exp_categories = Index(["c", "b", "a"])
+        exp_values = np.array(["a", "b", "c", "a"], dtype=np.object_)
+
+        cat = cat.set_categories(["c", "b", "a"])
+        res = cat.set_categories(["a", "b", "c"])
+        # cat must be the same as before
+        tm.assert_index_equal(cat.categories, exp_categories)
+        tm.assert_numpy_array_equal(cat.__array__(), exp_values)
+        # only res is changed
+        exp_categories_back = Index(["a", "b", "c"])
+        tm.assert_index_equal(res.categories, exp_categories_back)
+        tm.assert_numpy_array_equal(res.__array__(), exp_values)
+
+        # not all "old" included in "new" -> all not included ones are now
+        # np.nan
+        cat = Categorical(["a", "b", "c", "a"], ordered=True)
+        res = cat.set_categories(["a"])
+        tm.assert_numpy_array_equal(res.codes, np.array([0, -1, -1, 0], dtype=np.int8))
+
+        # still not all "old" in "new"
+        res = cat.set_categories(["a", "b", "d"])
+        tm.assert_numpy_array_equal(res.codes, np.array([0, 1, -1, 0], dtype=np.int8))
+        tm.assert_index_equal(res.categories, Index(["a", "b", "d"]))
+
+        # all "old" included in "new"
+        cat = cat.set_categories(["a", "b", "c", "d"])
+        exp_categories = Index(["a", "b", "c", "d"])
+        tm.assert_index_equal(cat.categories, exp_categories)
+
+        # internals...
+        c = Categorical([1, 2, 3, 4, 1], categories=[1, 2, 3, 4], ordered=True)
+        tm.assert_numpy_array_equal(c._codes, np.array([0, 1, 2, 3, 0], dtype=np.int8))
+        tm.assert_index_equal(c.categories, Index([1, 2, 3, 4]))
+
+        exp = np.array([1, 2, 3, 4, 1], dtype=np.int64)
+        tm.assert_numpy_array_equal(np.asarray(c), exp)
+
+        # all "pointers" to '4' must be changed from 3 to 0,...
+        c = c.set_categories([4, 3, 2, 1])
+
+        # positions are changed
+        tm.assert_numpy_array_equal(c._codes, np.array([3, 2, 1, 0, 3], dtype=np.int8))
+
+        # categories are now in new order
+        tm.assert_index_equal(c.categories, Index([4, 3, 2, 1]))
+
+        # output is the same
+        exp = np.array([1, 2, 3, 4, 1], dtype=np.int64)
+        tm.assert_numpy_array_equal(np.asarray(c), exp)
+        assert c.min() == 4
+        assert c.max() == 1
+
+        # set_categories should set the ordering if specified
+        c2 = c.set_categories([4, 3, 2, 1], ordered=False)
+        assert not c2.ordered
+
+        tm.assert_numpy_array_equal(np.asarray(c), np.asarray(c2))
+
+        # set_categories should pass thru the ordering
+        c2 = c.set_ordered(False).set_categories([4, 3, 2, 1])
+        assert not c2.ordered
+
+        tm.assert_numpy_array_equal(np.asarray(c), np.asarray(c2))
+
+    @pytest.mark.parametrize(
+        "values, categories, new_categories",
+        [
+            # No NaNs, same cats, same order
+            (["a", "b", "a"], ["a", "b"], ["a", "b"]),
+            # No NaNs, same cats, different order
+            (["a", "b", "a"], ["a", "b"], ["b", "a"]),
+            # Same, unsorted
+            (["b", "a", "a"], ["a", "b"], ["a", "b"]),
+            # No NaNs, same cats, different order
+            (["b", "a", "a"], ["a", "b"], ["b", "a"]),
+            # NaNs
+            (["a", "b", "c"], ["a", "b"], ["a", "b"]),
+            (["a", "b", "c"], ["a", "b"], ["b", "a"]),
+            (["b", "a", "c"], ["a", "b"], ["a", "b"]),
+            (["b", "a", "c"], ["a", "b"], ["a", "b"]),
+            # Introduce NaNs
+            (["a", "b", "c"], ["a", "b"], ["a"]),
+            (["a", "b", "c"], ["a", "b"], ["b"]),
+            (["b", "a", "c"], ["a", "b"], ["a"]),
+            (["b", "a", "c"], ["a", "b"], ["a"]),
+            # No overlap
+            (["a", "b", "c"], ["a", "b"], ["d", "e"]),
+        ],
+    )
+    @pytest.mark.parametrize("ordered", [True, False])
+    def test_set_categories_many(self, values, categories, new_categories, ordered):
+        c = Categorical(values, categories)
+        expected = Categorical(values, new_categories, ordered)
+        result = c.set_categories(new_categories, ordered=ordered)
+        tm.assert_categorical_equal(result, expected)
+
+    def test_set_categories_rename_less(self):
+        # GH 24675
+        cat = Categorical(["A", "B"])
+        result = cat.set_categories(["A"], rename=True)
+        expected = Categorical(["A", np.nan])
+        tm.assert_categorical_equal(result, expected)
+
+    def test_set_categories_private(self):
+        cat = Categorical(["a", "b", "c"], categories=["a", "b", "c", "d"])
+        cat._set_categories(["a", "c", "d", "e"])
+        expected = Categorical(["a", "c", "d"], categories=list("acde"))
+        tm.assert_categorical_equal(cat, expected)
+
+        # fastpath
+        cat = Categorical(["a", "b", "c"], categories=["a", "b", "c", "d"])
+        cat._set_categories(["a", "c", "d", "e"], fastpath=True)
+        expected = Categorical(["a", "c", "d"], categories=list("acde"))
+        tm.assert_categorical_equal(cat, expected)
+
+    def test_remove_categories(self):
+        cat = Categorical(["a", "b", "c", "a"], ordered=True)
+        old = cat.copy()
+        new = Categorical(["a", "b", np.nan, "a"], categories=["a", "b"], ordered=True)
+
+        res = cat.remove_categories("c")
+        tm.assert_categorical_equal(cat, old)
+        tm.assert_categorical_equal(res, new)
+
+        res = cat.remove_categories(["c"])
+        tm.assert_categorical_equal(cat, old)
+        tm.assert_categorical_equal(res, new)
+
+    @pytest.mark.parametrize("removals", [["c"], ["c", np.nan], "c", ["c", "c"]])
+    def test_remove_categories_raises(self, removals):
+        cat = Categorical(["a", "b", "a"])
+        message = re.escape("removals must all be in old categories: {'c'}")
+
+        with pytest.raises(ValueError, match=message):
+            cat.remove_categories(removals)
+
+    def test_remove_unused_categories(self):
+        c = Categorical(["a", "b", "c", "d", "a"], categories=["a", "b", "c", "d", "e"])
+        exp_categories_all = Index(["a", "b", "c", "d", "e"])
+        exp_categories_dropped = Index(["a", "b", "c", "d"])
+
+        tm.assert_index_equal(c.categories, exp_categories_all)
+
+        res = c.remove_unused_categories()
+        tm.assert_index_equal(res.categories, exp_categories_dropped)
+        tm.assert_index_equal(c.categories, exp_categories_all)
+
+        # with NaN values (GH11599)
+        c = Categorical(["a", "b", "c", np.nan], categories=["a", "b", "c", "d", "e"])
+        res = c.remove_unused_categories()
+        tm.assert_index_equal(res.categories, Index(np.array(["a", "b", "c"])))
+        exp_codes = np.array([0, 1, 2, -1], dtype=np.int8)
+        tm.assert_numpy_array_equal(res.codes, exp_codes)
+        tm.assert_index_equal(c.categories, exp_categories_all)
+
+        val = ["F", np.nan, "D", "B", "D", "F", np.nan]
+        cat = Categorical(values=val, categories=list("ABCDEFG"))
+        out = cat.remove_unused_categories()
+        tm.assert_index_equal(out.categories, Index(["B", "D", "F"]))
+        exp_codes = np.array([2, -1, 1, 0, 1, 2, -1], dtype=np.int8)
+        tm.assert_numpy_array_equal(out.codes, exp_codes)
+        assert out.tolist() == val
+
+        alpha = list("abcdefghijklmnopqrstuvwxyz")
+        val = np.random.default_rng(2).choice(alpha[::2], 10000).astype("object")
+        val[np.random.default_rng(2).choice(len(val), 100)] = np.nan
+
+        cat = Categorical(values=val, categories=alpha)
+        out = cat.remove_unused_categories()
+        assert out.tolist() == val.tolist()
+
+
+class TestCategoricalAPIWithFactor:
+    def test_describe(self):
+        factor = Categorical(["a", "b", "b", "a", "a", "c", "c", "c"], ordered=True)
+        # string type
+        desc = factor.describe()
+        assert factor.ordered
+        exp_index = CategoricalIndex(
+            ["a", "b", "c"], name="categories", ordered=factor.ordered
+        )
+        expected = DataFrame(
+            {"counts": [3, 2, 3], "freqs": [3 / 8.0, 2 / 8.0, 3 / 8.0]}, index=exp_index
+        )
+        tm.assert_frame_equal(desc, expected)
+
+        # check unused categories
+        cat = factor.copy()
+        cat = cat.set_categories(["a", "b", "c", "d"])
+        desc = cat.describe()
+
+        exp_index = CategoricalIndex(
+            list("abcd"), ordered=factor.ordered, name="categories"
+        )
+        expected = DataFrame(
+            {"counts": [3, 2, 3, 0], "freqs": [3 / 8.0, 2 / 8.0, 3 / 8.0, 0]},
+            index=exp_index,
+        )
+        tm.assert_frame_equal(desc, expected)
+
+        # check an integer one
+        cat = Categorical([1, 2, 3, 1, 2, 3, 3, 2, 1, 1, 1])
+        desc = cat.describe()
+        exp_index = CategoricalIndex([1, 2, 3], ordered=cat.ordered, name="categories")
+        expected = DataFrame(
+            {"counts": [5, 3, 3], "freqs": [5 / 11.0, 3 / 11.0, 3 / 11.0]},
+            index=exp_index,
+        )
+        tm.assert_frame_equal(desc, expected)
+
+        # https://github.com/pandas-dev/pandas/issues/3678
+        # describe should work with NaN
+        cat = Categorical([np.nan, 1, 2, 2])
+        desc = cat.describe()
+        expected = DataFrame(
+            {"counts": [1, 2, 1], "freqs": [1 / 4.0, 2 / 4.0, 1 / 4.0]},
+            index=CategoricalIndex(
+                [1, 2, np.nan], categories=[1, 2], name="categories"
+            ),
+        )
+        tm.assert_frame_equal(desc, expected)
+
+
+class TestPrivateCategoricalAPI:
+    def test_codes_immutable(self):
+        # Codes should be read only
+        c = Categorical(["a", "b", "c", "a", np.nan])
+        exp = np.array([0, 1, 2, 0, -1], dtype="int8")
+        tm.assert_numpy_array_equal(c.codes, exp)
+
+        # Assignments to codes should raise
+        msg = (
+            "property 'codes' of 'Categorical' object has no setter"
+            if PY311
+            else "can't set attribute"
+        )
+        with pytest.raises(AttributeError, match=msg):
+            c.codes = np.array([0, 1, 2, 0, 1], dtype="int8")
+
+        # changes in the codes array should raise
+        codes = c.codes
+
+        with pytest.raises(ValueError, match="assignment destination is read-only"):
+            codes[4] = 1
+
+        # But even after getting the codes, the original array should still be
+        # writeable!
+        c[4] = "a"
+        exp = np.array([0, 1, 2, 0, 0], dtype="int8")
+        tm.assert_numpy_array_equal(c.codes, exp)
+        c._codes[4] = 2
+        exp = np.array([0, 1, 2, 0, 2], dtype="int8")
+        tm.assert_numpy_array_equal(c.codes, exp)
+
+    @pytest.mark.parametrize(
+        "codes, old, new, expected",
+        [
+            ([0, 1], ["a", "b"], ["a", "b"], [0, 1]),
+            ([0, 1], ["b", "a"], ["b", "a"], [0, 1]),
+            ([0, 1], ["a", "b"], ["b", "a"], [1, 0]),
+            ([0, 1], ["b", "a"], ["a", "b"], [1, 0]),
+            ([0, 1, 0, 1], ["a", "b"], ["a", "b", "c"], [0, 1, 0, 1]),
+            ([0, 1, 2, 2], ["a", "b", "c"], ["a", "b"], [0, 1, -1, -1]),
+            ([0, 1, -1], ["a", "b", "c"], ["a", "b", "c"], [0, 1, -1]),
+            ([0, 1, -1], ["a", "b", "c"], ["b"], [-1, 0, -1]),
+            ([0, 1, -1], ["a", "b", "c"], ["d"], [-1, -1, -1]),
+            ([0, 1, -1], ["a", "b", "c"], [], [-1, -1, -1]),
+            ([-1, -1], [], ["a", "b"], [-1, -1]),
+            ([1, 0], ["b", "a"], ["a", "b"], [0, 1]),
+        ],
+    )
+    def test_recode_to_categories(self, codes, old, new, expected):
+        codes = np.asanyarray(codes, dtype=np.int8)
+        expected = np.asanyarray(expected, dtype=np.int8)
+        old = Index(old)
+        new = Index(new)
+        result = recode_for_categories(codes, old, new)
+        tm.assert_numpy_array_equal(result, expected)
+
+    def test_recode_to_categories_large(self):
+        N = 1000
+        codes = np.arange(N)
+        old = Index(codes)
+        expected = np.arange(N - 1, -1, -1, dtype=np.int16)
+        new = Index(expected)
+        result = recode_for_categories(codes, old, new)
+        tm.assert_numpy_array_equal(result, expected)
+ from copy import deepcopy
+import inspect
+import pydoc
+
+import numpy as np
+import pytest
+
+from pandas._config import using_string_dtype
+from pandas._config.config import option_context
+
+from pandas.compat import HAS_PYARROW
+
+import pandas as pd
+from pandas import (
+    DataFrame,
+    Series,
+    date_range,
+    timedelta_range,
+)
+import pandas._testing as tm
+
+
+class TestDataFrameMisc:
+    def test_getitem_pop_assign_name(self, float_frame):
+        s = float_frame["A"]
+        assert s.name == "A"
+
+        s = float_frame.pop("A")
+        assert s.name == "A"
+
+        s = float_frame.loc[:, "B"]
+        assert s.name == "B"
+
+        s2 = s.loc[:]
+        assert s2.name == "B"
+
+    def test_get_axis(self, float_frame):
+        f = float_frame
+        assert f._get_axis_number(0) == 0
+        assert f._get_axis_number(1) == 1
+        assert f._get_axis_number("index") == 0
+        assert f._get_axis_number("rows") == 0
+        assert f._get_axis_number("columns") == 1
+
+        assert f._get_axis_name(0) == "index"
+        assert f._get_axis_name(1) == "columns"
+        assert f._get_axis_name("index") == "index"
+        assert f._get_axis_name("rows") == "index"
+        assert f._get_axis_name("columns") == "columns"
+
+        assert f._get_axis(0) is f.index
+        assert f._get_axis(1) is f.columns
+
+        with pytest.raises(ValueError, match="No axis named"):
+            f._get_axis_number(2)
+
+        with pytest.raises(ValueError, match="No axis.*foo"):
+            f._get_axis_name("foo")
+
+        with pytest.raises(ValueError, match="No axis.*None"):
+            f._get_axis_name(None)
+
+        with pytest.raises(ValueError, match="No axis named"):
+            f._get_axis_number(None)
+
+    def test_column_contains_raises(self, float_frame):
+        with pytest.raises(TypeError, match="unhashable type: 'Index'"):
+            float_frame.columns in float_frame
+
+    def test_tab_completion(self):
+        # DataFrame whose columns are identifiers shall have them in __dir__.
+        df = DataFrame([list("abcd"), list("efgh")], columns=list("ABCD"))
+        for key in list("ABCD"):
+            assert key in dir(df)
+        assert isinstance(df.__getitem__("A"), Series)
+
+        # DataFrame whose first-level columns are identifiers shall have
+        # them in __dir__.
+        df = DataFrame(
+            [list("abcd"), list("efgh")],
+            columns=pd.MultiIndex.from_tuples(list(zip("ABCD", "EFGH"))),
+        )
+        for key in list("ABCD"):
+            assert key in dir(df)
+        for key in list("EFGH"):
+            assert key not in dir(df)
+        assert isinstance(df.__getitem__("A"), DataFrame)
+
+    def test_display_max_dir_items(self):
+        # display.max_dir_items increaes the number of columns that are in __dir__.
+        columns = ["a" + str(i) for i in range(420)]
+        values = [range(420), range(420)]
+        df = DataFrame(values, columns=columns)
+
+        # The default value for display.max_dir_items is 100
+        assert "a99" in dir(df)
+        assert "a100" not in dir(df)
+
+        with option_context("display.max_dir_items", 300):
+            df = DataFrame(values, columns=columns)
+            assert "a299" in dir(df)
+            assert "a300" not in dir(df)
+
+        with option_context("display.max_dir_items", None):
+            df = DataFrame(values, columns=columns)
+            assert "a419" in dir(df)
+
+    def test_not_hashable(self):
+        empty_frame = DataFrame()
+
+        df = DataFrame([1])
+        msg = "unhashable type: 'DataFrame'"
+        with pytest.raises(TypeError, match=msg):
+            hash(df)
+        with pytest.raises(TypeError, match=msg):
+            hash(empty_frame)
+
+    @pytest.mark.xfail(
+        using_string_dtype() and HAS_PYARROW, reason="surrogates not allowed"
+    )
+    def test_column_name_contains_unicode_surrogate(self):
+        # GH 25509
+        colname = "\ud83d"
+        df = DataFrame({colname: []})
+        # this should not crash
+        assert colname not in dir(df)
+        assert df.columns[0] == colname
+
+    def test_new_empty_index(self):
+        df1 = DataFrame(np.random.default_rng(2).standard_normal((0, 3)))
+        df2 = DataFrame(np.random.default_rng(2).standard_normal((0, 3)))
+        df1.index.name = "foo"
+        assert df2.index.name is None
+
+    def test_get_agg_axis(self, float_frame):
+        cols = float_frame._get_agg_axis(0)
+        assert cols is float_frame.columns
+
+        idx = float_frame._get_agg_axis(1)
+        assert idx is float_frame.index
+
+        msg = r"Axis must be 0 or 1 \(got 2\)"
+        with pytest.raises(ValueError, match=msg):
+            float_frame._get_agg_axis(2)
+
+    def test_empty(self, float_frame, float_string_frame):
+        empty_frame = DataFrame()
+        assert empty_frame.empty
+
+        assert not float_frame.empty
+        assert not float_string_frame.empty
+
+        # corner case
+        df = DataFrame({"A": [1.0, 2.0, 3.0], "B": ["a", "b", "c"]}, index=np.arange(3))
+        del df["A"]
+        assert not df.empty
+
+    def test_len(self, float_frame):
+        assert len(float_frame) == len(float_frame.index)
+
+        # single block corner case
+        arr = float_frame[["A", "B"]].values
+        expected = float_frame.reindex(columns=["A", "B"]).values
+        tm.assert_almost_equal(arr, expected)
+
+    def test_axis_aliases(self, float_frame):
+        f = float_frame
+
+        # reg name
+        expected = f.sum(axis=0)
+        result = f.sum(axis="index")
+        tm.assert_series_equal(result, expected)
+
+        expected = f.sum(axis=1)
+        result = f.sum(axis="columns")
+        tm.assert_series_equal(result, expected)
+
+    def test_class_axis(self):
+        # GH 18147
+        # no exception and no empty docstring
+        assert pydoc.getdoc(DataFrame.index)
+        assert pydoc.getdoc(DataFrame.columns)
+
+    def test_series_put_names(self, float_string_frame):
+        series = float_string_frame._series
+        for k, v in series.items():
+            assert v.name == k
+
+    def test_empty_nonzero(self):
+        df = DataFrame([1, 2, 3])
+        assert not df.empty
+        df = DataFrame(index=[1], columns=[1])
+        assert not df.empty
+        df = DataFrame(index=["a", "b"], columns=["c", "d"]).dropna()
+        assert df.empty
+        assert df.T.empty
+
+    @pytest.mark.parametrize(
+        "df",
+        [
+            DataFrame(),
+            DataFrame(index=[1]),
+            DataFrame(columns=[1]),
+            DataFrame({1: []}),
+        ],
+    )
+    def test_empty_like(self, df):
+        assert df.empty
+        assert df.T.empty
+
+    def test_with_datetimelikes(self):
+        df = DataFrame(
+            {
+                "A": date_range("20130101", periods=10),
+                "B": timedelta_range("1 day", periods=10),
+            }
+        )
+        t = df.T
+
+        result = t.dtypes.value_counts()
+        expected = Series({np.dtype("object"): 10}, name="count")
+        tm.assert_series_equal(result, expected)
+
+    def test_deepcopy(self, float_frame):
+        cp = deepcopy(float_frame)
+        cp.loc[0, "A"] = 10
+        assert not float_frame.equals(cp)
+
+    def test_inplace_return_self(self):
+        # GH 1893
+
+        data = DataFrame(
+            {"a": ["foo", "bar", "baz", "qux"], "b": [0, 0, 1, 1], "c": [1, 2, 3, 4]}
+        )
+
+        def _check_f(base, f):
+            result = f(base)
+            assert result is None
+
+        # -----DataFrame-----
+
+        # set_index
+        f = lambda x: x.set_index("a", inplace=True)
+        _check_f(data.copy(), f)
+
+        # reset_index
+        f = lambda x: x.reset_index(inplace=True)
+        _check_f(data.set_index("a"), f)
+
+        # drop_duplicates
+        f = lambda x: x.drop_duplicates(inplace=True)
+        _check_f(data.copy(), f)
+
+        # sort
+        f = lambda x: x.sort_values("b", inplace=True)
+        _check_f(data.copy(), f)
+
+        # sort_index
+        f = lambda x: x.sort_index(inplace=True)
+        _check_f(data.copy(), f)
+
+        # fillna
+        f = lambda x: x.fillna(0, inplace=True)
+        _check_f(data.copy(), f)
+
+        # replace
+        f = lambda x: x.replace(1, 0, inplace=True)
+        _check_f(data.copy(), f)
+
+        # rename
+        f = lambda x: x.rename({1: "foo"}, inplace=True)
+        _check_f(data.copy(), f)
+
+        # -----Series-----
+        d = data.copy()["c"]
+
+        # reset_index
+        f = lambda x: x.reset_index(inplace=True, drop=True)
+        _check_f(data.set_index("a")["c"], f)
+
+        # fillna
+        f = lambda x: x.fillna(0, inplace=True)
+        _check_f(d.copy(), f)
+
+        # replace
+        f = lambda x: x.replace(1, 0, inplace=True)
+        _check_f(d.copy(), f)
+
+        # rename
+        f = lambda x: x.rename({1: "foo"}, inplace=True)
+        _check_f(d.copy(), f)
+
+    def test_tab_complete_warning(self, ip, frame_or_series):
+        # GH 16409
+        pytest.importorskip("IPython", minversion="6.0.0")
+        from IPython.core.completer import provisionalcompleter
+
+        if frame_or_series is DataFrame:
+            code = "from pandas import DataFrame; obj = DataFrame()"
+        else:
+            code = "from pandas import Series; obj = Series(dtype=object)"
+
+        ip.run_cell(code)
+        # GH 31324 newer jedi version raises Deprecation warning;
+        #  appears resolved 2021-02-02
+        with tm.assert_produces_warning(None, raise_on_extra_warnings=False):
+            with provisionalcompleter("ignore"):
+                list(ip.Completer.completions("obj.", 1))
+
+    def test_attrs(self):
+        df = DataFrame({"A": [2, 3]})
+        assert df.attrs == {}
+        df.attrs["version"] = 1
+
+        result = df.rename(columns=str)
+        assert result.attrs == {"version": 1}
+
+    def test_attrs_deepcopy(self):
+        df = DataFrame({"A": [2, 3]})
+        assert df.attrs == {}
+        df.attrs["tags"] = {"spam", "ham"}
+
+        result = df.rename(columns=str)
+        assert result.attrs == df.attrs
+        assert result.attrs["tags"] is not df.attrs["tags"]
+
+    @pytest.mark.parametrize("allows_duplicate_labels", [True, False, None])
+    def test_set_flags(
+        self,
+        allows_duplicate_labels,
+        frame_or_series,
+        using_copy_on_write,
+        warn_copy_on_write,
+    ):
+        obj = DataFrame({"A": [1, 2]})
+        key = (0, 0)
+        if frame_or_series is Series:
+            obj = obj["A"]
+            key = 0
+
+        result = obj.set_flags(allows_duplicate_labels=allows_duplicate_labels)
+
+        if allows_duplicate_labels is None:
+            # We don't update when it's not provided
+            assert result.flags.allows_duplicate_labels is True
+        else:
+            assert result.flags.allows_duplicate_labels is allows_duplicate_labels
+
+        # We made a copy
+        assert obj is not result
+
+        # We didn't mutate obj
+        assert obj.flags.allows_duplicate_labels is True
+
+        # But we didn't copy data
+        if frame_or_series is Series:
+            assert np.may_share_memory(obj.values, result.values)
+        else:
+            assert np.may_share_memory(obj["A"].values, result["A"].values)
+
+        with tm.assert_cow_warning(warn_copy_on_write):
+            result.iloc[key] = 0
+        if using_copy_on_write:
+            assert obj.iloc[key] == 1
+        else:
+            assert obj.iloc[key] == 0
+            # set back to 1 for test below
+            with tm.assert_cow_warning(warn_copy_on_write):
+                result.iloc[key] = 1
+
+        # Now we do copy.
+        result = obj.set_flags(
+            copy=True, allows_duplicate_labels=allows_duplicate_labels
+        )
+        result.iloc[key] = 10
+        assert obj.iloc[key] == 1
+
+    def test_constructor_expanddim(self):
+        # GH#33628 accessing _constructor_expanddim should not raise NotImplementedError
+        # GH38782 pandas has no container higher than DataFrame (two-dim), so
+        # DataFrame._constructor_expand_dim, doesn't make sense, so is removed.
+        df = DataFrame()
+
+        msg = "'DataFrame' object has no attribute '_constructor_expanddim'"
+        with pytest.raises(AttributeError, match=msg):
+            df._constructor_expanddim(np.arange(27).reshape(3, 3, 3))
+
+    def test_inspect_getmembers(self):
+        # GH38740
+        df = DataFrame()
+        msg = "DataFrame._data is deprecated"
+        with tm.assert_produces_warning(
+            DeprecationWarning, match=msg, check_stacklevel=False
+        ):
+            inspect.getmembers(df)
+ """
+Tests of the groupby API, including internal consistency and with other pandas objects.
+
+Tests in this file should only check the existence, names, and arguments of groupby
+methods. It should not test the results of any groupby operation.
+"""
+
+import inspect
+
+import pytest
+
+from pandas import (
+    DataFrame,
+    Series,
+)
+from pandas.core.groupby.base import (
+    groupby_other_methods,
+    reduction_kernels,
+    transformation_kernels,
+)
+from pandas.core.groupby.generic import (
+    DataFrameGroupBy,
+    SeriesGroupBy,
+)
+
+
+def test_tab_completion(multiindex_dataframe_random_data):
+    grp = multiindex_dataframe_random_data.groupby(level="second")
+    results = {v for v in dir(grp) if not v.startswith("_")}
+    expected = {
+        "A",
+        "B",
+        "C",
+        "agg",
+        "aggregate",
+        "apply",
+        "boxplot",
+        "filter",
+        "first",
+        "get_group",
+        "groups",
+        "hist",
+        "indices",
+        "last",
+        "max",
+        "mean",
+        "median",
+        "min",
+        "ngroups",
+        "nth",
+        "ohlc",
+        "plot",
+        "prod",
+        "size",
+        "std",
+        "sum",
+        "transform",
+        "var",
+        "sem",
+        "count",
+        "nunique",
+        "head",
+        "describe",
+        "cummax",
+        "quantile",
+        "rank",
+        "cumprod",
+        "tail",
+        "resample",
+        "cummin",
+        "fillna",
+        "cumsum",
+        "cumcount",
+        "ngroup",
+        "all",
+        "shift",
+        "skew",
+        "take",
+        "pct_change",
+        "any",
+        "corr",
+        "corrwith",
+        "cov",
+        "dtypes",
+        "ndim",
+        "diff",
+        "idxmax",
+        "idxmin",
+        "ffill",
+        "bfill",
+        "rolling",
+        "expanding",
+        "pipe",
+        "sample",
+        "ewm",
+        "value_counts",
+    }
+    assert results == expected
+
+
+def test_all_methods_categorized(multiindex_dataframe_random_data):
+    grp = multiindex_dataframe_random_data.groupby(
+        multiindex_dataframe_random_data.iloc[:, 0]
+    )
+    names = {_ for _ in dir(grp) if not _.startswith("_")} - set(
+        multiindex_dataframe_random_data.columns
+    )
+    new_names = set(names)
+    new_names -= reduction_kernels
+    new_names -= transformation_kernels
+    new_names -= groupby_other_methods
+
+    assert not reduction_kernels & transformation_kernels
+    assert not reduction_kernels & groupby_other_methods
+    assert not transformation_kernels & groupby_other_methods
+
+    # new public method?
+    if new_names:
+        msg = f"""
+There are uncategorized methods defined on the Grouper class:
+{new_names}.
+
+Was a new method recently added?
+
+Every public method On Grouper must appear in exactly one the
+following three lists defined in pandas.core.groupby.base:
+- `reduction_kernels`
+- `transformation_kernels`
+- `groupby_other_methods`
+see the comments in pandas/core/groupby/base.py for guidance on
+how to fix this test.
+        """
+        raise AssertionError(msg)
+
+    # removed a public method?
+    all_categorized = reduction_kernels | transformation_kernels | groupby_other_methods
+    if names != all_categorized:
+        msg = f"""
+Some methods which are supposed to be on the Grouper class
+are missing:
+{all_categorized - names}.
+
+They're still defined in one of the lists that live in pandas/core/groupby/base.py.
+If you removed a method, you should update them
+"""
+        raise AssertionError(msg)
+
+
+def test_frame_consistency(groupby_func):
+    # GH#48028
+    if groupby_func in ("first", "last"):
+        msg = "first and last are entirely different between frame and groupby"
+        pytest.skip(reason=msg)
+
+    if groupby_func in ("cumcount", "ngroup"):
+        assert not hasattr(DataFrame, groupby_func)
+        return
+
+    frame_method = getattr(DataFrame, groupby_func)
+    gb_method = getattr(DataFrameGroupBy, groupby_func)
+    result = set(inspect.signature(gb_method).parameters)
+    if groupby_func == "size":
+        # "size" is a method on GroupBy but property on DataFrame:
+        expected = {"self"}
+    else:
+        expected = set(inspect.signature(frame_method).parameters)
+
+    # Exclude certain arguments from result and expected depending on the operation
+    # Some of these may be purposeful inconsistencies between the APIs
+    exclude_expected, exclude_result = set(), set()
+    if groupby_func in ("any", "all"):
+        exclude_expected = {"kwargs", "bool_only", "axis"}
+    elif groupby_func in ("count",):
+        exclude_expected = {"numeric_only", "axis"}
+    elif groupby_func in ("nunique",):
+        exclude_expected = {"axis"}
+    elif groupby_func in ("max", "min"):
+        exclude_expected = {"axis", "kwargs", "skipna"}
+        exclude_result = {"min_count", "engine", "engine_kwargs"}
+    elif groupby_func in ("mean", "std", "sum", "var"):
+        exclude_expected = {"axis", "kwargs", "skipna"}
+        exclude_result = {"engine", "engine_kwargs"}
+    elif groupby_func in ("median", "prod", "sem"):
+        exclude_expected = {"axis", "kwargs", "skipna"}
+    elif groupby_func in ("backfill", "bfill", "ffill", "pad"):
+        exclude_expected = {"downcast", "inplace", "axis", "limit_area"}
+    elif groupby_func in ("cummax", "cummin"):
+        exclude_expected = {"skipna", "args"}
+        exclude_result = {"numeric_only"}
+    elif groupby_func in ("cumprod", "cumsum"):
+        exclude_expected = {"skipna"}
+    elif groupby_func in ("pct_change",):
+        exclude_expected = {"kwargs"}
+        exclude_result = {"axis"}
+    elif groupby_func in ("rank",):
+        exclude_expected = {"numeric_only"}
+    elif groupby_func in ("quantile",):
+        exclude_expected = {"method", "axis"}
+
+    # Ensure excluded arguments are actually in the signatures
+    assert result & exclude_result == exclude_result
+    assert expected & exclude_expected == exclude_expected
+
+    result -= exclude_result
+    expected -= exclude_expected
+    assert result == expected
+
+
+def test_series_consistency(request, groupby_func):
+    # GH#48028
+    if groupby_func in ("first", "last"):
+        pytest.skip("first and last are entirely different between Series and groupby")
+
+    if groupby_func in ("cumcount", "corrwith", "ngroup"):
+        assert not hasattr(Series, groupby_func)
+        return
+
+    series_method = getattr(Series, groupby_func)
+    gb_method = getattr(SeriesGroupBy, groupby_func)
+    result = set(inspect.signature(gb_method).parameters)
+    if groupby_func == "size":
+        # "size" is a method on GroupBy but property on Series
+        expected = {"self"}
+    else:
+        expected = set(inspect.signature(series_method).parameters)
+
+    # Exclude certain arguments from result and expected depending on the operation
+    # Some of these may be purposeful inconsistencies between the APIs
+    exclude_expected, exclude_result = set(), set()
+    if groupby_func in ("any", "all"):
+        exclude_expected = {"kwargs", "bool_only", "axis"}
+    elif groupby_func in ("diff",):
+        exclude_result = {"axis"}
+    elif groupby_func in ("max", "min"):
+        exclude_expected = {"axis", "kwargs", "skipna"}
+        exclude_result = {"min_count", "engine", "engine_kwargs"}
+    elif groupby_func in ("mean", "std", "sum", "var"):
+        exclude_expected = {"axis", "kwargs", "skipna"}
+        exclude_result = {"engine", "engine_kwargs"}
+    elif groupby_func in ("median", "prod", "sem"):
+        exclude_expected = {"axis", "kwargs", "skipna"}
+    elif groupby_func in ("backfill", "bfill", "ffill", "pad"):
+        exclude_expected = {"downcast", "inplace", "axis", "limit_area"}
+    elif groupby_func in ("cummax", "cummin"):
+        exclude_expected = {"skipna", "args"}
+        exclude_result = {"numeric_only"}
+    elif groupby_func in ("cumprod", "cumsum"):
+        exclude_expected = {"skipna"}
+    elif groupby_func in ("pct_change",):
+        exclude_expected = {"kwargs"}
+        exclude_result = {"axis"}
+    elif groupby_func in ("rank",):
+        exclude_expected = {"numeric_only"}
+    elif groupby_func in ("idxmin", "idxmax"):
+        exclude_expected = {"args", "kwargs"}
+    elif groupby_func in ("quantile",):
+        exclude_result = {"numeric_only"}
+
+    # Ensure excluded arguments are actually in the signatures
+    assert result & exclude_result == exclude_result
+    assert expected & exclude_expected == exclude_expected
+
+    result -= exclude_result
+    expected -= exclude_expected
+    assert result == expected
+ """
+Tests for the pseudo-public API implemented in internals/api.py and exposed
+in core.internals
+"""
+
+import pytest
+
+import pandas as pd
+import pandas._testing as tm
+from pandas.core import internals
+from pandas.core.internals import api
+
+
+def test_internals_api():
+    assert internals.make_block is api.make_block
+
+
+def test_namespace():
+    # SUBJECT TO CHANGE
+
+    modules = [
+        "blocks",
+        "concat",
+        "managers",
+        "construction",
+        "array_manager",
+        "base",
+        "api",
+        "ops",
+    ]
+    expected = [
+        "make_block",
+        "DataManager",
+        "ArrayManager",
+        "BlockManager",
+        "SingleDataManager",
+        "SingleBlockManager",
+        "SingleArrayManager",
+        "concatenate_managers",
+    ]
+
+    result = [x for x in dir(internals) if not x.startswith("__")]
+    assert set(result) == set(expected + modules)
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "NumericBlock",
+        "ObjectBlock",
+        "Block",
+        "ExtensionBlock",
+        "DatetimeTZBlock",
+    ],
+)
+def test_deprecations(name):
+    # GH#55139
+    msg = f"{name} is deprecated.* Use public APIs instead"
+    with tm.assert_produces_warning(DeprecationWarning, match=msg):
+        getattr(internals, name)
+
+    if name not in ["NumericBlock", "ObjectBlock"]:
+        # NumericBlock and ObjectBlock are not in the internals.api namespace
+        with tm.assert_produces_warning(DeprecationWarning, match=msg):
+            getattr(api, name)
+
+
+def test_make_block_2d_with_dti():
+    # GH#41168
+    dti = pd.date_range("2012", periods=3, tz="UTC")
+    blk = api.make_block(dti, placement=[0])
+
+    assert blk.shape == (1, 3)
+    assert blk.values.shape == (1, 3)
+
+
+def test_create_block_manager_from_blocks_deprecated():
+    # GH#33892
+    # If they must, downstream packages should get this from internals.api,
+    #  not internals.
+    msg = (
+        "create_block_manager_from_blocks is deprecated and will be "
+        "removed in a future version. Use public APIs instead"
+    )
+    with tm.assert_produces_warning(DeprecationWarning, match=msg):
+        internals.create_block_manager_from_blocks
+ import inspect
+import pydoc
+
+import numpy as np
+import pytest
+
+import pandas as pd
+from pandas import (
+    DataFrame,
+    Index,
+    Series,
+    date_range,
+    period_range,
+    timedelta_range,
+)
+import pandas._testing as tm
+
+
+class TestSeriesMisc:
+    def test_tab_completion(self):
+        # GH 9910
+        s = Series(list("abcd"))
+        # Series of str values should have .str but not .dt/.cat in __dir__
+        assert "str" in dir(s)
+        assert "dt" not in dir(s)
+        assert "cat" not in dir(s)
+
+    def test_tab_completion_dt(self):
+        # similarly for .dt
+        s = Series(date_range("1/1/2015", periods=5))
+        assert "dt" in dir(s)
+        assert "str" not in dir(s)
+        assert "cat" not in dir(s)
+
+    def test_tab_completion_cat(self):
+        # Similarly for .cat, but with the twist that str and dt should be
+        # there if the categories are of that type first cat and str.
+        s = Series(list("abbcd"), dtype="category")
+        assert "cat" in dir(s)
+        assert "str" in dir(s)  # as it is a string categorical
+        assert "dt" not in dir(s)
+
+    def test_tab_completion_cat_str(self):
+        # similar to cat and str
+        s = Series(date_range("1/1/2015", periods=5)).astype("category")
+        assert "cat" in dir(s)
+        assert "str" not in dir(s)
+        assert "dt" in dir(s)  # as it is a datetime categorical
+
+    def test_tab_completion_with_categorical(self):
+        # test the tab completion display
+        ok_for_cat = [
+            "categories",
+            "codes",
+            "ordered",
+            "set_categories",
+            "add_categories",
+            "remove_categories",
+            "rename_categories",
+            "reorder_categories",
+            "remove_unused_categories",
+            "as_ordered",
+            "as_unordered",
+        ]
+
+        s = Series(list("aabbcde")).astype("category")
+        results = sorted({r for r in s.cat.__dir__() if not r.startswith("_")})
+        tm.assert_almost_equal(results, sorted(set(ok_for_cat)))
+
+    @pytest.mark.parametrize(
+        "index",
+        [
+            Index(list("ab") * 5, dtype="category"),
+            Index([str(i) for i in range(10)]),
+            Index(["foo", "bar", "baz"] * 2),
+            date_range("2020-01-01", periods=10),
+            period_range("2020-01-01", periods=10, freq="D"),
+            timedelta_range("1 day", periods=10),
+            Index(np.arange(10), dtype=np.uint64),
+            Index(np.arange(10), dtype=np.int64),
+            Index(np.arange(10), dtype=np.float64),
+            Index([True, False]),
+            Index([f"a{i}" for i in range(101)]),
+            pd.MultiIndex.from_tuples(zip("ABCD", "EFGH")),
+            pd.MultiIndex.from_tuples(zip([0, 1, 2, 3], "EFGH")),
+        ],
+    )
+    def test_index_tab_completion(self, index):
+        # dir contains string-like values of the Index.
+        s = Series(index=index, dtype=object)
+        dir_s = dir(s)
+        for i, x in enumerate(s.index.unique(level=0)):
+            if i < 100:
+                assert not isinstance(x, str) or not x.isidentifier() or x in dir_s
+            else:
+                assert x not in dir_s
+
+    @pytest.mark.parametrize("ser", [Series(dtype=object), Series([1])])
+    def test_not_hashable(self, ser):
+        msg = "unhashable type: 'Series'"
+        with pytest.raises(TypeError, match=msg):
+            hash(ser)
+
+    def test_contains(self, datetime_series):
+        tm.assert_contains_all(datetime_series.index, datetime_series)
+
+    def test_axis_alias(self):
+        s = Series([1, 2, np.nan])
+        tm.assert_series_equal(s.dropna(axis="rows"), s.dropna(axis="index"))
+        assert s.dropna().sum("rows") == 3
+        assert s._get_axis_number("rows") == 0
+        assert s._get_axis_name("rows") == "index"
+
+    def test_class_axis(self):
+        # https://github.com/pandas-dev/pandas/issues/18147
+        # no exception and no empty docstring
+        assert pydoc.getdoc(Series.index)
+
+    def test_ndarray_compat(self):
+        # test numpy compat with Series as sub-class of NDFrame
+        tsdf = DataFrame(
+            np.random.default_rng(2).standard_normal((1000, 3)),
+            columns=["A", "B", "C"],
+            index=date_range("1/1/2000", periods=1000),
+        )
+
+        def f(x):
+            return x[x.idxmax()]
+
+        result = tsdf.apply(f)
+        expected = tsdf.max()
+        tm.assert_series_equal(result, expected)
+
+    def test_ndarray_compat_like_func(self):
+        # using an ndarray like function
+        s = Series(np.random.default_rng(2).standard_normal(10))
+        result = Series(np.ones_like(s))
+        expected = Series(1, index=range(10), dtype="float64")
+        tm.assert_series_equal(result, expected)
+
+    def test_ndarray_compat_ravel(self):
+        # ravel
+        s = Series(np.random.default_rng(2).standard_normal(10))
+        with tm.assert_produces_warning(FutureWarning, match="ravel is deprecated"):
+            result = s.ravel(order="F")
+        tm.assert_almost_equal(result, s.values.ravel(order="F"))
+
+    def test_empty_method(self):
+        s_empty = Series(dtype=object)
+        assert s_empty.empty
+
+    @pytest.mark.parametrize("dtype", ["int64", object])
+    def test_empty_method_full_series(self, dtype):
+        full_series = Series(index=[1], dtype=dtype)
+        assert not full_series.empty
+
+    @pytest.mark.parametrize("dtype", [None, "Int64"])
+    def test_integer_series_size(self, dtype):
+        # GH 25580
+        s = Series(range(9), dtype=dtype)
+        assert s.size == 9
+
+    def test_attrs(self):
+        s = Series([0, 1], name="abc")
+        assert s.attrs == {}
+        s.attrs["version"] = 1
+        result = s + 1
+        assert result.attrs == {"version": 1}
+
+    def test_inspect_getmembers(self):
+        # GH38782
+        ser = Series(dtype=object)
+        msg = "Series._data is deprecated"
+        with tm.assert_produces_warning(
+            DeprecationWarning, match=msg, check_stacklevel=False
+        ):
+            inspect.getmembers(ser)
+
+    def test_unknown_attribute(self):
+        # GH#9680
+        tdi = timedelta_range(start=0, periods=10, freq="1s")
+        ser = Series(np.random.default_rng(2).normal(size=10), index=tdi)
+        assert "foo" not in ser.__dict__
+        msg = "'Series' object has no attribute 'foo'"
+        with pytest.raises(AttributeError, match=msg):
+            ser.foo
+
+    @pytest.mark.parametrize("op", ["year", "day", "second", "weekday"])
+    def test_datetime_series_no_datelike_attrs(self, op, datetime_series):
+        # GH#7206
+        msg = f"'Series' object has no attribute '{op}'"
+        with pytest.raises(AttributeError, match=msg):
+            getattr(datetime_series, op)
+
+    def test_series_datetimelike_attribute_access(self):
+        # attribute access should still work!
+        ser = Series({"year": 2000, "month": 1, "day": 10})
+        assert ser.year == 2000
+        assert ser.month == 1
+        assert ser.day == 10
+
+    def test_series_datetimelike_attribute_access_invalid(self):
+        ser = Series({"year": 2000, "month": 1, "day": 10})
+        msg = "'Series' object has no attribute 'weekday'"
+        with pytest.raises(AttributeError, match=msg):
+            ser.weekday
+
+    @pytest.mark.filterwarnings("ignore:Downcasting object dtype arrays:FutureWarning")
+    @pytest.mark.parametrize(
+        "kernel, has_numeric_only",
+        [
+            ("skew", True),
+            ("var", True),
+            ("all", False),
+            ("prod", True),
+            ("any", False),
+            ("idxmin", False),
+            ("quantile", False),
+            ("idxmax", False),
+            ("min", True),
+            ("sem", True),
+            ("mean", True),
+            ("nunique", False),
+            ("max", True),
+            ("sum", True),
+            ("count", False),
+            ("median", True),
+            ("std", True),
+            ("backfill", False),
+            ("rank", True),
+            ("pct_change", False),
+            ("cummax", False),
+            ("shift", False),
+            ("diff", False),
+            ("cumsum", False),
+            ("cummin", False),
+            ("cumprod", False),
+            ("fillna", False),
+            ("ffill", False),
+            ("pad", False),
+            ("bfill", False),
+            ("sample", False),
+            ("tail", False),
+            ("take", False),
+            ("head", False),
+            ("cov", False),
+            ("corr", False),
+        ],
+    )
+    @pytest.mark.parametrize("dtype", [bool, int, float, object])
+    def test_numeric_only(self, kernel, has_numeric_only, dtype):
+        # GH#47500
+        ser = Series([0, 1, 1], dtype=dtype)
+        if kernel == "corrwith":
+            args = (ser,)
+        elif kernel == "corr":
+            args = (ser,)
+        elif kernel == "cov":
+            args = (ser,)
+        elif kernel == "nth":
+            args = (0,)
+        elif kernel == "fillna":
+            args = (True,)
+        elif kernel == "fillna":
+            args = ("ffill",)
+        elif kernel == "take":
+            args = ([0],)
+        elif kernel == "quantile":
+            args = (0.5,)
+        else:
+            args = ()
+        method = getattr(ser, kernel)
+        if not has_numeric_only:
+            msg = (
+                "(got an unexpected keyword argument 'numeric_only'"
+                "|too many arguments passed in)"
+            )
+            with pytest.raises(TypeError, match=msg):
+                method(*args, numeric_only=True)
+        elif dtype is object:
+            msg = f"Series.{kernel} does not allow numeric_only=True with non-numeric"
+            with pytest.raises(TypeError, match=msg):
+                method(*args, numeric_only=True)
+        else:
+            result = method(*args, numeric_only=True)
+            expected = method(*args, numeric_only=False)
+            if isinstance(expected, Series):
+                # transformer
+                tm.assert_series_equal(result, expected)
+            else:
+                # reducer
+                assert result == expected
+
+
+@pytest.mark.parametrize("converter", [int, float, complex])
+def test_float_int_deprecated(converter):
+    # GH 51101
+    with tm.assert_produces_warning(FutureWarning):
+        assert converter(Series([1])) == converter(1)
+ import numpy as np
+import pytest
+
+from pandas import (
+    CategoricalDtype,
+    DataFrame,
+    Index,
+    MultiIndex,
+    Series,
+    _testing as tm,
+    option_context,
+)
+from pandas.core.strings.accessor import StringMethods
+
+# subset of the full set from pandas/conftest.py
+_any_allowed_skipna_inferred_dtype = [
+    ("string", ["a", np.nan, "c"]),
+    ("bytes", [b"a", np.nan, b"c"]),
+    ("empty", [np.nan, np.nan, np.nan]),
+    ("empty", []),
+    ("mixed-integer", ["a", np.nan, 2]),
+]
+ids, _ = zip(*_any_allowed_skipna_inferred_dtype)  # use inferred type as id
+
+
+@pytest.fixture(params=_any_allowed_skipna_inferred_dtype, ids=ids)
+def any_allowed_skipna_inferred_dtype(request):
+    """
+    Fixture for all (inferred) dtypes allowed in StringMethods.__init__
+
+    The covered (inferred) types are:
+    * 'string'
+    * 'empty'
+    * 'bytes'
+    * 'mixed'
+    * 'mixed-integer'
+
+    Returns
+    -------
+    inferred_dtype : str
+        The string for the inferred dtype from _libs.lib.infer_dtype
+    values : np.ndarray
+        An array of object dtype that will be inferred to have
+        `inferred_dtype`
+
+    Examples
+    --------
+    >>> from pandas._libs import lib
+    >>>
+    >>> def test_something(any_allowed_skipna_inferred_dtype):
+    ...     inferred_dtype, values = any_allowed_skipna_inferred_dtype
+    ...     # will pass
+    ...     assert lib.infer_dtype(values, skipna=True) == inferred_dtype
+    ...
+    ...     # constructor for .str-accessor will also pass
+    ...     Series(values).str
+    """
+    inferred_dtype, values = request.param
+    values = np.array(values, dtype=object)  # object dtype to avoid casting
+
+    # correctness of inference tested in tests/dtypes/test_inference.py
+    return inferred_dtype, values
+
+
+def test_api(any_string_dtype):
+    # GH 6106, GH 9322
+    assert Series.str is StringMethods
+    assert isinstance(Series([""], dtype=any_string_dtype).str, StringMethods)
+
+
+def test_api_mi_raises():
+    # GH 23679
+    mi = MultiIndex.from_arrays([["a", "b", "c"]])
+    msg = "Can only use .str accessor with Index, not MultiIndex"
+    with pytest.raises(AttributeError, match=msg):
+        mi.str
+    assert not hasattr(mi, "str")
+
+
+@pytest.mark.parametrize("dtype", [object, "category"])
+def test_api_per_dtype(index_or_series, dtype, any_skipna_inferred_dtype):
+    # one instance of parametrized fixture
+    box = index_or_series
+    inferred_dtype, values = any_skipna_inferred_dtype
+
+    t = box(values, dtype=dtype)  # explicit dtype to avoid casting
+
+    types_passing_constructor = [
+        "string",
+        "unicode",
+        "empty",
+        "bytes",
+        "mixed",
+        "mixed-integer",
+    ]
+    if inferred_dtype in types_passing_constructor:
+        # GH 6106
+        assert isinstance(t.str, StringMethods)
+    else:
+        # GH 9184, GH 23011, GH 23163
+        msg = "Can only use .str accessor with string values.*"
+        with pytest.raises(AttributeError, match=msg):
+            t.str
+        assert not hasattr(t, "str")
+
+
+@pytest.mark.parametrize("dtype", [object, "category"])
+def test_api_per_method(
+    index_or_series,
+    dtype,
+    any_allowed_skipna_inferred_dtype,
+    any_string_method,
+    request,
+    using_infer_string,
+):
+    # this test does not check correctness of the different methods,
+    # just that the methods work on the specified (inferred) dtypes,
+    # and raise on all others
+    box = index_or_series
+
+    # one instance of each parametrized fixture
+    inferred_dtype, values = any_allowed_skipna_inferred_dtype
+    method_name, args, kwargs = any_string_method
+
+    reason = None
+    if box is Index and values.size == 0:
+        if method_name in ["partition", "rpartition"] and kwargs.get("expand", True):
+            raises = TypeError
+            reason = "Method cannot deal with empty Index"
+        elif method_name == "split" and kwargs.get("expand", None):
+            raises = TypeError
+            reason = "Split fails on empty Series when expand=True"
+        elif method_name == "get_dummies":
+            raises = ValueError
+            reason = "Need to fortify get_dummies corner cases"
+
+    elif (
+        box is Index
+        and inferred_dtype == "empty"
+        and dtype == object
+        and method_name == "get_dummies"
+    ):
+        raises = ValueError
+        reason = "Need to fortify get_dummies corner cases"
+
+    if reason is not None:
+        mark = pytest.mark.xfail(raises=raises, reason=reason)
+        request.applymarker(mark)
+
+    t = box(values, dtype=dtype)  # explicit dtype to avoid casting
+    method = getattr(t.str, method_name)
+
+    if using_infer_string and dtype == "category":
+        string_allowed = method_name not in ["decode"]
+    else:
+        string_allowed = True
+    bytes_allowed = method_name in ["decode", "get", "len", "slice"]
+    # as of v0.23.4, all methods except 'cat' are very lenient with the
+    # allowed data types, just returning NaN for entries that error.
+    # This could be changed with an 'errors'-kwarg to the `str`-accessor,
+    # see discussion in GH 13877
+    mixed_allowed = method_name not in ["cat"]
+
+    allowed_types = (
+        ["empty"]
+        + ["string", "unicode"] * string_allowed
+        + ["bytes"] * bytes_allowed
+        + ["mixed", "mixed-integer"] * mixed_allowed
+    )
+
+    if inferred_dtype in allowed_types:
+        # xref GH 23555, GH 23556
+        with option_context("future.no_silent_downcasting", True):
+            method(*args, **kwargs)  # works!
+    else:
+        # GH 23011, GH 23163
+        msg = (
+            f"Cannot use .str.{method_name} with values of "
+            f"inferred dtype {repr(inferred_dtype)}."
+            "|a bytes-like object is required, not 'str'"
+        )
+        with pytest.raises(TypeError, match=msg):
+            method(*args, **kwargs)
+
+
+def test_api_for_categorical(any_string_method, any_string_dtype):
+    # https://github.com/pandas-dev/pandas/issues/10661
+    s = Series(list("aabb"), dtype=any_string_dtype)
+    s = s + " " + s
+    c = s.astype("category")
+    c = c.astype(CategoricalDtype(c.dtype.categories.astype("object")))
+    assert isinstance(c.str, StringMethods)
+
+    method_name, args, kwargs = any_string_method
+
+    result = getattr(c.str, method_name)(*args, **kwargs)
+    expected = getattr(s.astype("object").str, method_name)(*args, **kwargs)
+
+    if isinstance(result, DataFrame):
+        tm.assert_frame_equal(result, expected)
+    elif isinstance(result, Series):
+        tm.assert_series_equal(result, expected)
+    else:
+        # str.cat(others=None) returns string, for example
+        assert result == expected
+ """Tests that the tslibs API is locked down"""
+
+from pandas._libs import tslibs
+
+
+def test_namespace():
+    submodules = [
+        "base",
+        "ccalendar",
+        "conversion",
+        "dtypes",
+        "fields",
+        "nattype",
+        "np_datetime",
+        "offsets",
+        "parsing",
+        "period",
+        "strptime",
+        "vectorized",
+        "timedeltas",
+        "timestamps",
+        "timezones",
+        "tzconversion",
+    ]
+
+    api = [
+        "BaseOffset",
+        "NaT",
+        "NaTType",
+        "iNaT",
+        "nat_strings",
+        "OutOfBoundsDatetime",
+        "OutOfBoundsTimedelta",
+        "Period",
+        "IncompatibleFrequency",
+        "Resolution",
+        "Tick",
+        "Timedelta",
+        "dt64arr_to_periodarr",
+        "Timestamp",
+        "is_date_array_normalized",
+        "ints_to_pydatetime",
+        "normalize_i8_timestamps",
+        "get_resolution",
+        "delta_to_nanoseconds",
+        "ints_to_pytimedelta",
+        "localize_pydatetime",
+        "tz_convert_from_utc",
+        "tz_convert_from_utc_single",
+        "to_offset",
+        "tz_compare",
+        "is_unitless",
+        "astype_overflowsafe",
+        "get_unit_from_dtype",
+        "periods_per_day",
+        "periods_per_second",
+        "guess_datetime_format",
+        "add_overflowsafe",
+        "get_supported_dtype",
+        "is_supported_dtype",
+    ]
+
+    expected = set(submodules + api)
+    names = [x for x in dir(tslibs) if not x.startswith("__")]
+    assert set(names) == expected
+ import numpy as np
+import pytest
+
+from pandas.errors import (
+    DataError,
+    SpecificationError,
+)
+
+from pandas import (
+    DataFrame,
+    Index,
+    MultiIndex,
+    Period,
+    Series,
+    Timestamp,
+    concat,
+    date_range,
+    timedelta_range,
+)
+import pandas._testing as tm
+
+
+def test_getitem(step):
+    frame = DataFrame(np.random.default_rng(2).standard_normal((5, 5)))
+    r = frame.rolling(window=5, step=step)
+    tm.assert_index_equal(r._selected_obj.columns, frame[::step].columns)
+
+    r = frame.rolling(window=5, step=step)[1]
+    assert r._selected_obj.name == frame[::step].columns[1]
+
+    # technically this is allowed
+    r = frame.rolling(window=5, step=step)[1, 3]
+    tm.assert_index_equal(r._selected_obj.columns, frame[::step].columns[[1, 3]])
+
+    r = frame.rolling(window=5, step=step)[[1, 3]]
+    tm.assert_index_equal(r._selected_obj.columns, frame[::step].columns[[1, 3]])
+
+
+def test_select_bad_cols():
+    df = DataFrame([[1, 2]], columns=["A", "B"])
+    g = df.rolling(window=5)
+    with pytest.raises(KeyError, match="Columns not found: 'C'"):
+        g[["C"]]
+    with pytest.raises(KeyError, match="^[^A]+$"):
+        # A should not be referenced as a bad column...
+        # will have to rethink regex if you change message!
+        g[["A", "C"]]
+
+
+def test_attribute_access():
+    df = DataFrame([[1, 2]], columns=["A", "B"])
+    r = df.rolling(window=5)
+    tm.assert_series_equal(r.A.sum(), r["A"].sum())
+    msg = "'Rolling' object has no attribute 'F'"
+    with pytest.raises(AttributeError, match=msg):
+        r.F
+
+
+def tests_skip_nuisance(step):
+    df = DataFrame({"A": range(5), "B": range(5, 10), "C": "foo"})
+    r = df.rolling(window=3, step=step)
+    result = r[["A", "B"]].sum()
+    expected = DataFrame(
+        {"A": [np.nan, np.nan, 3, 6, 9], "B": [np.nan, np.nan, 18, 21, 24]},
+        columns=list("AB"),
+    )[::step]
+    tm.assert_frame_equal(result, expected)
+
+
+def test_sum_object_str_raises(step):
+    df = DataFrame({"A": range(5), "B": range(5, 10), "C": "foo"})
+    r = df.rolling(window=3, step=step)
+    with pytest.raises(
+        DataError, match="Cannot aggregate non-numeric type: object|str"
+    ):
+        # GH#42738, enforced in 2.0
+        r.sum()
+
+
+def test_agg(step):
+    df = DataFrame({"A": range(5), "B": range(0, 10, 2)})
+
+    r = df.rolling(window=3, step=step)
+    a_mean = r["A"].mean()
+    a_std = r["A"].std()
+    a_sum = r["A"].sum()
+    b_mean = r["B"].mean()
+    b_std = r["B"].std()
+
+    with tm.assert_produces_warning(FutureWarning, match="using Rolling.[mean|std]"):
+        result = r.aggregate([np.mean, np.std])
+    expected = concat([a_mean, a_std, b_mean, b_std], axis=1)
+    expected.columns = MultiIndex.from_product([["A", "B"], ["mean", "std"]])
+    tm.assert_frame_equal(result, expected)
+
+    with tm.assert_produces_warning(FutureWarning, match="using Rolling.[mean|std]"):
+        result = r.aggregate({"A": np.mean, "B": np.std})
+
+    expected = concat([a_mean, b_std], axis=1)
+    tm.assert_frame_equal(result, expected, check_like=True)
+
+    result = r.aggregate({"A": ["mean", "std"]})
+    expected = concat([a_mean, a_std], axis=1)
+    expected.columns = MultiIndex.from_tuples([("A", "mean"), ("A", "std")])
+    tm.assert_frame_equal(result, expected)
+
+    result = r["A"].aggregate(["mean", "sum"])
+    expected = concat([a_mean, a_sum], axis=1)
+    expected.columns = ["mean", "sum"]
+    tm.assert_frame_equal(result, expected)
+
+    msg = "nested renamer is not supported"
+    with pytest.raises(SpecificationError, match=msg):
+        # using a dict with renaming
+        r.aggregate({"A": {"mean": "mean", "sum": "sum"}})
+
+    with pytest.raises(SpecificationError, match=msg):
+        r.aggregate(
+            {"A": {"mean": "mean", "sum": "sum"}, "B": {"mean2": "mean", "sum2": "sum"}}
+        )
+
+    result = r.aggregate({"A": ["mean", "std"], "B": ["mean", "std"]})
+    expected = concat([a_mean, a_std, b_mean, b_std], axis=1)
+
+    exp_cols = [("A", "mean"), ("A", "std"), ("B", "mean"), ("B", "std")]
+    expected.columns = MultiIndex.from_tuples(exp_cols)
+    tm.assert_frame_equal(result, expected, check_like=True)
+
+
+@pytest.mark.parametrize(
+    "func", [["min"], ["mean", "max"], {"b": "sum"}, {"b": "prod", "c": "median"}]
+)
+def test_multi_axis_1_raises(func):
+    # GH#46904
+    df = DataFrame({"a": [1, 1, 2], "b": [3, 4, 5], "c": [6, 7, 8]})
+    msg = "Support for axis=1 in DataFrame.rolling is deprecated"
+    with tm.assert_produces_warning(FutureWarning, match=msg):
+        r = df.rolling(window=3, axis=1)
+    with pytest.raises(NotImplementedError, match="axis other than 0 is not supported"):
+        r.agg(func)
+
+
+def test_agg_apply(raw):
+    # passed lambda
+    df = DataFrame({"A": range(5), "B": range(0, 10, 2)})
+
+    r = df.rolling(window=3)
+    a_sum = r["A"].sum()
+
+    with tm.assert_produces_warning(FutureWarning, match="using Rolling.[sum|std]"):
+        result = r.agg({"A": np.sum, "B": lambda x: np.std(x, ddof=1)})
+    rcustom = r["B"].apply(lambda x: np.std(x, ddof=1), raw=raw)
+    expected = concat([a_sum, rcustom], axis=1)
+    tm.assert_frame_equal(result, expected, check_like=True)
+
+
+def test_agg_consistency(step):
+    df = DataFrame({"A": range(5), "B": range(0, 10, 2)})
+    r = df.rolling(window=3, step=step)
+
+    with tm.assert_produces_warning(FutureWarning, match="using Rolling.[sum|mean]"):
+        result = r.agg([np.sum, np.mean]).columns
+    expected = MultiIndex.from_product([list("AB"), ["sum", "mean"]])
+    tm.assert_index_equal(result, expected)
+
+    with tm.assert_produces_warning(FutureWarning, match="using Rolling.[sum|mean]"):
+        result = r["A"].agg([np.sum, np.mean]).columns
+    expected = Index(["sum", "mean"])
+    tm.assert_index_equal(result, expected)
+
+    with tm.assert_produces_warning(FutureWarning, match="using Rolling.[sum|mean]"):
+        result = r.agg({"A": [np.sum, np.mean]}).columns
+    expected = MultiIndex.from_tuples([("A", "sum"), ("A", "mean")])
+    tm.assert_index_equal(result, expected)
+
+
+def test_agg_nested_dicts():
+    # API change for disallowing these types of nested dicts
+    df = DataFrame({"A": range(5), "B": range(0, 10, 2)})
+    r = df.rolling(window=3)
+
+    msg = "nested renamer is not supported"
+    with pytest.raises(SpecificationError, match=msg):
+        r.aggregate({"r1": {"A": ["mean", "sum"]}, "r2": {"B": ["mean", "sum"]}})
+
+    expected = concat(
+        [r["A"].mean(), r["A"].std(), r["B"].mean(), r["B"].std()], axis=1
+    )
+    expected.columns = MultiIndex.from_tuples(
+        [("ra", "mean"), ("ra", "std"), ("rb", "mean"), ("rb", "std")]
+    )
+    with pytest.raises(SpecificationError, match=msg):
+        r[["A", "B"]].agg({"A": {"ra": ["mean", "std"]}, "B": {"rb": ["mean", "std"]}})
+
+    with pytest.raises(SpecificationError, match=msg):
+        r.agg({"A": {"ra": ["mean", "std"]}, "B": {"rb": ["mean", "std"]}})
+
+
+def test_count_nonnumeric_types(step):
+    # GH12541
+    cols = [
+        "int",
+        "float",
+        "string",
+        "datetime",
+        "timedelta",
+        "periods",
+        "fl_inf",
+        "fl_nan",
+        "str_nan",
+        "dt_nat",
+        "periods_nat",
+    ]
+    dt_nat_col = [Timestamp("20170101"), Timestamp("20170203"), Timestamp(None)]
+
+    df = DataFrame(
+        {
+            "int": [1, 2, 3],
+            "float": [4.0, 5.0, 6.0],
+            "string": list("abc"),
+            "datetime": date_range("20170101", periods=3),
+            "timedelta": timedelta_range("1 s", periods=3, freq="s"),
+            "periods": [
+                Period("2012-01"),
+                Period("2012-02"),
+                Period("2012-03"),
+            ],
+            "fl_inf": [1.0, 2.0, np.inf],
+            "fl_nan": [1.0, 2.0, np.nan],
+            "str_nan": ["aa", "bb", np.nan],
+            "dt_nat": dt_nat_col,
+            "periods_nat": [
+                Period("2012-01"),
+                Period("2012-02"),
+                Period(None),
+            ],
+        },
+        columns=cols,
+    )
+
+    expected = DataFrame(
+        {
+            "int": [1.0, 2.0, 2.0],
+            "float": [1.0, 2.0, 2.0],
+            "string": [1.0, 2.0, 2.0],
+            "datetime": [1.0, 2.0, 2.0],
+            "timedelta": [1.0, 2.0, 2.0],
+            "periods": [1.0, 2.0, 2.0],
+            "fl_inf": [1.0, 2.0, 2.0],
+            "fl_nan": [1.0, 2.0, 1.0],
+            "str_nan": [1.0, 2.0, 1.0],
+            "dt_nat": [1.0, 2.0, 1.0],
+            "periods_nat": [1.0, 2.0, 1.0],
+        },
+        columns=cols,
+    )[::step]
+
+    result = df.rolling(window=2, min_periods=0, step=step).count()
+    tm.assert_frame_equal(result, expected)
+
+    result = df.rolling(1, min_periods=0, step=step).count()
+    expected = df.notna().astype(float)[::step]
+    tm.assert_frame_equal(result, expected)
+
+
+def test_preserve_metadata():
+    # GH 10565
+    s = Series(np.arange(100), name="foo")
+
+    s2 = s.rolling(30).sum()
+    s3 = s.rolling(20).sum()
+    assert s2.name == "foo"
+    assert s3.name == "foo"
+
+
+@pytest.mark.parametrize(
+    "func,window_size,expected_vals",
+    [
+        (
+            "rolling",
+            2,
+            [
+                [np.nan, np.nan, np.nan, np.nan],
+                [15.0, 20.0, 25.0, 20.0],
+                [25.0, 30.0, 35.0, 30.0],
+                [np.nan, np.nan, np.nan, np.nan],
+                [20.0, 30.0, 35.0, 30.0],
+                [35.0, 40.0, 60.0, 40.0],
+                [60.0, 80.0, 85.0, 80],
+            ],
+        ),
+        (
+            "expanding",
+            None,
+            [
+                [10.0, 10.0, 20.0, 20.0],
+                [15.0, 20.0, 25.0, 20.0],
+                [20.0, 30.0, 30.0, 20.0],
+                [10.0, 10.0, 30.0, 30.0],
+                [20.0, 30.0, 35.0, 30.0],
+                [26.666667, 40.0, 50.0, 30.0],
+                [40.0, 80.0, 60.0, 30.0],
+            ],
+        ),
+    ],
+)
+def test_multiple_agg_funcs(func, window_size, expected_vals):
+    # GH 15072
+    df = DataFrame(
+        [
+            ["A", 10, 20],
+            ["A", 20, 30],
+            ["A", 30, 40],
+            ["B", 10, 30],
+            ["B", 30, 40],
+            ["B", 40, 80],
+            ["B", 80, 90],
+        ],
+        columns=["stock", "low", "high"],
+    )
+
+    f = getattr(df.groupby("stock"), func)
+    if window_size:
+        window = f(window_size)
+    else:
+        window = f()
+
+    index = MultiIndex.from_tuples(
+        [("A", 0), ("A", 1), ("A", 2), ("B", 3), ("B", 4), ("B", 5), ("B", 6)],
+        names=["stock", None],
+    )
+    columns = MultiIndex.from_tuples(
+        [("low", "mean"), ("low", "max"), ("high", "mean"), ("high", "min")]
+    )
+    expected = DataFrame(expected_vals, index=index, columns=columns)
+
+    result = window.agg({"low": ["mean", "max"], "high": ["mean", "min"]})
+
+    tm.assert_frame_equal(result, expected)
+
+
+def test_dont_modify_attributes_after_methods(
+    arithmetic_win_operators, closed, center, min_periods, step
+):
+    # GH 39554
+    roll_obj = Series(range(1)).rolling(
+        1, center=center, closed=closed, min_periods=min_periods, step=step
+    )
+    expected = {attr: getattr(roll_obj, attr) for attr in roll_obj._attributes}
+    getattr(roll_obj, arithmetic_win_operators)()
+    result = {attr: getattr(roll_obj, attr) for attr in roll_obj._attributes}
+    assert result == expected
+
+
+def test_centered_axis_validation(step):
+    # ok
+    msg = "The 'axis' keyword in Series.rolling is deprecated"
+    with tm.assert_produces_warning(FutureWarning, match=msg):
+        Series(np.ones(10)).rolling(window=3, center=True, axis=0, step=step).mean()
+
+    # bad axis
+    msg = "No axis named 1 for object type Series"
+    with pytest.raises(ValueError, match=msg):
+        Series(np.ones(10)).rolling(window=3, center=True, axis=1, step=step).mean()
+
+    # ok ok
+    df = DataFrame(np.ones((10, 10)))
+    msg = "The 'axis' keyword in DataFrame.rolling is deprecated"
+    with tm.assert_produces_warning(FutureWarning, match=msg):
+        df.rolling(window=3, center=True, axis=0, step=step).mean()
+    msg = "Support for axis=1 in DataFrame.rolling is deprecated"
+    with tm.assert_produces_warning(FutureWarning, match=msg):
+        df.rolling(window=3, center=True, axis=1, step=step).mean()
+
+    # bad axis
+    msg = "No axis named 2 for object type DataFrame"
+    with pytest.raises(ValueError, match=msg):
+        (df.rolling(window=3, center=True, axis=2, step=step).mean())
+
+
+def test_rolling_min_min_periods(step):
+    a = Series([1, 2, 3, 4, 5])
+    result = a.rolling(window=100, min_periods=1, step=step).min()
+    expected = Series(np.ones(len(a)))[::step]
+    tm.assert_series_equal(result, expected)
+    msg = "min_periods 5 must be <= window 3"
+    with pytest.raises(ValueError, match=msg):
+        Series([1, 2, 3]).rolling(window=3, min_periods=5, step=step).min()
+
+
+def test_rolling_max_min_periods(step):
+    a = Series([1, 2, 3, 4, 5], dtype=np.float64)
+    result = a.rolling(window=100, min_periods=1, step=step).max()
+    expected = a[::step]
+    tm.assert_almost_equal(result, expected)
+    msg = "min_periods 5 must be <= window 3"
+    with pytest.raises(ValueError, match=msg):
+        Series([1, 2, 3]).rolling(window=3, min_periods=5, step=step).max()
+

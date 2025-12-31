@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+"""
+Script de test_f2cmap pour PERIMONT_ERP
+Module: venv.Lib.site-packages.numpy.f2py.tests.test_f2cmap.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+import numpy as np
+
+from . import util
+
+
+class TestF2Cmap(util.F2PyTest):
+    sources = [
+        util.getpath("tests", "src", "f2cmap", "isoFortranEnvMap.f90"),
+        util.getpath("tests", "src", "f2cmap", ".f2py_f2cmap")
+    ]
+
+    # gh-15095
+    def test_gh15095(self):
+        inp = np.ones(3)
+        out = self.module.func1(inp)
+        exp_out = 3
+        assert out == exp_out
+

@@ -1,0 +1,32 @@
+import customtkinter as ctk
+from config.settings import *
+from ui.screens.login_screen import LoginScreen
+# L'IMPORTATION MANQUANTE ÉTAIT ICI :
+from ui.screens.main_window import MainWindow 
+
+class PerimontERP(ctk.CTk):
+    def __init__(self):
+        super().__init__()
+        self.title("PERIMONT ERP v1.0")
+        self.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
+        self.configure(fg_color=COLOR_MAIN_BG)
+
+        # Affichage de l'écran de login au démarrage
+        self.show_login()
+
+    def show_login(self):
+        self.login_frame = LoginScreen(self, self.on_login_success)
+        self.login_frame.pack(expand=True, fill="both")
+
+    def on_login_success(self, user_data):
+        print(f"Connexion réussie : {user_data['username']}")
+        # 1. Détruire l'écran de login
+        self.login_frame.destroy()
+        
+        # 2. Créer et afficher la fenêtre principale
+        self.main_window = MainWindow(self, user_data)
+        self.main_window.pack(expand=True, fill="both")
+
+if __name__ == "__main__":
+    app = PerimontERP()
+    app.mainloop()

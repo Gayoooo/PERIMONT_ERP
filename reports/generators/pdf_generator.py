@@ -1,0 +1,69 @@
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.lib.colors import HexColor # Importation directe pour plus de sécurité
+import os
+
+class PDFGenerator:
+    @staticmethod
+    def generer_fiche_paie(nom_fichier, data):
+        if not os.path.exists('exports'):
+            os.makedirs('exports')
+            
+        path = f"exports/{nom_fichier}.pdf"
+        c = canvas.Canvas(path, pagesize=A4)
+        width, height = A4
+
+        # --- EN-TÊTE ---
+        c.setFont("Helvetica-Bold", 20)
+        # Correction ici : HexColor au lieu de hexColor
+        c.setFillColor(HexColor("#38BDF8")) 
+        logo_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "assets", "logo.png")
+        if os.path.exists(logo_path):
+            c.drawImage(logo_path, 50, height - 60, width=100, height=40, mask='auto')
+        c.drawString(50, height - 50, "PERIMONT ERP")
+        
+        c.setFont("Helvetica", 10)
+        c.setFillColor(colors.black)
+        c.drawString(50, height - 65, "Gestion Logistique et Personnel")
+        c.line(50, height - 75, width - 50, height - 75)
+
+        # --- INFOS EMPLOYÉ ---
+        c.setFont("Helvetica-Bold", 14)
+        c.drawString(50, height - 110, "BULLETIN DE PAIE")
+        
+        c.setFont("Helvetica", 12)
+        c.drawString(50, height - 140, f"Employé : {data['nom']}")
+        c.drawString(50, height - 160, f"Matricule : {data['matricule']}")
+        c.drawString(350, height - 140, f"Période : {data['periode']}")
+
+        # --- TABLEAU ---
+        c.rect(50, height - 350, width - 100, 150)
+        c.line(50, height - 230, width - 50, height - 230)
+        
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(60, height - 220, "Désignation")
+        c.drawString(450, height - 220, "Montant (FCFA)")
+
+        c.setFont("Helvetica", 12)
+        y = height - 250
+        details = [
+            ("Salaire de base", str(data['base'])),
+            ("Primes", str(data['primes'])),
+            ("Avances", f"-{data['avances']}"),
+            ("Retenues", f"-{data['retenues']}")
+        ]
+
+        for item, montant in details:
+            c.drawString(60, y, item)
+            c.drawString(450, y, montant)
+            y -= 25
+
+        # --- TOTAL NET ---
+        c.line(50, height - 370, width - 50, height - 370)
+        c.setFont("Helvetica-Bold", 16)
+        c.setFillColor(HexColor("#1f6aa5")) # Correction ici aussi
+        c.drawString(50, height - 400, f"NET À PAYER : {data['net']} FCFA")
+
+        c.save()
+        return path

@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+"""
+Script de drawing pour PERIMONT_ERP
+Module: venv.Lib.site-packages.openpyxl.worksheet.drawing.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+# Copyright (c) 2010-2024 openpyxl
+
+from openpyxl.descriptors.serialisable import Serialisable
+from openpyxl.descriptors.excel import Relation
+
+
+class Drawing(Serialisable):
+
+    tagname = "drawing"
+
+    id = Relation()
+
+    def __init__(self, id=None):
+        self.id = id
+

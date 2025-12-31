@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+"""
+Script de test_is_monotonic pour PERIMONT_ERP
+Module: venv.Lib.site-packages.pandas.tests.series.methods.test_is_monotonic.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+import numpy as np
+
+from pandas import (
+    Series,
+    date_range,
+)
+
+
+class TestIsMonotonic:
+    def test_is_monotonic_numeric(self):
+        ser = Series(np.random.default_rng(2).integers(0, 10, size=1000))
+        assert not ser.is_monotonic_increasing
+        ser = Series(np.arange(1000))
+        assert ser.is_monotonic_increasing is True
+        assert ser.is_monotonic_increasing is True
+        ser = Series(np.arange(1000, 0, -1))
+        assert ser.is_monotonic_decreasing is True
+
+    def test_is_monotonic_dt64(self):
+        ser = Series(date_range("20130101", periods=10))
+        assert ser.is_monotonic_increasing is True
+        assert ser.is_monotonic_increasing is True
+
+        ser = Series(list(reversed(ser)))
+        assert ser.is_monotonic_increasing is False
+        assert ser.is_monotonic_decreasing is True
+

@@ -1,0 +1,8 @@
+// Chemin: C:\PERIMONT_ERP\venv\Lib\site-packages\PIL\report.py
+
+from __future__ import annotations
+
+from .features import pilinfo
+
+pilinfo(supported_formats=False)
+

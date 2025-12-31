@@ -1,0 +1,119 @@
+#!/usr/bin/env python3
+"""
+Script de paie_screen pour PERIMONT_ERP
+Module: ui.screens.paie_screen.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+import customtkinter as ctk
+import tkinter.messagebox as messagebox
+from database.db_manager import Database
+from modules.paie.engine import PayrollEngine
+from config.settings import *
+from reports.generators.pdf_generator import PDFGenerator
+from datetime import datetime
+
+class PaieScreen(ctk.CTkFrame):
+    def __init__(self, parent):
+        super().__init__(parent, fg_color="transparent")
+        self.db = Database()
+        self.engine = PayrollEngine()
+        
+        # Titre de la page
+        ctk.CTkLabel(self, text="Calcul et Édition de la Paie", 
+                     font=("Segoe UI", 24, "bold"), text_color=COLOR_TEXT_MAIN).pack(pady=20, anchor="w", padx=30)
+        
+        # Conteneur principal
+        self.container = ctk.CTkFrame(self, fg_color=COLOR_CARD_BG, corner_radius=15)
+        self.container.pack(pady=10, padx=30, fill="both", expand=True)
+
+        # --- SECTION GAUCHE : SAISIE ---
+        self.left_panel = ctk.CTkFrame(self.container, fg_color="transparent")
+        self.left_panel.pack(side="left", fill="both", expand=True, padx=20, pady=20)
+
+        ctk.CTkLabel(self.left_panel, text="Détails du calcul", font=("Segoe UI", 16, "bold"), text_color=COLOR_ACCENT).pack(pady=(0, 20), anchor="w")
+
+        # Sélection employé
+        self.employees = self.db.query("SELECT * FROM personnel").fetchall()
+        list_emp = [f"{e['matricule']} - {e['nom']}" for e in self.employees]
+        
+        self.combo = ctk.CTkComboBox(self.left_panel, values=list_emp, width=350, height=40, command=self.on_employee_change)
+        self.combo.pack(pady=10)
+
+        # Champs de saisie
+        self.ent_base = ctk.CTkEntry(self.left_panel, placeholder_text="Salaire de base", width=350, height=40)
+        self.ent_base.pack(pady=10)
+        
+        self.ent_primes = ctk.CTkEntry(self.left_panel, placeholder_text="Primes (+)", width=350, height=40)
+        self.ent_primes.pack(pady=10)
+        
+        self.ent_avances = ctk.CTkEntry(self.left_panel, placeholder_text="Avances (-)", width=350, height=40)
+        self.ent_avances.pack(pady=10)
+        
+        self.ent_retenues = ctk.CTkEntry(self.left_panel, placeholder_text="Retenues (-)", width=350, height=40)
+        self.ent_retenues.pack(pady=10)
+
+        # --- SECTION DROITE : RÉSULTAT & ACTIONS ---
+        self.right_panel = ctk.CTkFrame(self.container, fg_color=COLOR_MAIN_BG, corner_radius=15, width=300)
+        self.right_panel.pack(side="right", fill="both", padx=20, pady=20)
+        self.right_panel.pack_propagate(False)
+
+        ctk.CTkLabel(self.right_panel, text="RÉSUMÉ NET", font=("Segoe UI", 14)).pack(pady=(30, 10))
+        
+        self.res_lbl = ctk.CTkLabel(self.right_panel, text="0 FCFA", 
+                                    font=("Segoe UI", 32, "bold"), text_color=COLOR_ACCENT)
+        self.res_lbl.pack(pady=20)
+
+        # Boutons
+        self.btn_calc = ctk.CTkButton(self.right_panel, text="CALCULER", fg_color=COLOR_ACCENT, 
+                                      text_color=COLOR_MAIN_BG, font=("Segoe UI", 14, "bold"),
+                                      command=self.effectuer_calcul)
+        self.btn_calc.pack(pady=10, padx=20, fill="x")
+
+        self.btn_pdf = ctk.CTkButton(self.right_panel, text="GÉNÉRER PDF", fg_color="#10b981", 
+                                     font=("Segoe UI", 14, "bold"), command=self.exporter_pdf)
+        self.btn_pdf.pack(pady=10, padx=20, fill="x")
+
+    def on_employee_change(self, selection):
+        mat = selection.split(" - ")[0]
+        emp = next(e for e in self.employees if e['matricule'] == mat)
+        self.ent_base.delete(0, 'end')
+        self.ent_base.insert(0, str(emp['salaire_base']))
+
+    def effectuer_calcul(self):
+        try:
+            base = float(self.ent_base.get() or 0)
+            primes = float(self.ent_primes.get() or 0)
+            avances = float(self.ent_avances.get() or 0)
+            retenues = float(self.ent_retenues.get() or 0)
+            
+            net = self.engine.calculer_net(base, primes, avances, retenues)
+            self.res_lbl.configure(text=f"{net:,.0f} FCFA")
+            return net
+        except ValueError:
+            messagebox.showerror("Erreur", "Veuillez saisir des nombres valides.")
+            return None
+
+    def exporter_pdf(self):
+        net = self.effectuer_calcul()
+        if net is None or self.combo.get() == "":
+            messagebox.showwarning("Attention", "Veuillez sélectionner un employé et calculer la paie.")
+            return
+
+        nom_emp = self.combo.get()
+        data = {
+            "nom": nom_emp.split(" - ")[1],
+            "matricule": nom_emp.split(" - ")[0],
+            "periode": datetime.now().strftime("%B %Y"),
+            "base": self.ent_base.get(),
+            "primes": self.ent_primes.get() or "0",
+            "avances": self.ent_avances.get() or "0",
+            "retenues": self.ent_retenues.get() or "0",
+            "net": f"{net:,.0f}"
+        }
+
+        try:
+            path = PDFGenerator.generer_fiche_paie(f"Fiche_Paie_{data['matricule']}", data)
+            messagebox.showinfo("Succès", f"Fiche de paie générée :\n{path}")
+        except Exception as e:
+            messagebox.showerror("Erreur PDF", f"Impossible de générer le PDF : {e}")

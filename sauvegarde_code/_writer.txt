@@ -1,0 +1,955 @@
+// Chemin: C:\PERIMONT_ERP\venv\Lib\site-packages\openpyxl\cell\_writer.py C:\PERIMONT_ERP\venv\Lib\site-packages\openpyxl\workbook\_writer.py C:\PERIMONT_ERP\venv\Lib\site-packages\openpyxl\worksheet\_writer.py C:\PERIMONT_ERP\venv\Lib\site-packages\pip\_vendor\tomli_w\_writer.py
+
+# Copyright (c) 2010-2024 openpyxl
+
+from openpyxl.compat import safe_string
+from openpyxl.xml.functions import Element, SubElement, whitespace, XML_NS
+from openpyxl import LXML
+from openpyxl.utils.datetime import to_excel, to_ISO8601
+from datetime import timedelta
+
+from openpyxl.worksheet.formula import DataTableFormula, ArrayFormula
+from openpyxl.cell.rich_text import CellRichText
+
+def _set_attributes(cell, styled=None):
+    """
+    Set coordinate and datatype
+    """
+    coordinate = cell.coordinate
+    attrs = {'r': coordinate}
+    if styled:
+        attrs['s'] = f"{cell.style_id}"
+
+    if cell.data_type == "s":
+        attrs['t'] = "inlineStr"
+    elif cell.data_type != 'f':
+        attrs['t'] = cell.data_type
+
+    value = cell._value
+
+    if cell.data_type == "d":
+        if hasattr(value, "tzinfo") and value.tzinfo is not None:
+            raise TypeError("Excel does not support timezones in datetimes. "
+                    "The tzinfo in the datetime/time object must be set to None.")
+
+        if cell.parent.parent.iso_dates and not isinstance(value, timedelta):
+            value = to_ISO8601(value)
+        else:
+            attrs['t'] = "n"
+            value = to_excel(value, cell.parent.parent.epoch)
+
+    if cell.hyperlink:
+        cell.parent._hyperlinks.append(cell.hyperlink)
+
+    return value, attrs
+
+
+def etree_write_cell(xf, worksheet, cell, styled=None):
+
+    value, attributes = _set_attributes(cell, styled)
+
+    el = Element("c", attributes)
+    if value is None or value == "":
+        xf.write(el)
+        return
+
+    if cell.data_type == 'f':
+        attrib = {}
+
+        if isinstance(value, ArrayFormula):
+            attrib = dict(value)
+            value = value.text
+
+        elif isinstance(value, DataTableFormula):
+            attrib = dict(value)
+            value = None
+
+        formula = SubElement(el, 'f', attrib)
+        if value is not None and not attrib.get('t') == "dataTable":
+            formula.text = value[1:]
+            value = None
+
+    if cell.data_type == 's':
+        if isinstance(value, CellRichText):
+            el.append(value.to_tree())
+        else:
+            inline_string = Element("is")
+            text = Element('t')
+            text.text = value
+            whitespace(text)
+            inline_string.append(text)
+            el.append(inline_string)
+
+    else:
+        cell_content = SubElement(el, 'v')
+        if value is not None:
+            cell_content.text = safe_string(value)
+
+    xf.write(el)
+
+
+def lxml_write_cell(xf, worksheet, cell, styled=False):
+    value, attributes = _set_attributes(cell, styled)
+
+    if value == '' or value is None:
+        with xf.element("c", attributes):
+            return
+
+    with xf.element('c', attributes):
+        if cell.data_type == 'f':
+            attrib = {}
+
+            if isinstance(value, ArrayFormula):
+                attrib = dict(value)
+                value = value.text
+
+            elif isinstance(value, DataTableFormula):
+                attrib = dict(value)
+                value = None
+
+            with xf.element('f', attrib):
+                if value is not None and not attrib.get('t') == "dataTable":
+                    xf.write(value[1:])
+                    value = None
+
+        if cell.data_type == 's':
+            if isinstance(value, CellRichText):
+                el = value.to_tree()
+                xf.write(el)
+            else:
+                with xf.element("is"):
+                    if isinstance(value, str):
+                        attrs = {}
+                        if value != value.strip():
+                            attrs["{%s}space" % XML_NS] = "preserve"
+                        el = Element("t", attrs) # lxml can't handle xml-ns
+                        el.text = value
+                        xf.write(el)
+
+        else:
+            with xf.element("v"):
+                if value is not None:
+                    xf.write(safe_string(value))
+
+
+if LXML:
+    write_cell = lxml_write_cell
+else:
+    write_cell = etree_write_cell
+ # Copyright (c) 2010-2024 openpyxl
+
+"""Write the workbook global settings to the archive."""
+
+from openpyxl.utils import quote_sheetname
+from openpyxl.xml.constants import (
+    ARC_APP,
+    ARC_CORE,
+    ARC_CUSTOM,
+    ARC_WORKBOOK,
+    PKG_REL_NS,
+    CUSTOMUI_NS,
+    ARC_ROOT_RELS,
+)
+from openpyxl.xml.functions import tostring, fromstring
+
+from openpyxl.packaging.relationship import Relationship, RelationshipList
+from openpyxl.workbook.defined_name import (
+    DefinedName,
+    DefinedNameList,
+)
+from openpyxl.workbook.external_reference import ExternalReference
+from openpyxl.packaging.workbook import ChildSheet, WorkbookPackage, PivotCache
+from openpyxl.workbook.properties import WorkbookProperties
+from openpyxl.utils.datetime import CALENDAR_MAC_1904
+
+
+def get_active_sheet(wb):
+    """
+    Return the index of the active sheet.
+    If the sheet set to active is hidden return the next visible sheet or None
+    """
+    visible_sheets = [idx for idx, sheet in enumerate(wb._sheets) if sheet.sheet_state == "visible"]
+    if not visible_sheets:
+        raise IndexError("At least one sheet must be visible")
+
+    idx = wb._active_sheet_index
+    sheet = wb.active
+    if sheet and sheet.sheet_state == "visible":
+        return idx
+
+    for idx in visible_sheets[idx:]:
+        wb.active = idx
+        return idx
+
+    return None
+
+
+class WorkbookWriter:
+
+    def __init__(self, wb):
+        self.wb = wb
+        self.rels = RelationshipList()
+        self.package = WorkbookPackage()
+        self.package.workbookProtection = wb.security
+        self.package.calcPr = wb.calculation
+
+
+    def write_properties(self):
+
+        props = WorkbookProperties() # needs a mapping to the workbook for preservation
+        if self.wb.code_name is not None:
+            props.codeName = self.wb.code_name
+        if self.wb.excel_base_date == CALENDAR_MAC_1904:
+            props.date1904 = True
+        self.package.workbookPr = props
+
+
+    def write_worksheets(self):
+        for idx, sheet in enumerate(self.wb._sheets, 1):
+            sheet_node = ChildSheet(name=sheet.title, sheetId=idx, id="rId{0}".format(idx))
+            rel = Relationship(type=sheet._rel_type, Target=sheet.path)
+            self.rels.append(rel)
+
+            if not sheet.sheet_state == 'visible':
+                if len(self.wb._sheets) == 1:
+                    raise ValueError("The only worksheet of a workbook cannot be hidden")
+                sheet_node.state = sheet.sheet_state
+            self.package.sheets.append(sheet_node)
+
+
+    def write_refs(self):
+        for link in self.wb._external_links:
+            # need to match a counter with a workbook's relations
+            rId = len(self.wb.rels) + 1
+            rel = Relationship(type=link._rel_type, Target=link.path)
+            self.rels.append(rel)
+            ext = ExternalReference(id=rel.id)
+            self.package.externalReferences.append(ext)
+
+
+    def write_names(self):
+        defined_names = list(self.wb.defined_names.values())
+
+        for idx, sheet in enumerate(self.wb.worksheets):
+            quoted = quote_sheetname(sheet.title)
+
+            # local names
+            if sheet.defined_names:
+                names = sheet.defined_names.values()
+                for n in names:
+                    n.localSheetId = idx
+                defined_names.extend(names)
+
+            if sheet.auto_filter:
+                name = DefinedName(name='_FilterDatabase', localSheetId=idx, hidden=True)
+                name.value = f"{quoted}!{sheet.auto_filter}"
+                defined_names.append(name)
+
+            if sheet.print_titles:
+                name = DefinedName(name="Print_Titles", localSheetId=idx)
+                name.value = sheet.print_titles
+                defined_names.append(name)
+
+            if sheet.print_area:
+                name = DefinedName(name="Print_Area", localSheetId=idx)
+                name.value = sheet.print_area
+                defined_names.append(name)
+
+        self.package.definedNames = DefinedNameList(definedName=defined_names)
+
+
+    def write_pivots(self):
+        pivot_caches = set()
+        for pivot in self.wb._pivots:
+            if pivot.cache not in pivot_caches:
+                pivot_caches.add(pivot.cache)
+                c = PivotCache(cacheId=pivot.cacheId)
+                self.package.pivotCaches.append(c)
+                rel = Relationship(Type=pivot.cache.rel_type, Target=pivot.cache.path)
+                self.rels.append(rel)
+                c.id = rel.id
+        #self.wb._pivots = [] # reset
+
+
+    def write_views(self):
+        active = get_active_sheet(self.wb)
+        if self.wb.views:
+            self.wb.views[0].activeTab = active
+        self.package.bookViews = self.wb.views
+
+
+    def write(self):
+        """Write the core workbook xml."""
+
+        self.write_properties()
+        self.write_worksheets()
+        self.write_names()
+        self.write_pivots()
+        self.write_views()
+        self.write_refs()
+
+        return tostring(self.package.to_tree())
+
+
+    def write_rels(self):
+        """Write the workbook relationships xml."""
+
+        styles =  Relationship(type='styles', Target='styles.xml')
+        self.rels.append(styles)
+
+        theme =  Relationship(type='theme', Target='theme/theme1.xml')
+        self.rels.append(theme)
+
+        if self.wb.vba_archive:
+            vba =  Relationship(type='', Target='vbaProject.bin')
+            vba.Type ='http://schemas.microsoft.com/office/2006/relationships/vbaProject'
+            self.rels.append(vba)
+
+        return tostring(self.rels.to_tree())
+
+
+    def write_root_rels(self):
+        """Write the package relationships"""
+
+        rels = RelationshipList()
+
+        rel = Relationship(type="officeDocument", Target=ARC_WORKBOOK)
+        rels.append(rel)
+        rel = Relationship(Type=f"{PKG_REL_NS}/metadata/core-properties", Target=ARC_CORE)
+        rels.append(rel)
+
+        rel = Relationship(type="extended-properties", Target=ARC_APP)
+        rels.append(rel)
+
+        if len(self.wb.custom_doc_props) >= 1:
+            rel = Relationship(type="custom-properties", Target=ARC_CUSTOM)
+            rels.append(rel)
+
+        if self.wb.vba_archive is not None:
+            # See if there was a customUI relation and reuse it
+            xml = fromstring(self.wb.vba_archive.read(ARC_ROOT_RELS))
+            root_rels = RelationshipList.from_tree(xml)
+            for rel in root_rels.find(CUSTOMUI_NS):
+                rels.append(rel)
+
+        return tostring(rels.to_tree())
+ # Copyright (c) 2010-2024 openpyxl
+
+import atexit
+from collections import defaultdict
+from io import BytesIO
+import os
+from tempfile import NamedTemporaryFile
+from warnings import warn
+
+from openpyxl.xml.functions import xmlfile
+from openpyxl.xml.constants import SHEET_MAIN_NS
+
+from openpyxl.comments.comment_sheet import CommentRecord
+from openpyxl.packaging.relationship import Relationship, RelationshipList
+from openpyxl.styles.differential import DifferentialStyle
+
+from .dimensions import SheetDimension
+from .hyperlink import HyperlinkList
+from .merge import MergeCell, MergeCells
+from .related import Related
+from .table import TablePartList
+
+from openpyxl.cell._writer import write_cell
+
+
+ALL_TEMP_FILES = []
+
+@atexit.register
+def _openpyxl_shutdown():
+    for path in ALL_TEMP_FILES:
+        if os.path.exists(path):
+            os.remove(path)
+
+
+def create_temporary_file(suffix=''):
+    fobj = NamedTemporaryFile(mode='w+', suffix=suffix,
+                              prefix='openpyxl.', delete=False)
+    filename = fobj.name
+    fobj.close()
+    ALL_TEMP_FILES.append(filename)
+    return filename
+
+
+class WorksheetWriter:
+
+
+    def __init__(self, ws, out=None):
+        self.ws = ws
+        self.ws._hyperlinks = []
+        self.ws._comments = []
+        if out is None:
+            out = create_temporary_file()
+        self.out = out
+        self._rels = RelationshipList()
+        self.xf = self.get_stream()
+        next(self.xf) # start generator
+
+
+    def write_properties(self):
+        props = self.ws.sheet_properties
+        self.xf.send(props.to_tree())
+
+
+    def write_dimensions(self):
+        """
+        Write worksheet size if known
+        """
+        ref = getattr(self.ws, 'calculate_dimension', None)
+        if ref:
+            dim = SheetDimension(ref())
+            self.xf.send(dim.to_tree())
+
+
+    def write_format(self):
+        self.ws.sheet_format.outlineLevelCol = self.ws.column_dimensions.max_outline
+        fmt = self.ws.sheet_format
+        self.xf.send(fmt.to_tree())
+
+
+    def write_views(self):
+        views = self.ws.views
+        self.xf.send(views.to_tree())
+
+
+    def write_cols(self):
+        cols = self.ws.column_dimensions
+        self.xf.send(cols.to_tree())
+
+
+    def write_top(self):
+        """
+        Write all elements up to rows:
+        properties
+        dimensions
+        views
+        format
+        cols
+        """
+        self.write_properties()
+        self.write_dimensions()
+        self.write_views()
+        self.write_format()
+        self.write_cols()
+
+
+    def rows(self):
+        """Return all rows, and any cells that they contain"""
+        # order cells by row
+        rows = defaultdict(list)
+        for (row, col), cell in sorted(self.ws._cells.items()):
+            rows[row].append(cell)
+
+        # add empty rows if styling has been applied
+        for row in self.ws.row_dimensions.keys() - rows.keys():
+            rows[row] = []
+
+        return sorted(rows.items())
+
+
+    def write_rows(self):
+        xf = self.xf.send(True)
+
+        with xf.element("sheetData"):
+            for row_idx, row in self.rows():
+                self.write_row(xf, row, row_idx)
+
+        self.xf.send(None) # return control to generator
+
+
+    def write_row(self, xf, row, row_idx):
+        attrs = {'r': f"{row_idx}"}
+        dims = self.ws.row_dimensions
+        attrs.update(dims.get(row_idx, {}))
+
+        with xf.element("row", attrs):
+
+            for cell in row:
+                if cell._comment is not None:
+                    comment = CommentRecord.from_cell(cell)
+                    self.ws._comments.append(comment)
+                if (
+                    cell._value is None
+                    and not cell.has_style
+                    and not cell._comment
+                    ):
+                    continue
+                write_cell(xf, self.ws, cell, cell.has_style)
+
+
+    def write_protection(self):
+        prot = self.ws.protection
+        if prot:
+            self.xf.send(prot.to_tree())
+
+
+    def write_scenarios(self):
+        scenarios = self.ws.scenarios
+        if scenarios:
+            self.xf.send(scenarios.to_tree())
+
+
+    def write_filter(self):
+        flt = self.ws.auto_filter
+        if flt:
+            self.xf.send(flt.to_tree())
+
+
+    def write_sort(self):
+        """
+        As per discusion with the OOXML Working Group global sort state is not required.
+        openpyxl never reads it from existing files
+        """
+        pass
+
+
+    def write_merged_cells(self):
+        merged = self.ws.merged_cells
+        if merged:
+            cells = [MergeCell(str(ref)) for ref in self.ws.merged_cells]
+            self.xf.send(MergeCells(mergeCell=cells).to_tree())
+
+
+    def write_formatting(self):
+        df = DifferentialStyle()
+        wb = self.ws.parent
+        for cf in self.ws.conditional_formatting:
+            for rule in cf.rules:
+                if rule.dxf and rule.dxf != df:
+                    rule.dxfId = wb._differential_styles.add(rule.dxf)
+            self.xf.send(cf.to_tree())
+
+
+    def write_validations(self):
+        dv = self.ws.data_validations
+        if dv:
+            self.xf.send(dv.to_tree())
+
+
+    def write_hyperlinks(self):
+
+        links = self.ws._hyperlinks
+
+        for link in links:
+            if link.target:
+                rel = Relationship(type="hyperlink", TargetMode="External", Target=link.target)
+                self._rels.append(rel)
+                link.id = rel.id
+
+        if links:
+            self.xf.send(HyperlinkList(links).to_tree())
+
+
+    def write_print(self):
+        print_options = self.ws.print_options
+        if print_options:
+            self.xf.send(print_options.to_tree())
+
+
+    def write_margins(self):
+        margins = self.ws.page_margins
+        if margins:
+            self.xf.send(margins.to_tree())
+
+
+    def write_page(self):
+        setup = self.ws.page_setup
+        if setup:
+            self.xf.send(setup.to_tree())
+
+
+    def write_header(self):
+        hf = self.ws.HeaderFooter
+        if hf:
+            self.xf.send(hf.to_tree())
+
+
+    def write_breaks(self):
+        brks = (self.ws.row_breaks, self.ws.col_breaks)
+        for brk in brks:
+            if brk:
+                self.xf.send(brk.to_tree())
+
+
+    def write_drawings(self):
+        if self.ws._charts or self.ws._images:
+            rel = Relationship(type="drawing", Target="")
+            self._rels.append(rel)
+            drawing = Related()
+            drawing.id = rel.id
+            self.xf.send(drawing.to_tree("drawing"))
+
+
+    def write_legacy(self):
+        """
+        Comments & VBA controls use VML and require an additional element
+        that is no longer in the specification.
+        """
+        if (self.ws.legacy_drawing is not None or self.ws._comments):
+            legacy = Related(id="anysvml")
+            self.xf.send(legacy.to_tree("legacyDrawing"))
+
+
+    def write_tables(self):
+        tables = TablePartList()
+
+        for table in self.ws.tables.values():
+            if not table.tableColumns:
+                table._initialise_columns()
+                if table.headerRowCount:
+                    try:
+                        row = self.ws[table.ref][0]
+                        for cell, col in zip(row, table.tableColumns):
+                            if cell.data_type != "s":
+                                warn("File may not be readable: column headings must be strings.")
+                            col.name = str(cell.value)
+                    except TypeError:
+                        warn("Column headings are missing, file may not be readable")
+            rel = Relationship(Type=table._rel_type, Target="")
+            self._rels.append(rel)
+            table._rel_id = rel.Id
+            tables.append(Related(id=rel.Id))
+
+        if tables:
+            self.xf.send(tables.to_tree())
+
+
+    def get_stream(self):
+        with xmlfile(self.out) as xf:
+            with xf.element("worksheet", xmlns=SHEET_MAIN_NS):
+                try:
+                    while True:
+                        el = (yield)
+                        if el is True:
+                            yield xf
+                        elif el is None: # et_xmlfile chokes
+                            continue
+                        else:
+                            xf.write(el)
+                except GeneratorExit:
+                    pass
+
+
+    def write_tail(self):
+        """
+        Write all elements after the rows
+        calc properties
+        protection
+        protected ranges #
+        scenarios
+        filters
+        sorts # always ignored
+        data consolidation #
+        custom views #
+        merged cells
+        phonetic properties #
+        conditional formatting
+        data validation
+        hyperlinks
+        print options
+        page margins
+        page setup
+        header
+        row breaks
+        col breaks
+        custom properties #
+        cell watches #
+        ignored errors #
+        smart tags #
+        drawing
+        drawingHF #
+        background #
+        OLE objects #
+        controls #
+        web publishing #
+        tables
+        """
+        self.write_protection()
+        self.write_scenarios()
+        self.write_filter()
+        self.write_merged_cells()
+        self.write_formatting()
+        self.write_validations()
+        self.write_hyperlinks()
+        self.write_print()
+        self.write_margins()
+        self.write_page()
+        self.write_header()
+        self.write_breaks()
+        self.write_drawings()
+        self.write_legacy()
+        self.write_tables()
+
+
+    def write(self):
+        """
+        High level
+        """
+        self.write_top()
+        self.write_rows()
+        self.write_tail()
+        self.close()
+
+
+    def close(self):
+        """
+        Close the context manager
+        """
+        if self.xf:
+            self.xf.close()
+
+
+    def read(self):
+        """
+        Close the context manager and return serialised XML
+        """
+        self.close()
+        if isinstance(self.out, BytesIO):
+            return self.out.getvalue()
+        with open(self.out, "rb") as src:
+            out = src.read()
+
+        return out
+
+
+    def cleanup(self):
+        """
+        Remove tempfile
+        """
+        os.remove(self.out)
+        ALL_TEMP_FILES.remove(self.out)
+ from __future__ import annotations
+
+from collections.abc import Mapping
+from datetime import date, datetime, time
+from types import MappingProxyType
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from collections.abc import Generator
+    from decimal import Decimal
+    from typing import IO, Any, Final
+
+ASCII_CTRL = frozenset(chr(i) for i in range(32)) | frozenset(chr(127))
+ILLEGAL_BASIC_STR_CHARS = frozenset('"\\') | ASCII_CTRL - frozenset("\t")
+BARE_KEY_CHARS = frozenset(
+    "abcdefghijklmnopqrstuvwxyz" "ABCDEFGHIJKLMNOPQRSTUVWXYZ" "0123456789" "-_"
+)
+ARRAY_TYPES = (list, tuple)
+MAX_LINE_LENGTH = 100
+
+COMPACT_ESCAPES = MappingProxyType(
+    {
+        "\u0008": "\\b",  # backspace
+        "\u000A": "\\n",  # linefeed
+        "\u000C": "\\f",  # form feed
+        "\u000D": "\\r",  # carriage return
+        "\u0022": '\\"',  # quote
+        "\u005C": "\\\\",  # backslash
+    }
+)
+
+
+class Context:
+    def __init__(self, allow_multiline: bool, indent: int):
+        if indent < 0:
+            raise ValueError("Indent width must be non-negative")
+        self.allow_multiline: Final = allow_multiline
+        # cache rendered inline tables (mapping from object id to rendered inline table)
+        self.inline_table_cache: Final[dict[int, str]] = {}
+        self.indent_str: Final = " " * indent
+
+
+def dump(
+    obj: Mapping[str, Any],
+    fp: IO[bytes],
+    /,
+    *,
+    multiline_strings: bool = False,
+    indent: int = 4,
+) -> None:
+    ctx = Context(multiline_strings, indent)
+    for chunk in gen_table_chunks(obj, ctx, name=""):
+        fp.write(chunk.encode())
+
+
+def dumps(
+    obj: Mapping[str, Any], /, *, multiline_strings: bool = False, indent: int = 4
+) -> str:
+    ctx = Context(multiline_strings, indent)
+    return "".join(gen_table_chunks(obj, ctx, name=""))
+
+
+def gen_table_chunks(
+    table: Mapping[str, Any],
+    ctx: Context,
+    *,
+    name: str,
+    inside_aot: bool = False,
+) -> Generator[str, None, None]:
+    yielded = False
+    literals = []
+    tables: list[tuple[str, Any, bool]] = []  # => [(key, value, inside_aot)]
+    for k, v in table.items():
+        if isinstance(v, Mapping):
+            tables.append((k, v, False))
+        elif is_aot(v) and not all(is_suitable_inline_table(t, ctx) for t in v):
+            tables.extend((k, t, True) for t in v)
+        else:
+            literals.append((k, v))
+
+    if inside_aot or name and (literals or not tables):
+        yielded = True
+        yield f"[[{name}]]\n" if inside_aot else f"[{name}]\n"
+
+    if literals:
+        yielded = True
+        for k, v in literals:
+            yield f"{format_key_part(k)} = {format_literal(v, ctx)}\n"
+
+    for k, v, in_aot in tables:
+        if yielded:
+            yield "\n"
+        else:
+            yielded = True
+        key_part = format_key_part(k)
+        display_name = f"{name}.{key_part}" if name else key_part
+        yield from gen_table_chunks(v, ctx, name=display_name, inside_aot=in_aot)
+
+
+def format_literal(obj: object, ctx: Context, *, nest_level: int = 0) -> str:
+    if isinstance(obj, bool):
+        return "true" if obj else "false"
+    if isinstance(obj, (int, float, date, datetime)):
+        return str(obj)
+    if isinstance(obj, time):
+        if obj.tzinfo:
+            raise ValueError("TOML does not support offset times")
+        return str(obj)
+    if isinstance(obj, str):
+        return format_string(obj, allow_multiline=ctx.allow_multiline)
+    if isinstance(obj, ARRAY_TYPES):
+        return format_inline_array(obj, ctx, nest_level)
+    if isinstance(obj, Mapping):
+        return format_inline_table(obj, ctx)
+
+    # Lazy import to improve module import time
+    from decimal import Decimal
+
+    if isinstance(obj, Decimal):
+        return format_decimal(obj)
+    raise TypeError(
+        f"Object of type '{type(obj).__qualname__}' is not TOML serializable"
+    )
+
+
+def format_decimal(obj: Decimal) -> str:
+    if obj.is_nan():
+        return "nan"
+    if obj.is_infinite():
+        return "-inf" if obj.is_signed() else "inf"
+    dec_str = str(obj).lower()
+    return dec_str if "." in dec_str or "e" in dec_str else dec_str + ".0"
+
+
+def format_inline_table(obj: Mapping, ctx: Context) -> str:
+    # check cache first
+    obj_id = id(obj)
+    if obj_id in ctx.inline_table_cache:
+        return ctx.inline_table_cache[obj_id]
+
+    if not obj:
+        rendered = "{}"
+    else:
+        rendered = (
+            "{ "
+            + ", ".join(
+                f"{format_key_part(k)} = {format_literal(v, ctx)}"
+                for k, v in obj.items()
+            )
+            + " }"
+        )
+    ctx.inline_table_cache[obj_id] = rendered
+    return rendered
+
+
+def format_inline_array(obj: tuple | list, ctx: Context, nest_level: int) -> str:
+    if not obj:
+        return "[]"
+    item_indent = ctx.indent_str * (1 + nest_level)
+    closing_bracket_indent = ctx.indent_str * nest_level
+    return (
+        "[\n"
+        + ",\n".join(
+            item_indent + format_literal(item, ctx, nest_level=nest_level + 1)
+            for item in obj
+        )
+        + f",\n{closing_bracket_indent}]"
+    )
+
+
+def format_key_part(part: str) -> str:
+    try:
+        only_bare_key_chars = BARE_KEY_CHARS.issuperset(part)
+    except TypeError:
+        raise TypeError(
+            f"Invalid mapping key '{part}' of type '{type(part).__qualname__}'."
+            " A string is required."
+        ) from None
+
+    if part and only_bare_key_chars:
+        return part
+    return format_string(part, allow_multiline=False)
+
+
+def format_string(s: str, *, allow_multiline: bool) -> str:
+    do_multiline = allow_multiline and "\n" in s
+    if do_multiline:
+        result = '"""\n'
+        s = s.replace("\r\n", "\n")
+    else:
+        result = '"'
+
+    pos = seq_start = 0
+    while True:
+        try:
+            char = s[pos]
+        except IndexError:
+            result += s[seq_start:pos]
+            if do_multiline:
+                return result + '"""'
+            return result + '"'
+        if char in ILLEGAL_BASIC_STR_CHARS:
+            result += s[seq_start:pos]
+            if char in COMPACT_ESCAPES:
+                if do_multiline and char == "\n":
+                    result += "\n"
+                else:
+                    result += COMPACT_ESCAPES[char]
+            else:
+                result += "\\u" + hex(ord(char))[2:].rjust(4, "0")
+            seq_start = pos + 1
+        pos += 1
+
+
+def is_aot(obj: Any) -> bool:
+    """Decides if an object behaves as an array of tables (i.e. a nonempty list
+    of dicts)."""
+    return bool(
+        isinstance(obj, ARRAY_TYPES)
+        and obj
+        and all(isinstance(v, Mapping) for v in obj)
+    )
+
+
+def is_suitable_inline_table(obj: Mapping, ctx: Context) -> bool:
+    """Use heuristics to decide if the inline-style representation is a good
+    choice for a given table."""
+    rendered_inline = f"{ctx.indent_str}{format_inline_table(obj, ctx)},"
+    return len(rendered_inline) <= MAX_LINE_LENGTH and "\n" not in rendered_inline
+

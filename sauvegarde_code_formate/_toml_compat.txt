@@ -1,0 +1,17 @@
+#!/usr/bin/env python3
+"""
+Script de _toml_compat pour PERIMONT_ERP
+Module: venv.Lib.site-packages.pip._vendor.dependency_groups._toml_compat.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+try:
+    import tomllib
+except ImportError:
+    try:
+        from pip._vendor import tomli as tomllib  # type: ignore[no-redef, unused-ignore]
+    except ModuleNotFoundError:  # pragma: no cover
+        tomllib = None  # type: ignore[assignment, unused-ignore]
+
+__all__ = ("tomllib",)
+

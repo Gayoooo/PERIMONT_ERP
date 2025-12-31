@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+"""
+Script de dashboard_screen pour PERIMONT_ERP
+Module: ui.screens.dashboard_screen.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+import customtkinter as ctk
+from database.db_manager import Database
+from config.settings import *
+
+class DashboardScreen(ctk.CTkFrame):
+    def __init__(self, parent):
+        super().__init__(parent, fg_color="transparent")
+        self.db = Database()
+        
+        ctk.CTkLabel(self, text="Tableau de Bord Général", font=("Segoe UI", 24, "bold")).pack(pady=10, anchor="w", padx=20)
+
+        # Grille de statistiques
+        self.stats_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.stats_frame.pack(fill="x", padx=20, pady=20)
+
+        # Récupération des données réelles
+        nb_emp = self.db.query("SELECT COUNT(*) as count FROM personnel").fetchone()['count']
+        nb_cam = self.db.query("SELECT COUNT(*) as count FROM camions").fetchone()['count']
+        nb_event = self.db.query("SELECT COUNT(*) as count FROM agenda").fetchone()['count']
+
+        # Création des cartes
+        self.create_stat_card("EMPLOYÉS", nb_emp, 0, 0)
+        self.create_stat_card("CAMIONS", nb_cam, 0, 1)
+        self.create_stat_card("ÉVÉNEMENTS", nb_event, 0, 2)
+
+    def create_stat_card(self, title, value, row, col):
+        card = ctk.CTkFrame(self.stats_frame, fg_color=COLOR_CARD_BG, width=250, height=150, corner_radius=15)
+        card.grid(row=row, column=col, padx=15, pady=10)
+        card.grid_propagate(False)
+
+        ctk.CTkLabel(card, text=title, font=("Segoe UI", 14), text_color=COLOR_TEXT_DIM).pack(pady=(20, 10))
+        ctk.CTkLabel(card, text=str(value), font=("Segoe UI", 40, "bold"), text_color=COLOR_ACCENT).pack()

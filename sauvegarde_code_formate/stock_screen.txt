@@ -1,0 +1,64 @@
+#!/usr/bin/env python3
+"""
+Script de stock_screen pour PERIMONT_ERP
+Module: ui.screens.stock_screen.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+import customtkinter as ctk
+from tkinter import ttk, messagebox
+from database.db_manager import Database
+from config.settings import *
+
+class StockScreen(ctk.CTkFrame):
+    def __init__(self, parent):
+        super().__init__(parent, fg_color="transparent")
+        self.db = Database()
+        
+        # Création de la table stock si elle n'existe pas
+        self.db.query("CREATE TABLE IF NOT EXISTS stock (id INTEGER PRIMARY KEY, article TEXT UNIQUE, quantite REAL)")
+
+        ctk.CTkLabel(self, text="Gestion Stocks & Carburant", font=("Segoe UI", 24, "bold")).pack(pady=20, padx=30, anchor="w")
+
+        # --- FORMULAIRE ---
+        self.form = ctk.CTkFrame(self, fg_color=COLOR_CARD_BG, corner_radius=15)
+        self.form.pack(fill="x", padx=30, pady=10)
+
+        self.ent_article = ctk.CTkEntry(self.form, placeholder_text="Article (ex: Gazole)", width=200)
+        self.ent_article.grid(row=0, column=0, padx=20, pady=20)
+
+        self.ent_qte = ctk.CTkEntry(self.form, placeholder_text="Quantité (+ ou -)", width=150)
+        self.ent_qte.grid(row=0, column=1, padx=20, pady=20)
+
+        ctk.CTkButton(self.form, text="Mettre à jour", fg_color=COLOR_ACCENT, text_color=COLOR_MAIN_BG,
+                      command=self.maj_stock).grid(row=0, column=2, padx=20, pady=20)
+
+        # --- TABLEAU ---
+        self.tree = ttk.Treeview(self, columns=("art", "qte"), show="headings")
+        self.tree.heading("art", text="ARTICLE")
+        self.tree.heading("qte", text="QUANTITÉ RESTANTE")
+        self.tree.pack(fill="both", expand=True, padx=30, pady=20)
+        
+        self.charger_donnees()
+
+    def maj_stock(self):
+        art = self.ent_article.get().upper()
+        try:
+            val = float(self.ent_qte.get())
+            # Vérifie si l'article existe
+            res = self.db.query("SELECT quantite FROM stock WHERE article=?", (art,)).fetchone()
+            if res:
+                nouvelle_qte = res['quantite'] + val
+                self.db.query("UPDATE stock SET quantite=? WHERE article=?", (nouvelle_qte, art))
+            else:
+                self.db.query("INSERT INTO stock (article, quantite) VALUES (?,?)", (art, val))
+            
+            self.charger_donnees()
+            messagebox.showinfo("Succès", "Stock mis à jour")
+        except:
+            messagebox.showerror("Erreur", "Saisissez un nombre valide")
+
+    def charger_donnees(self):
+        for i in self.tree.get_children(): self.tree.delete(i)
+        for r in self.db.query("SELECT * FROM stock").fetchall():
+            self.tree.insert("", "end", values=(r['article'], f"{r['quantite']} L/Unités"))

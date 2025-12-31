@@ -1,0 +1,18 @@
+#!/usr/bin/env python3
+"""
+Script de datetime pour PERIMONT_ERP
+Module: venv.Lib.site-packages.pip._internal.utils.datetime.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+"""For when pip wants to check the date or time."""
+
+import datetime
+
+
+def today_is_later_than(year: int, month: int, day: int) -> bool:
+    today = datetime.date.today()
+    given = datetime.date(year, month, day)
+
+    return today > given
+

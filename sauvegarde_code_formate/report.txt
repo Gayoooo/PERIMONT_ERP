@@ -1,0 +1,13 @@
+#!/usr/bin/env python3
+"""
+Script de report pour PERIMONT_ERP
+Module: venv.Lib.site-packages.PIL.report.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+from __future__ import annotations
+
+from .features import pilinfo
+
+pilinfo(supported_formats=False)
+

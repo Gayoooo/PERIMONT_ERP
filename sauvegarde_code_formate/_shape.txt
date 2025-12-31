@@ -1,0 +1,16 @@
+#!/usr/bin/env python3
+"""
+Script de _shape pour PERIMONT_ERP
+Module: venv.Lib.site-packages.numpy._typing._shape.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+from collections.abc import Sequence
+from typing import Any, SupportsIndex, TypeAlias
+
+_Shape: TypeAlias = tuple[int, ...]
+_AnyShape: TypeAlias = tuple[Any, ...]
+
+# Anything that can be coerced to a shape tuple
+_ShapeLike: TypeAlias = SupportsIndex | Sequence[SupportsIndex]
+

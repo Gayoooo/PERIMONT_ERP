@@ -1,0 +1,1693 @@
+// Chemin: C:\PERIMONT_ERP\venv\Lib\site-packages\openpyxl\pivot\cache.py C:\PERIMONT_ERP\venv\Lib\site-packages\pip\_internal\cache.py C:\PERIMONT_ERP\venv\Lib\site-packages\pip\_internal\commands\cache.py C:\PERIMONT_ERP\venv\Lib\site-packages\pip\_internal\network\cache.py C:\PERIMONT_ERP\venv\Lib\site-packages\pip\_vendor\cachecontrol\cache.py
+
+# Copyright (c) 2010-2024 openpyxl
+
+from openpyxl.descriptors.serialisable import Serialisable
+from openpyxl.descriptors import (
+    Typed,
+    Bool,
+    Float,
+    Set,
+    NoneSet,
+    String,
+    Integer,
+    DateTime,
+    Sequence,
+)
+
+from openpyxl.descriptors.excel import (
+    HexBinary,
+    ExtensionList,
+    Relation,
+)
+from openpyxl.descriptors.nested import NestedInteger
+from openpyxl.descriptors.sequence import (
+    NestedSequence,
+    MultiSequence,
+    MultiSequencePart,
+)
+from openpyxl.xml.constants import SHEET_MAIN_NS
+from openpyxl.xml.functions import tostring
+from openpyxl.packaging.relationship import (
+    RelationshipList,
+    Relationship,
+    get_rels_path
+)
+
+from .table import (
+    PivotArea,
+    Reference,
+)
+from .fields import (
+    Boolean,
+    Error,
+    Missing,
+    Number,
+    Text,
+    TupleList,
+    DateTimeField,
+)
+
+class MeasureDimensionMap(Serialisable):
+
+    tagname = "map"
+
+    measureGroup = Integer(allow_none=True)
+    dimension = Integer(allow_none=True)
+
+    def __init__(self,
+                 measureGroup=None,
+                 dimension=None,
+                ):
+        self.measureGroup = measureGroup
+        self.dimension = dimension
+
+
+class MeasureGroup(Serialisable):
+
+    tagname = "measureGroup"
+
+    name = String()
+    caption = String()
+
+    def __init__(self,
+                 name=None,
+                 caption=None,
+                ):
+        self.name = name
+        self.caption = caption
+
+
+class PivotDimension(Serialisable):
+
+    tagname = "dimension"
+
+    measure = Bool()
+    name = String()
+    uniqueName = String()
+    caption = String()
+
+    def __init__(self,
+                 measure=None,
+                 name=None,
+                 uniqueName=None,
+                 caption=None,
+                ):
+        self.measure = measure
+        self.name = name
+        self.uniqueName = uniqueName
+        self.caption = caption
+
+
+class CalculatedMember(Serialisable):
+
+    tagname = "calculatedMember"
+
+    name = String()
+    mdx = String()
+    memberName = String(allow_none=True)
+    hierarchy = String(allow_none=True)
+    parent = String(allow_none=True)
+    solveOrder = Integer(allow_none=True)
+    set = Bool()
+    extLst = Typed(expected_type=ExtensionList, allow_none=True)
+
+    __elements__ = ()
+
+    def __init__(self,
+                 name=None,
+                 mdx=None,
+                 memberName=None,
+                 hierarchy=None,
+                 parent=None,
+                 solveOrder=None,
+                 set=None,
+                 extLst=None,
+                ):
+        self.name = name
+        self.mdx = mdx
+        self.memberName = memberName
+        self.hierarchy = hierarchy
+        self.parent = parent
+        self.solveOrder = solveOrder
+        self.set = set
+        #self.extLst = extLst
+
+
+class CalculatedItem(Serialisable):
+
+    tagname = "calculatedItem"
+
+    field = Integer(allow_none=True)
+    formula = String()
+    pivotArea = Typed(expected_type=PivotArea, )
+    extLst = Typed(expected_type=ExtensionList, allow_none=True)
+
+    __elements__ = ('pivotArea', 'extLst')
+
+    def __init__(self,
+                 field=None,
+                 formula=None,
+                 pivotArea=None,
+                 extLst=None,
+                ):
+        self.field = field
+        self.formula = formula
+        self.pivotArea = pivotArea
+        self.extLst = extLst
+
+
+class ServerFormat(Serialisable):
+
+    tagname = "serverFormat"
+
+    culture = String(allow_none=True)
+    format = String(allow_none=True)
+
+    def __init__(self,
+                 culture=None,
+                 format=None,
+                ):
+        self.culture = culture
+        self.format = format
+
+
+class Query(Serialisable):
+
+    tagname = "query"
+
+    mdx = String()
+    tpls = Typed(expected_type=TupleList, allow_none=True)
+
+    __elements__ = ('tpls',)
+
+    def __init__(self,
+                 mdx=None,
+                 tpls=None,
+                ):
+        self.mdx = mdx
+        self.tpls = tpls
+
+
+class OLAPSet(Serialisable):
+
+    tagname = "set"
+
+    count = Integer()
+    maxRank = Integer()
+    setDefinition = String()
+    sortType = NoneSet(values=(['ascending', 'descending', 'ascendingAlpha',
+                                'descendingAlpha', 'ascendingNatural', 'descendingNatural']))
+    queryFailed = Bool()
+    tpls = Typed(expected_type=TupleList, allow_none=True)
+    sortByTuple = Typed(expected_type=TupleList, allow_none=True)
+
+    __elements__ = ('tpls', 'sortByTuple')
+
+    def __init__(self,
+                 count=None,
+                 maxRank=None,
+                 setDefinition=None,
+                 sortType=None,
+                 queryFailed=None,
+                 tpls=None,
+                 sortByTuple=None,
+                ):
+        self.count = count
+        self.maxRank = maxRank
+        self.setDefinition = setDefinition
+        self.sortType = sortType
+        self.queryFailed = queryFailed
+        self.tpls = tpls
+        self.sortByTuple = sortByTuple
+
+
+class PCDSDTCEntries(Serialisable):
+    # Implements CT_PCDSDTCEntries
+
+    tagname = "entries"
+
+    count = Integer(allow_none=True)
+    # elements are choice
+    m = Typed(expected_type=Missing, allow_none=True)
+    n = Typed(expected_type=Number, allow_none=True)
+    e = Typed(expected_type=Error, allow_none=True)
+    s = Typed(expected_type=Text, allow_none=True)
+
+    __elements__ = ('m', 'n', 'e', 's')
+
+    def __init__(self,
+                 count=None,
+                 m=None,
+                 n=None,
+                 e=None,
+                 s=None,
+                ):
+        self.count = count
+        self.m = m
+        self.n = n
+        self.e = e
+        self.s = s
+
+
+class TupleCache(Serialisable):
+
+    tagname = "tupleCache"
+
+    entries = Typed(expected_type=PCDSDTCEntries, allow_none=True)
+    sets = NestedSequence(expected_type=OLAPSet, count=True)
+    queryCache = NestedSequence(expected_type=Query, count=True)
+    serverFormats = NestedSequence(expected_type=ServerFormat, count=True)
+    extLst = Typed(expected_type=ExtensionList, allow_none=True)
+
+    __elements__ = ('entries', 'sets', 'queryCache', 'serverFormats', 'extLst')
+
+    def __init__(self,
+                 entries=None,
+                 sets=(),
+                 queryCache=(),
+                 serverFormats=(),
+                 extLst=None,
+                ):
+        self.entries = entries
+        self.sets = sets
+        self.queryCache = queryCache
+        self.serverFormats = serverFormats
+        self.extLst = extLst
+
+
+class OLAPKPI(Serialisable):
+
+    tagname = "kpi"
+
+    uniqueName = String()
+    caption = String(allow_none=True)
+    displayFolder = String(allow_none=True)
+    measureGroup = String(allow_none=True)
+    parent = String(allow_none=True)
+    value = String()
+    goal = String(allow_none=True)
+    status = String(allow_none=True)
+    trend = String(allow_none=True)
+    weight = String(allow_none=True)
+    time = String(allow_none=True)
+
+    def __init__(self,
+                 uniqueName=None,
+                 caption=None,
+                 displayFolder=None,
+                 measureGroup=None,
+                 parent=None,
+                 value=None,
+                 goal=None,
+                 status=None,
+                 trend=None,
+                 weight=None,
+                 time=None,
+                ):
+        self.uniqueName = uniqueName
+        self.caption = caption
+        self.displayFolder = displayFolder
+        self.measureGroup = measureGroup
+        self.parent = parent
+        self.value = value
+        self.goal = goal
+        self.status = status
+        self.trend = trend
+        self.weight = weight
+        self.time = time
+
+
+class GroupMember(Serialisable):
+
+    tagname = "groupMember"
+
+    uniqueName = String()
+    group = Bool()
+
+    def __init__(self,
+                 uniqueName=None,
+                 group=None,
+                ):
+        self.uniqueName = uniqueName
+        self.group = group
+
+
+class LevelGroup(Serialisable):
+
+    tagname = "group"
+
+    name = String()
+    uniqueName = String()
+    caption = String()
+    uniqueParent = String()
+    id = Integer()
+    groupMembers = NestedSequence(expected_type=GroupMember, count=True)
+
+    __elements__ = ('groupMembers',)
+
+    def __init__(self,
+                 name=None,
+                 uniqueName=None,
+                 caption=None,
+                 uniqueParent=None,
+                 id=None,
+                 groupMembers=(),
+                ):
+        self.name = name
+        self.uniqueName = uniqueName
+        self.caption = caption
+        self.uniqueParent = uniqueParent
+        self.id = id
+        self.groupMembers = groupMembers
+
+
+class GroupLevel(Serialisable):
+
+    tagname = "groupLevel"
+
+    uniqueName = String()
+    caption = String()
+    user = Bool()
+    customRollUp = Bool()
+    groups = NestedSequence(expected_type=LevelGroup, count=True)
+    extLst = Typed(expected_type=ExtensionList, allow_none=True)
+
+    __elements__ = ('groups', 'extLst')
+
+    def __init__(self,
+                 uniqueName=None,
+                 caption=None,
+                 user=None,
+                 customRollUp=None,
+                 groups=(),
+                 extLst=None,
+                ):
+        self.uniqueName = uniqueName
+        self.caption = caption
+        self.user = user
+        self.customRollUp = customRollUp
+        self.groups = groups
+        self.extLst = extLst
+
+
+class FieldUsage(Serialisable):
+
+    tagname = "fieldUsage"
+
+    x = Integer()
+
+    def __init__(self,
+                 x=None,
+                ):
+        self.x = x
+
+
+class CacheHierarchy(Serialisable):
+
+    tagname = "cacheHierarchy"
+
+    uniqueName = String()
+    caption = String(allow_none=True)
+    measure = Bool()
+    set = Bool()
+    parentSet = Integer(allow_none=True)
+    iconSet = Integer()
+    attribute = Bool()
+    time = Bool()
+    keyAttribute = Bool()
+    defaultMemberUniqueName = String(allow_none=True)
+    allUniqueName = String(allow_none=True)
+    allCaption = String(allow_none=True)
+    dimensionUniqueName = String(allow_none=True)
+    displayFolder = String(allow_none=True)
+    measureGroup = String(allow_none=True)
+    measures = Bool()
+    count = Integer()
+    oneField = Bool()
+    memberValueDatatype = Integer(allow_none=True)
+    unbalanced = Bool(allow_none=True)
+    unbalancedGroup = Bool(allow_none=True)
+    hidden = Bool()
+    fieldsUsage = NestedSequence(expected_type=FieldUsage, count=True)
+    groupLevels = NestedSequence(expected_type=GroupLevel, count=True)
+    extLst = Typed(expected_type=ExtensionList, allow_none=True)
+
+    __elements__ = ('fieldsUsage', 'groupLevels')
+
+    def __init__(self,
+                 uniqueName="",
+                 caption=None,
+                 measure=None,
+                 set=None,
+                 parentSet=None,
+                 iconSet=0,
+                 attribute=None,
+                 time=None,
+                 keyAttribute=None,
+                 defaultMemberUniqueName=None,
+                 allUniqueName=None,
+                 allCaption=None,
+                 dimensionUniqueName=None,
+                 displayFolder=None,
+                 measureGroup=None,
+                 measures=None,
+                 count=None,
+                 oneField=None,
+                 memberValueDatatype=None,
+                 unbalanced=None,
+                 unbalancedGroup=None,
+                 hidden=None,
+                 fieldsUsage=(),
+                 groupLevels=(),
+                 extLst=None,
+                ):
+        self.uniqueName = uniqueName
+        self.caption = caption
+        self.measure = measure
+        self.set = set
+        self.parentSet = parentSet
+        self.iconSet = iconSet
+        self.attribute = attribute
+        self.time = time
+        self.keyAttribute = keyAttribute
+        self.defaultMemberUniqueName = defaultMemberUniqueName
+        self.allUniqueName = allUniqueName
+        self.allCaption = allCaption
+        self.dimensionUniqueName = dimensionUniqueName
+        self.displayFolder = displayFolder
+        self.measureGroup = measureGroup
+        self.measures = measures
+        self.count = count
+        self.oneField = oneField
+        self.memberValueDatatype = memberValueDatatype
+        self.unbalanced = unbalanced
+        self.unbalancedGroup = unbalancedGroup
+        self.hidden = hidden
+        self.fieldsUsage = fieldsUsage
+        self.groupLevels = groupLevels
+        self.extLst = extLst
+
+
+class GroupItems(Serialisable):
+
+    tagname = "groupItems"
+
+    m = Sequence(expected_type=Missing)
+    n = Sequence(expected_type=Number)
+    b = Sequence(expected_type=Boolean)
+    e = Sequence(expected_type=Error)
+    s = Sequence(expected_type=Text)
+    d = Sequence(expected_type=DateTimeField,)
+
+    __elements__ = ('m', 'n', 'b', 'e', 's', 'd')
+    __attrs__ = ("count", )
+
+    def __init__(self,
+                 count=None,
+                 m=(),
+                 n=(),
+                 b=(),
+                 e=(),
+                 s=(),
+                 d=(),
+                ):
+        self.m = m
+        self.n = n
+        self.b = b
+        self.e = e
+        self.s = s
+        self.d = d
+
+
+    @property
+    def count(self):
+        return len(self.m + self.n + self.b + self.e + self.s + self.d)
+
+
+class RangePr(Serialisable):
+
+    tagname = "rangePr"
+
+    autoStart = Bool(allow_none=True)
+    autoEnd = Bool(allow_none=True)
+    groupBy = NoneSet(values=(['range', 'seconds', 'minutes', 'hours', 'days',
+                           'months', 'quarters', 'years']))
+    startNum = Float(allow_none=True)
+    endNum = Float(allow_none=True)
+    startDate = DateTime(allow_none=True)
+    endDate = DateTime(allow_none=True)
+    groupInterval = Float(allow_none=True)
+
+    def __init__(self,
+                 autoStart=True,
+                 autoEnd=True,
+                 groupBy="range",
+                 startNum=None,
+                 endNum=None,
+                 startDate=None,
+                 endDate=None,
+                 groupInterval=1,
+                ):
+        self.autoStart = autoStart
+        self.autoEnd = autoEnd
+        self.groupBy = groupBy
+        self.startNum = startNum
+        self.endNum = endNum
+        self.startDate = startDate
+        self.endDate = endDate
+        self.groupInterval = groupInterval
+
+
+class FieldGroup(Serialisable):
+
+    tagname = "fieldGroup"
+
+    par = Integer(allow_none=True)
+    base = Integer(allow_none=True)
+    rangePr = Typed(expected_type=RangePr, allow_none=True)
+    discretePr = NestedSequence(expected_type=NestedInteger, count=True)
+    groupItems = Typed(expected_type=GroupItems, allow_none=True)
+
+    __elements__ = ('rangePr', 'discretePr', 'groupItems')
+
+    def __init__(self,
+                 par=None,
+                 base=None,
+                 rangePr=None,
+                 discretePr=(),
+                 groupItems=None,
+                ):
+        self.par = par
+        self.base = base
+        self.rangePr = rangePr
+        self.discretePr = discretePr
+        self.groupItems = groupItems
+
+
+class SharedItems(Serialisable):
+
+    tagname = "sharedItems"
+
+    _fields = MultiSequence()
+    m = MultiSequencePart(expected_type=Missing, store="_fields")
+    n = MultiSequencePart(expected_type=Number, store="_fields")
+    b = MultiSequencePart(expected_type=Boolean, store="_fields")
+    e = MultiSequencePart(expected_type=Error, store="_fields")
+    s = MultiSequencePart(expected_type=Text,  store="_fields")
+    d = MultiSequencePart(expected_type=DateTimeField, store="_fields")
+    # attributes are optional and must be derived from associated cache records
+    containsSemiMixedTypes = Bool(allow_none=True)
+    containsNonDate = Bool(allow_none=True)
+    containsDate = Bool(allow_none=True)
+    containsString = Bool(allow_none=True)
+    containsBlank = Bool(allow_none=True)
+    containsMixedTypes = Bool(allow_none=True)
+    containsNumber = Bool(allow_none=True)
+    containsInteger = Bool(allow_none=True)
+    minValue = Float(allow_none=True)
+    maxValue = Float(allow_none=True)
+    minDate = DateTime(allow_none=True)
+    maxDate = DateTime(allow_none=True)
+    longText = Bool(allow_none=True)
+
+    __attrs__ = ('count', 'containsBlank', 'containsDate', 'containsInteger',
+                 'containsMixedTypes', 'containsNonDate', 'containsNumber',
+                 'containsSemiMixedTypes', 'containsString', 'minValue', 'maxValue',
+                 'minDate', 'maxDate', 'longText')
+
+    def __init__(self,
+                 _fields=(),
+                 containsSemiMixedTypes=None,
+                 containsNonDate=None,
+                 containsDate=None,
+                 containsString=None,
+                 containsBlank=None,
+                 containsMixedTypes=None,
+                 containsNumber=None,
+                 containsInteger=None,
+                 minValue=None,
+                 maxValue=None,
+                 minDate=None,
+                 maxDate=None,
+                 count=None,
+                 longText=None,
+                ):
+        self._fields = _fields
+        self.containsBlank = containsBlank
+        self.containsDate = containsDate
+        self.containsNonDate = containsNonDate
+        self.containsString = containsString
+        self.containsMixedTypes = containsMixedTypes
+        self.containsSemiMixedTypes = containsSemiMixedTypes
+        self.containsNumber = containsNumber
+        self.containsInteger = containsInteger
+        self.minValue = minValue
+        self.maxValue = maxValue
+        self.minDate = minDate
+        self.maxDate = maxDate
+        self.longText = longText
+
+
+    @property
+    def count(self):
+        return len(self._fields)
+
+
+class CacheField(Serialisable):
+
+    tagname = "cacheField"
+
+    sharedItems = Typed(expected_type=SharedItems, allow_none=True)
+    fieldGroup = Typed(expected_type=FieldGroup, allow_none=True)
+    mpMap = NestedInteger(allow_none=True, attribute="v")
+    extLst = Typed(expected_type=ExtensionList, allow_none=True)
+    name = String()
+    caption = String(allow_none=True)
+    propertyName = String(allow_none=True)
+    serverField = Bool(allow_none=True)
+    uniqueList = Bool(allow_none=True)
+    numFmtId = Integer(allow_none=True)
+    formula = String(allow_none=True)
+    sqlType = Integer(allow_none=True)
+    hierarchy = Integer(allow_none=True)
+    level = Integer(allow_none=True)
+    databaseField = Bool(allow_none=True)
+    mappingCount = Integer(allow_none=True)
+    memberPropertyField = Bool(allow_none=True)
+
+    __elements__ = ('sharedItems', 'fieldGroup', 'mpMap')
+
+    def __init__(self,
+                 sharedItems=None,
+                 fieldGroup=None,
+                 mpMap=None,
+                 extLst=None,
+                 name=None,
+                 caption=None,
+                 propertyName=None,
+                 serverField=None,
+                 uniqueList=True,
+                 numFmtId=None,
+                 formula=None,
+                 sqlType=0,
+                 hierarchy=0,
+                 level=0,
+                 databaseField=True,
+                 mappingCount=None,
+                 memberPropertyField=None,
+                ):
+        self.sharedItems = sharedItems
+        self.fieldGroup = fieldGroup
+        self.mpMap = mpMap
+        self.extLst = extLst
+        self.name = name
+        self.caption = caption
+        self.propertyName = propertyName
+        self.serverField = serverField
+        self.uniqueList = uniqueList
+        self.numFmtId = numFmtId
+        self.formula = formula
+        self.sqlType = sqlType
+        self.hierarchy = hierarchy
+        self.level = level
+        self.databaseField = databaseField
+        self.mappingCount = mappingCount
+        self.memberPropertyField = memberPropertyField
+
+
+class RangeSet(Serialisable):
+
+    tagname = "rangeSet"
+
+    i1 = Integer(allow_none=True)
+    i2 = Integer(allow_none=True)
+    i3 = Integer(allow_none=True)
+    i4 = Integer(allow_none=True)
+    ref = String()
+    name = String(allow_none=True)
+    sheet = String(allow_none=True)
+
+    def __init__(self,
+                 i1=None,
+                 i2=None,
+                 i3=None,
+                 i4=None,
+                 ref=None,
+                 name=None,
+                 sheet=None,
+                ):
+        self.i1 = i1
+        self.i2 = i2
+        self.i3 = i3
+        self.i4 = i4
+        self.ref = ref
+        self.name = name
+        self.sheet = sheet
+
+
+class PageItem(Serialisable):
+
+    tagname = "pageItem"
+
+    name = String()
+
+    def __init__(self,
+                 name=None,
+                ):
+        self.name = name
+
+
+class Consolidation(Serialisable):
+
+    tagname = "consolidation"
+
+    autoPage = Bool(allow_none=True)
+    pages = NestedSequence(expected_type=PageItem, count=True)
+    rangeSets = NestedSequence(expected_type=RangeSet, count=True)
+
+    __elements__ = ('pages', 'rangeSets')
+
+    def __init__(self,
+                 autoPage=None,
+                 pages=(),
+                 rangeSets=(),
+                ):
+        self.autoPage = autoPage
+        self.pages = pages
+        self.rangeSets = rangeSets
+
+
+class WorksheetSource(Serialisable):
+
+    tagname = "worksheetSource"
+
+    ref = String(allow_none=True)
+    name = String(allow_none=True)
+    sheet = String(allow_none=True)
+
+    def __init__(self,
+                 ref=None,
+                 name=None,
+                 sheet=None,
+                ):
+        self.ref = ref
+        self.name = name
+        self.sheet = sheet
+
+
+class CacheSource(Serialisable):
+
+    tagname = "cacheSource"
+
+    type = Set(values=(['worksheet', 'external', 'consolidation', 'scenario']))
+    connectionId = Integer(allow_none=True)
+    # some elements are choice
+    worksheetSource = Typed(expected_type=WorksheetSource, allow_none=True)
+    consolidation = Typed(expected_type=Consolidation, allow_none=True)
+    extLst = Typed(expected_type=ExtensionList, allow_none=True)
+
+    __elements__ = ('worksheetSource', 'consolidation',)
+
+    def __init__(self,
+                 type=None,
+                 connectionId=None,
+                 worksheetSource=None,
+                 consolidation=None,
+                 extLst=None,
+                ):
+        self.type = type
+        self.connectionId = connectionId
+        self.worksheetSource = worksheetSource
+        self.consolidation = consolidation
+
+
+class CacheDefinition(Serialisable):
+
+    mime_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.pivotCacheDefinition+xml"
+    rel_type = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/pivotCacheDefinition"
+    _id = 1
+    _path = "/xl/pivotCache/pivotCacheDefinition{0}.xml"
+    records = None
+
+    tagname = "pivotCacheDefinition"
+
+    invalid = Bool(allow_none=True)
+    saveData = Bool(allow_none=True)
+    refreshOnLoad = Bool(allow_none=True)
+    optimizeMemory = Bool(allow_none=True)
+    enableRefresh = Bool(allow_none=True)
+    refreshedBy = String(allow_none=True)
+    refreshedDate = Float(allow_none=True)
+    refreshedDateIso = DateTime(allow_none=True)
+    backgroundQuery = Bool(allow_none=True)
+    missingItemsLimit = Integer(allow_none=True)
+    createdVersion = Integer(allow_none=True)
+    refreshedVersion = Integer(allow_none=True)
+    minRefreshableVersion = Integer(allow_none=True)
+    recordCount = Integer(allow_none=True)
+    upgradeOnRefresh = Bool(allow_none=True)
+    supportSubquery = Bool(allow_none=True)
+    supportAdvancedDrill = Bool(allow_none=True)
+    cacheSource = Typed(expected_type=CacheSource)
+    cacheFields = NestedSequence(expected_type=CacheField, count=True)
+    cacheHierarchies = NestedSequence(expected_type=CacheHierarchy, allow_none=True)
+    kpis = NestedSequence(expected_type=OLAPKPI, count=True)
+    tupleCache = Typed(expected_type=TupleCache, allow_none=True)
+    calculatedItems = NestedSequence(expected_type=CalculatedItem, count=True)
+    calculatedMembers = NestedSequence(expected_type=CalculatedMember, count=True)
+    dimensions = NestedSequence(expected_type=PivotDimension, allow_none=True)
+    measureGroups = NestedSequence(expected_type=MeasureGroup, count=True)
+    maps = NestedSequence(expected_type=MeasureDimensionMap, count=True)
+    extLst = Typed(expected_type=ExtensionList, allow_none=True)
+    id = Relation()
+
+    __elements__ = ('cacheSource', 'cacheFields', 'cacheHierarchies', 'kpis',
+                    'tupleCache', 'calculatedItems', 'calculatedMembers', 'dimensions',
+                    'measureGroups', 'maps',)
+
+    def __init__(self,
+                 invalid=None,
+                 saveData=None,
+                 refreshOnLoad=None,
+                 optimizeMemory=None,
+                 enableRefresh=None,
+                 refreshedBy=None,
+                 refreshedDate=None,
+                 refreshedDateIso=None,
+                 backgroundQuery=None,
+                 missingItemsLimit=None,
+                 createdVersion=None,
+                 refreshedVersion=None,
+                 minRefreshableVersion=None,
+                 recordCount=None,
+                 upgradeOnRefresh=None,
+                 tupleCache=None,
+                 supportSubquery=None,
+                 supportAdvancedDrill=None,
+                 cacheSource=None,
+                 cacheFields=(),
+                 cacheHierarchies=(),
+                 kpis=(),
+                 calculatedItems=(),
+                 calculatedMembers=(),
+                 dimensions=(),
+                 measureGroups=(),
+                 maps=(),
+                 extLst=None,
+                 id = None,
+                ):
+        self.invalid = invalid
+        self.saveData = saveData
+        self.refreshOnLoad = refreshOnLoad
+        self.optimizeMemory = optimizeMemory
+        self.enableRefresh = enableRefresh
+        self.refreshedBy = refreshedBy
+        self.refreshedDate = refreshedDate
+        self.refreshedDateIso = refreshedDateIso
+        self.backgroundQuery = backgroundQuery
+        self.missingItemsLimit = missingItemsLimit
+        self.createdVersion = createdVersion
+        self.refreshedVersion = refreshedVersion
+        self.minRefreshableVersion = minRefreshableVersion
+        self.recordCount = recordCount
+        self.upgradeOnRefresh = upgradeOnRefresh
+        self.supportSubquery = supportSubquery
+        self.supportAdvancedDrill = supportAdvancedDrill
+        self.cacheSource = cacheSource
+        self.cacheFields = cacheFields
+        self.cacheHierarchies = cacheHierarchies
+        self.kpis = kpis
+        self.tupleCache = tupleCache
+        self.calculatedItems = calculatedItems
+        self.calculatedMembers = calculatedMembers
+        self.dimensions = dimensions
+        self.measureGroups = measureGroups
+        self.maps = maps
+        self.id = id
+
+
+    def to_tree(self):
+        node = super().to_tree()
+        node.set("xmlns", SHEET_MAIN_NS)
+        return node
+
+
+    @property
+    def path(self):
+        return self._path.format(self._id)
+
+
+    def _write(self, archive, manifest):
+        """
+        Add to zipfile and update manifest
+        """
+        self._write_rels(archive, manifest)
+        xml = tostring(self.to_tree())
+        archive.writestr(self.path[1:], xml)
+        manifest.append(self)
+
+
+    def _write_rels(self, archive, manifest):
+        """
+        Write the relevant child objects and add links
+        """
+        if self.records is None:
+            return
+
+        rels = RelationshipList()
+        r = Relationship(Type=self.records.rel_type, Target=self.records.path)
+        rels.append(r)
+        self.id = r.id
+        self.records._id = self._id
+        self.records._write(archive, manifest)
+
+        path = get_rels_path(self.path)
+        xml = tostring(rels.to_tree())
+        archive.writestr(path[1:], xml)
+ """Cache Management"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import logging
+import os
+from pathlib import Path
+from typing import Any
+
+from pip._vendor.packaging.tags import Tag, interpreter_name, interpreter_version
+from pip._vendor.packaging.utils import canonicalize_name
+
+from pip._internal.exceptions import InvalidWheelFilename
+from pip._internal.models.direct_url import DirectUrl
+from pip._internal.models.link import Link
+from pip._internal.models.wheel import Wheel
+from pip._internal.utils.temp_dir import TempDirectory, tempdir_kinds
+from pip._internal.utils.urls import path_to_url
+
+logger = logging.getLogger(__name__)
+
+ORIGIN_JSON_NAME = "origin.json"
+
+
+def _hash_dict(d: dict[str, str]) -> str:
+    """Return a stable sha224 of a dictionary."""
+    s = json.dumps(d, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+    return hashlib.sha224(s.encode("ascii")).hexdigest()
+
+
+class Cache:
+    """An abstract class - provides cache directories for data from links
+
+    :param cache_dir: The root of the cache.
+    """
+
+    def __init__(self, cache_dir: str) -> None:
+        super().__init__()
+        assert not cache_dir or os.path.isabs(cache_dir)
+        self.cache_dir = cache_dir or None
+
+    def _get_cache_path_parts(self, link: Link) -> list[str]:
+        """Get parts of part that must be os.path.joined with cache_dir"""
+
+        # We want to generate an url to use as our cache key, we don't want to
+        # just reuse the URL because it might have other items in the fragment
+        # and we don't care about those.
+        key_parts = {"url": link.url_without_fragment}
+        if link.hash_name is not None and link.hash is not None:
+            key_parts[link.hash_name] = link.hash
+        if link.subdirectory_fragment:
+            key_parts["subdirectory"] = link.subdirectory_fragment
+
+        # Include interpreter name, major and minor version in cache key
+        # to cope with ill-behaved sdists that build a different wheel
+        # depending on the python version their setup.py is being run on,
+        # and don't encode the difference in compatibility tags.
+        # https://github.com/pypa/pip/issues/7296
+        key_parts["interpreter_name"] = interpreter_name()
+        key_parts["interpreter_version"] = interpreter_version()
+
+        # Encode our key url with sha224, we'll use this because it has similar
+        # security properties to sha256, but with a shorter total output (and
+        # thus less secure). However the differences don't make a lot of
+        # difference for our use case here.
+        hashed = _hash_dict(key_parts)
+
+        # We want to nest the directories some to prevent having a ton of top
+        # level directories where we might run out of sub directories on some
+        # FS.
+        parts = [hashed[:2], hashed[2:4], hashed[4:6], hashed[6:]]
+
+        return parts
+
+    def _get_candidates(self, link: Link, canonical_package_name: str) -> list[Any]:
+        can_not_cache = not self.cache_dir or not canonical_package_name or not link
+        if can_not_cache:
+            return []
+
+        path = self.get_path_for_link(link)
+        if os.path.isdir(path):
+            return [(candidate, path) for candidate in os.listdir(path)]
+        return []
+
+    def get_path_for_link(self, link: Link) -> str:
+        """Return a directory to store cached items in for link."""
+        raise NotImplementedError()
+
+    def get(
+        self,
+        link: Link,
+        package_name: str | None,
+        supported_tags: list[Tag],
+    ) -> Link:
+        """Returns a link to a cached item if it exists, otherwise returns the
+        passed link.
+        """
+        raise NotImplementedError()
+
+
+class SimpleWheelCache(Cache):
+    """A cache of wheels for future installs."""
+
+    def __init__(self, cache_dir: str) -> None:
+        super().__init__(cache_dir)
+
+    def get_path_for_link(self, link: Link) -> str:
+        """Return a directory to store cached wheels for link
+
+        Because there are M wheels for any one sdist, we provide a directory
+        to cache them in, and then consult that directory when looking up
+        cache hits.
+
+        We only insert things into the cache if they have plausible version
+        numbers, so that we don't contaminate the cache with things that were
+        not unique. E.g. ./package might have dozens of installs done for it
+        and build a version of 0.0...and if we built and cached a wheel, we'd
+        end up using the same wheel even if the source has been edited.
+
+        :param link: The link of the sdist for which this will cache wheels.
+        """
+        parts = self._get_cache_path_parts(link)
+        assert self.cache_dir
+        # Store wheels within the root cache_dir
+        return os.path.join(self.cache_dir, "wheels", *parts)
+
+    def get(
+        self,
+        link: Link,
+        package_name: str | None,
+        supported_tags: list[Tag],
+    ) -> Link:
+        candidates = []
+
+        if not package_name:
+            return link
+
+        canonical_package_name = canonicalize_name(package_name)
+        for wheel_name, wheel_dir in self._get_candidates(link, canonical_package_name):
+            try:
+                wheel = Wheel(wheel_name)
+            except InvalidWheelFilename:
+                continue
+            if wheel.name != canonical_package_name:
+                logger.debug(
+                    "Ignoring cached wheel %s for %s as it "
+                    "does not match the expected distribution name %s.",
+                    wheel_name,
+                    link,
+                    package_name,
+                )
+                continue
+            if not wheel.supported(supported_tags):
+                # Built for a different python/arch/etc
+                continue
+            candidates.append(
+                (
+                    wheel.support_index_min(supported_tags),
+                    wheel_name,
+                    wheel_dir,
+                )
+            )
+
+        if not candidates:
+            return link
+
+        _, wheel_name, wheel_dir = min(candidates)
+        return Link(path_to_url(os.path.join(wheel_dir, wheel_name)))
+
+
+class EphemWheelCache(SimpleWheelCache):
+    """A SimpleWheelCache that creates it's own temporary cache directory"""
+
+    def __init__(self) -> None:
+        self._temp_dir = TempDirectory(
+            kind=tempdir_kinds.EPHEM_WHEEL_CACHE,
+            globally_managed=True,
+        )
+
+        super().__init__(self._temp_dir.path)
+
+
+class CacheEntry:
+    def __init__(
+        self,
+        link: Link,
+        persistent: bool,
+    ):
+        self.link = link
+        self.persistent = persistent
+        self.origin: DirectUrl | None = None
+        origin_direct_url_path = Path(self.link.file_path).parent / ORIGIN_JSON_NAME
+        if origin_direct_url_path.exists():
+            try:
+                self.origin = DirectUrl.from_json(
+                    origin_direct_url_path.read_text(encoding="utf-8")
+                )
+            except Exception as e:
+                logger.warning(
+                    "Ignoring invalid cache entry origin file %s for %s (%s)",
+                    origin_direct_url_path,
+                    link.filename,
+                    e,
+                )
+
+
+class WheelCache(Cache):
+    """Wraps EphemWheelCache and SimpleWheelCache into a single Cache
+
+    This Cache allows for gracefully degradation, using the ephem wheel cache
+    when a certain link is not found in the simple wheel cache first.
+    """
+
+    def __init__(self, cache_dir: str) -> None:
+        super().__init__(cache_dir)
+        self._wheel_cache = SimpleWheelCache(cache_dir)
+        self._ephem_cache = EphemWheelCache()
+
+    def get_path_for_link(self, link: Link) -> str:
+        return self._wheel_cache.get_path_for_link(link)
+
+    def get_ephem_path_for_link(self, link: Link) -> str:
+        return self._ephem_cache.get_path_for_link(link)
+
+    def get(
+        self,
+        link: Link,
+        package_name: str | None,
+        supported_tags: list[Tag],
+    ) -> Link:
+        cache_entry = self.get_cache_entry(link, package_name, supported_tags)
+        if cache_entry is None:
+            return link
+        return cache_entry.link
+
+    def get_cache_entry(
+        self,
+        link: Link,
+        package_name: str | None,
+        supported_tags: list[Tag],
+    ) -> CacheEntry | None:
+        """Returns a CacheEntry with a link to a cached item if it exists or
+        None. The cache entry indicates if the item was found in the persistent
+        or ephemeral cache.
+        """
+        retval = self._wheel_cache.get(
+            link=link,
+            package_name=package_name,
+            supported_tags=supported_tags,
+        )
+        if retval is not link:
+            return CacheEntry(retval, persistent=True)
+
+        retval = self._ephem_cache.get(
+            link=link,
+            package_name=package_name,
+            supported_tags=supported_tags,
+        )
+        if retval is not link:
+            return CacheEntry(retval, persistent=False)
+
+        return None
+
+    @staticmethod
+    def record_download_origin(cache_dir: str, download_info: DirectUrl) -> None:
+        origin_path = Path(cache_dir) / ORIGIN_JSON_NAME
+        if origin_path.exists():
+            try:
+                origin = DirectUrl.from_json(origin_path.read_text(encoding="utf-8"))
+            except Exception as e:
+                logger.warning(
+                    "Could not read origin file %s in cache entry (%s). "
+                    "Will attempt to overwrite it.",
+                    origin_path,
+                    e,
+                )
+            else:
+                # TODO: use DirectUrl.equivalent when
+                # https://github.com/pypa/pip/pull/10564 is merged.
+                if origin.url != download_info.url:
+                    logger.warning(
+                        "Origin URL %s in cache entry %s does not match download URL "
+                        "%s. This is likely a pip bug or a cache corruption issue. "
+                        "Will overwrite it with the new value.",
+                        origin.url,
+                        cache_dir,
+                        download_info.url,
+                    )
+        origin_path.write_text(download_info.to_json(), encoding="utf-8")
+ import os
+import textwrap
+from optparse import Values
+from typing import Callable
+
+from pip._internal.cli.base_command import Command
+from pip._internal.cli.status_codes import ERROR, SUCCESS
+from pip._internal.exceptions import CommandError, PipError
+from pip._internal.utils import filesystem
+from pip._internal.utils.logging import getLogger
+from pip._internal.utils.misc import format_size
+
+logger = getLogger(__name__)
+
+
+class CacheCommand(Command):
+    """
+    Inspect and manage pip's wheel cache.
+
+    Subcommands:
+
+    - dir: Show the cache directory.
+    - info: Show information about the cache.
+    - list: List filenames of packages stored in the cache.
+    - remove: Remove one or more package from the cache.
+    - purge: Remove all items from the cache.
+
+    ``<pattern>`` can be a glob expression or a package name.
+    """
+
+    ignore_require_venv = True
+    usage = """
+        %prog dir
+        %prog info
+        %prog list [<pattern>] [--format=[human, abspath]]
+        %prog remove <pattern>
+        %prog purge
+    """
+
+    def add_options(self) -> None:
+        self.cmd_opts.add_option(
+            "--format",
+            action="store",
+            dest="list_format",
+            default="human",
+            choices=("human", "abspath"),
+            help="Select the output format among: human (default) or abspath",
+        )
+
+        self.parser.insert_option_group(0, self.cmd_opts)
+
+    def handler_map(self) -> dict[str, Callable[[Values, list[str]], None]]:
+        return {
+            "dir": self.get_cache_dir,
+            "info": self.get_cache_info,
+            "list": self.list_cache_items,
+            "remove": self.remove_cache_items,
+            "purge": self.purge_cache,
+        }
+
+    def run(self, options: Values, args: list[str]) -> int:
+        handler_map = self.handler_map()
+
+        if not options.cache_dir:
+            logger.error("pip cache commands can not function since cache is disabled.")
+            return ERROR
+
+        # Determine action
+        if not args or args[0] not in handler_map:
+            logger.error(
+                "Need an action (%s) to perform.",
+                ", ".join(sorted(handler_map)),
+            )
+            return ERROR
+
+        action = args[0]
+
+        # Error handling happens here, not in the action-handlers.
+        try:
+            handler_map[action](options, args[1:])
+        except PipError as e:
+            logger.error(e.args[0])
+            return ERROR
+
+        return SUCCESS
+
+    def get_cache_dir(self, options: Values, args: list[str]) -> None:
+        if args:
+            raise CommandError("Too many arguments")
+
+        logger.info(options.cache_dir)
+
+    def get_cache_info(self, options: Values, args: list[str]) -> None:
+        if args:
+            raise CommandError("Too many arguments")
+
+        num_http_files = len(self._find_http_files(options))
+        num_packages = len(self._find_wheels(options, "*"))
+
+        http_cache_location = self._cache_dir(options, "http-v2")
+        old_http_cache_location = self._cache_dir(options, "http")
+        wheels_cache_location = self._cache_dir(options, "wheels")
+        http_cache_size = filesystem.format_size(
+            filesystem.directory_size(http_cache_location)
+            + filesystem.directory_size(old_http_cache_location)
+        )
+        wheels_cache_size = filesystem.format_directory_size(wheels_cache_location)
+
+        message = (
+            textwrap.dedent(
+                """
+                    Package index page cache location (pip v23.3+): {http_cache_location}
+                    Package index page cache location (older pips): {old_http_cache_location}
+                    Package index page cache size: {http_cache_size}
+                    Number of HTTP files: {num_http_files}
+                    Locally built wheels location: {wheels_cache_location}
+                    Locally built wheels size: {wheels_cache_size}
+                    Number of locally built wheels: {package_count}
+                """  # noqa: E501
+            )
+            .format(
+                http_cache_location=http_cache_location,
+                old_http_cache_location=old_http_cache_location,
+                http_cache_size=http_cache_size,
+                num_http_files=num_http_files,
+                wheels_cache_location=wheels_cache_location,
+                package_count=num_packages,
+                wheels_cache_size=wheels_cache_size,
+            )
+            .strip()
+        )
+
+        logger.info(message)
+
+    def list_cache_items(self, options: Values, args: list[str]) -> None:
+        if len(args) > 1:
+            raise CommandError("Too many arguments")
+
+        if args:
+            pattern = args[0]
+        else:
+            pattern = "*"
+
+        files = self._find_wheels(options, pattern)
+        if options.list_format == "human":
+            self.format_for_human(files)
+        else:
+            self.format_for_abspath(files)
+
+    def format_for_human(self, files: list[str]) -> None:
+        if not files:
+            logger.info("No locally built wheels cached.")
+            return
+
+        results = []
+        for filename in files:
+            wheel = os.path.basename(filename)
+            size = filesystem.format_file_size(filename)
+            results.append(f" - {wheel} ({size})")
+        logger.info("Cache contents:\n")
+        logger.info("\n".join(sorted(results)))
+
+    def format_for_abspath(self, files: list[str]) -> None:
+        if files:
+            logger.info("\n".join(sorted(files)))
+
+    def remove_cache_items(self, options: Values, args: list[str]) -> None:
+        if len(args) > 1:
+            raise CommandError("Too many arguments")
+
+        if not args:
+            raise CommandError("Please provide a pattern")
+
+        files = self._find_wheels(options, args[0])
+
+        no_matching_msg = "No matching packages"
+        if args[0] == "*":
+            # Only fetch http files if no specific pattern given
+            files += self._find_http_files(options)
+        else:
+            # Add the pattern to the log message
+            no_matching_msg += f' for pattern "{args[0]}"'
+
+        if not files:
+            logger.warning(no_matching_msg)
+
+        bytes_removed = 0
+        for filename in files:
+            bytes_removed += os.stat(filename).st_size
+            os.unlink(filename)
+            logger.verbose("Removed %s", filename)
+        logger.info("Files removed: %s (%s)", len(files), format_size(bytes_removed))
+
+    def purge_cache(self, options: Values, args: list[str]) -> None:
+        if args:
+            raise CommandError("Too many arguments")
+
+        return self.remove_cache_items(options, ["*"])
+
+    def _cache_dir(self, options: Values, subdir: str) -> str:
+        return os.path.join(options.cache_dir, subdir)
+
+    def _find_http_files(self, options: Values) -> list[str]:
+        old_http_dir = self._cache_dir(options, "http")
+        new_http_dir = self._cache_dir(options, "http-v2")
+        return filesystem.find_files(old_http_dir, "*") + filesystem.find_files(
+            new_http_dir, "*"
+        )
+
+    def _find_wheels(self, options: Values, pattern: str) -> list[str]:
+        wheel_dir = self._cache_dir(options, "wheels")
+
+        # The wheel filename format, as specified in PEP 427, is:
+        #     {distribution}-{version}(-{build})?-{python}-{abi}-{platform}.whl
+        #
+        # Additionally, non-alphanumeric values in the distribution are
+        # normalized to underscores (_), meaning hyphens can never occur
+        # before `-{version}`.
+        #
+        # Given that information:
+        # - If the pattern we're given contains a hyphen (-), the user is
+        #   providing at least the version. Thus, we can just append `*.whl`
+        #   to match the rest of it.
+        # - If the pattern we're given doesn't contain a hyphen (-), the
+        #   user is only providing the name. Thus, we append `-*.whl` to
+        #   match the hyphen before the version, followed by anything else.
+        #
+        # PEP 427: https://www.python.org/dev/peps/pep-0427/
+        pattern = pattern + ("*.whl" if "-" in pattern else "-*.whl")
+
+        return filesystem.find_files(wheel_dir, pattern)
+ """HTTP cache implementation."""
+
+from __future__ import annotations
+
+import os
+import shutil
+from collections.abc import Generator
+from contextlib import contextmanager
+from datetime import datetime
+from typing import Any, BinaryIO, Callable
+
+from pip._vendor.cachecontrol.cache import SeparateBodyBaseCache
+from pip._vendor.cachecontrol.caches import SeparateBodyFileCache
+from pip._vendor.requests.models import Response
+
+from pip._internal.utils.filesystem import (
+    adjacent_tmp_file,
+    copy_directory_permissions,
+    replace,
+)
+from pip._internal.utils.misc import ensure_dir
+
+
+def is_from_cache(response: Response) -> bool:
+    return getattr(response, "from_cache", False)
+
+
+@contextmanager
+def suppressed_cache_errors() -> Generator[None, None, None]:
+    """If we can't access the cache then we can just skip caching and process
+    requests as if caching wasn't enabled.
+    """
+    try:
+        yield
+    except OSError:
+        pass
+
+
+class SafeFileCache(SeparateBodyBaseCache):
+    """
+    A file based cache which is safe to use even when the target directory may
+    not be accessible or writable.
+
+    There is a race condition when two processes try to write and/or read the
+    same entry at the same time, since each entry consists of two separate
+    files (https://github.com/psf/cachecontrol/issues/324).  We therefore have
+    additional logic that makes sure that both files to be present before
+    returning an entry; this fixes the read side of the race condition.
+
+    For the write side, we assume that the server will only ever return the
+    same data for the same URL, which ought to be the case for files pip is
+    downloading.  PyPI does not have a mechanism to swap out a wheel for
+    another wheel, for example.  If this assumption is not true, the
+    CacheControl issue will need to be fixed.
+    """
+
+    def __init__(self, directory: str) -> None:
+        assert directory is not None, "Cache directory must not be None."
+        super().__init__()
+        self.directory = directory
+
+    def _get_cache_path(self, name: str) -> str:
+        # From cachecontrol.caches.file_cache.FileCache._fn, brought into our
+        # class for backwards-compatibility and to avoid using a non-public
+        # method.
+        hashed = SeparateBodyFileCache.encode(name)
+        parts = list(hashed[:5]) + [hashed]
+        return os.path.join(self.directory, *parts)
+
+    def get(self, key: str) -> bytes | None:
+        # The cache entry is only valid if both metadata and body exist.
+        metadata_path = self._get_cache_path(key)
+        body_path = metadata_path + ".body"
+        if not (os.path.exists(metadata_path) and os.path.exists(body_path)):
+            return None
+        with suppressed_cache_errors():
+            with open(metadata_path, "rb") as f:
+                return f.read()
+
+    def _write_to_file(self, path: str, writer_func: Callable[[BinaryIO], Any]) -> None:
+        """Common file writing logic with proper permissions and atomic replacement."""
+        with suppressed_cache_errors():
+            ensure_dir(os.path.dirname(path))
+
+            with adjacent_tmp_file(path) as f:
+                writer_func(f)
+                # Inherit the read/write permissions of the cache directory
+                # to enable multi-user cache use-cases.
+                copy_directory_permissions(self.directory, f)
+
+            replace(f.name, path)
+
+    def _write(self, path: str, data: bytes) -> None:
+        self._write_to_file(path, lambda f: f.write(data))
+
+    def _write_from_io(self, path: str, source_file: BinaryIO) -> None:
+        self._write_to_file(path, lambda f: shutil.copyfileobj(source_file, f))
+
+    def set(
+        self, key: str, value: bytes, expires: int | datetime | None = None
+    ) -> None:
+        path = self._get_cache_path(key)
+        self._write(path, value)
+
+    def delete(self, key: str) -> None:
+        path = self._get_cache_path(key)
+        with suppressed_cache_errors():
+            os.remove(path)
+        with suppressed_cache_errors():
+            os.remove(path + ".body")
+
+    def get_body(self, key: str) -> BinaryIO | None:
+        # The cache entry is only valid if both metadata and body exist.
+        metadata_path = self._get_cache_path(key)
+        body_path = metadata_path + ".body"
+        if not (os.path.exists(metadata_path) and os.path.exists(body_path)):
+            return None
+        with suppressed_cache_errors():
+            return open(body_path, "rb")
+
+    def set_body(self, key: str, body: bytes) -> None:
+        path = self._get_cache_path(key) + ".body"
+        self._write(path, body)
+
+    def set_body_from_io(self, key: str, body_file: BinaryIO) -> None:
+        """Set the body of the cache entry from a file object."""
+        path = self._get_cache_path(key) + ".body"
+        self._write_from_io(path, body_file)
+ # SPDX-FileCopyrightText: 2015 Eric Larson
+#
+# SPDX-License-Identifier: Apache-2.0
+
+"""
+The cache object API for implementing caches. The default is a thread
+safe in-memory dictionary.
+"""
+
+from __future__ import annotations
+
+from threading import Lock
+from typing import IO, TYPE_CHECKING, MutableMapping
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+
+class BaseCache:
+    def get(self, key: str) -> bytes | None:
+        raise NotImplementedError()
+
+    def set(
+        self, key: str, value: bytes, expires: int | datetime | None = None
+    ) -> None:
+        raise NotImplementedError()
+
+    def delete(self, key: str) -> None:
+        raise NotImplementedError()
+
+    def close(self) -> None:
+        pass
+
+
+class DictCache(BaseCache):
+    def __init__(self, init_dict: MutableMapping[str, bytes] | None = None) -> None:
+        self.lock = Lock()
+        self.data = init_dict or {}
+
+    def get(self, key: str) -> bytes | None:
+        return self.data.get(key, None)
+
+    def set(
+        self, key: str, value: bytes, expires: int | datetime | None = None
+    ) -> None:
+        with self.lock:
+            self.data.update({key: value})
+
+    def delete(self, key: str) -> None:
+        with self.lock:
+            if key in self.data:
+                self.data.pop(key)
+
+
+class SeparateBodyBaseCache(BaseCache):
+    """
+    In this variant, the body is not stored mixed in with the metadata, but is
+    passed in (as a bytes-like object) in a separate call to ``set_body()``.
+
+    That is, the expected interaction pattern is::
+
+        cache.set(key, serialized_metadata)
+        cache.set_body(key)
+
+    Similarly, the body should be loaded separately via ``get_body()``.
+    """
+
+    def set_body(self, key: str, body: bytes) -> None:
+        raise NotImplementedError()
+
+    def get_body(self, key: str) -> IO[bytes] | None:
+        """
+        Return the body as file-like object.
+        """
+        raise NotImplementedError()
+

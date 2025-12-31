@@ -1,0 +1,60 @@
+// Chemin: C:\PERIMONT_ERP\ui\screens\login_screen.py
+
+import customtkinter as ctk
+from config.settings import *
+from modules.auth.auth_handler import AuthHandler
+
+class LoginScreen(ctk.CTkFrame):
+    def __init__(self, parent, on_login_success):
+        super().__init__(parent, fg_color=COLOR_MAIN_BG)
+        self.on_login_success = on_login_success
+        self.auth = AuthHandler()
+
+        # Configuration de la grille (2 colonnes)
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+
+        # --- Côté Gauche : Design / Branding ---
+        self.side_frame = ctk.CTkFrame(self, fg_color=COLOR_ACCENT, corner_radius=0, width=400)
+        self.side_frame.grid(row=0, column=0, sticky="nsew")
+        
+        self.brand_label = ctk.CTkLabel(self.side_frame, text="PERIMONT\nERP", 
+                                       font=("Impact", 60), text_color=COLOR_MAIN_BG)
+        self.brand_label.place(relx=0.5, rely=0.4, anchor="center")
+        
+        self.slogan = ctk.CTkLabel(self.side_frame, text="Logistique & Finance\nHors Ligne", 
+                                  font=("Segoe UI", 18), text_color=COLOR_MAIN_BG)
+        self.slogan.place(relx=0.5, rely=0.6, anchor="center")
+
+        # --- Côté Droit : Formulaire ---
+        self.login_card = ctk.CTkFrame(self, fg_color=COLOR_CARD_BG, corner_radius=20, width=400, height=450)
+        self.login_card.grid(row=0, column=1, padx=50)
+        self.login_card.grid_propagate(False)
+
+        ctk.CTkLabel(self.login_card, text="Connexion", font=("Segoe UI", 32, "bold"), text_color=COLOR_TEXT_MAIN).pack(pady=(40, 20))
+
+        self.user_entry = ctk.CTkEntry(self.login_card, placeholder_text="Nom d'utilisateur", 
+                                      width=300, height=50, fg_color=COLOR_MAIN_BG, border_color=COLOR_ACCENT)
+        self.user_entry.pack(pady=10)
+
+        self.pass_entry = ctk.CTkEntry(self.login_card, placeholder_text="Mot de passe", show="*", 
+                                      width=300, height=50, fg_color=COLOR_MAIN_BG, border_color=COLOR_ACCENT)
+        self.pass_entry.pack(pady=10)
+
+        self.error_label = ctk.CTkLabel(self.login_card, text="", text_color=COLOR_ERROR)
+        self.error_label.pack(pady=5)
+
+        self.btn_login = ctk.CTkButton(self.login_card, text="SE CONNECTER", command=self.attempt_login,
+                                      width=300, height=50, font=("Segoe UI", 16, "bold"),
+                                      fg_color=COLOR_ACCENT, text_color=COLOR_MAIN_BG, hover_color="#7dd3fc")
+        self.btn_login.pack(pady=20)
+
+    def attempt_login(self):
+        user = self.user_entry.get()
+        pw = self.pass_entry.get()
+        success, user_data = self.auth.login(user, pw)
+        
+        if success:
+            self.on_login_success(user_data)
+        else:
+            self.error_label.configure(text="Identifiants incorrects")

@@ -1,0 +1,17 @@
+#!/usr/bin/env python3
+"""
+Script de test_sparse_accessor pour PERIMONT_ERP
+Module: venv.Lib.site-packages.pandas.tests.series.accessors.test_sparse_accessor.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+from pandas import Series
+
+
+class TestSparseAccessor:
+    def test_sparse_accessor_updates_on_inplace(self):
+        ser = Series([1, 1, 2, 3], dtype="Sparse[int]")
+        return_value = ser.drop([0, 1], inplace=True)
+        assert return_value is None
+        assert ser.sparse.density == 1.0
+

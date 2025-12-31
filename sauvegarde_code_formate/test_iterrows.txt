@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+"""
+Script de test_iterrows pour PERIMONT_ERP
+Module: venv.Lib.site-packages.pandas.tests.frame.methods.test_iterrows.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+from pandas import (
+    DataFrame,
+    Timedelta,
+)
+
+
+def test_no_overflow_of_freq_and_time_in_dataframe():
+    # GH 35665
+    df = DataFrame(
+        {
+            "some_string": ["2222Y3"],
+            "time": [Timedelta("0 days 00:00:00.990000")],
+        }
+    )
+    for _, row in df.iterrows():
+        assert row.dtype == "object"
+

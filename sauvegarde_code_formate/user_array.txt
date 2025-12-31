@@ -1,0 +1,9 @@
+#!/usr/bin/env python3
+"""
+Script de user_array pour PERIMONT_ERP
+Module: venv.Lib.site-packages.numpy.lib.user_array.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+from ._user_array_impl import __doc__, container  # noqa: F401
+

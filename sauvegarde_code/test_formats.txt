@@ -1,0 +1,2366 @@
+// Chemin: C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\arrays\interval\test_formats.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\indexes\base_class\test_formats.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\indexes\categorical\test_formats.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\indexes\datetimes\test_formats.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\indexes\interval\test_formats.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\indexes\multi\test_formats.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\indexes\period\test_formats.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\indexes\timedeltas\test_formats.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\scalar\interval\test_formats.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\scalar\timedelta\test_formats.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\scalar\timestamp\test_formats.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tests\series\test_formats.py
+
+from pandas.core.arrays import IntervalArray
+
+
+def test_repr():
+    # GH#25022
+    arr = IntervalArray.from_tuples([(0, 1), (1, 2)])
+    result = repr(arr)
+    expected = (
+        "<IntervalArray>\n"
+        "[(0, 1], (1, 2]]\n"
+        "Length: 2, dtype: interval[int64, right]"
+    )
+    assert result == expected
+ import numpy as np
+import pytest
+
+from pandas._config import using_string_dtype
+import pandas._config.config as cf
+
+from pandas import Index
+import pandas._testing as tm
+
+
+class TestIndexRendering:
+    def test_repr_is_valid_construction_code(self):
+        # for the case of Index, where the repr is traditional rather than
+        # stylized
+        idx = Index(["a", "b"])
+        res = eval(repr(idx))
+        tm.assert_index_equal(res, idx)
+
+    @pytest.mark.xfail(using_string_dtype(), reason="repr different")
+    @pytest.mark.parametrize(
+        "index,expected",
+        [
+            # ASCII
+            # short
+            (
+                Index(["a", "bb", "ccc"]),
+                """Index(['a', 'bb', 'ccc'], dtype='object')""",
+            ),
+            # multiple lines
+            (
+                Index(["a", "bb", "ccc"] * 10),
+                "Index(['a', 'bb', 'ccc', 'a', 'bb', 'ccc', 'a', "
+                "'bb', 'ccc', 'a', 'bb', 'ccc',\n"
+                "       'a', 'bb', 'ccc', 'a', 'bb', 'ccc', 'a', "
+                "'bb', 'ccc', 'a', 'bb', 'ccc',\n"
+                "       'a', 'bb', 'ccc', 'a', 'bb', 'ccc'],\n"
+                "      dtype='object')",
+            ),
+            # truncated
+            (
+                Index(["a", "bb", "ccc"] * 100),
+                "Index(['a', 'bb', 'ccc', 'a', 'bb', 'ccc', 'a', 'bb', 'ccc', 'a',\n"
+                "       ...\n"
+                "       'ccc', 'a', 'bb', 'ccc', 'a', 'bb', 'ccc', 'a', 'bb', 'ccc'],\n"
+                "      dtype='object', length=300)",
+            ),
+            # Non-ASCII
+            # short
+            (
+                Index(["あ", "いい", "ううう"]),
+                """Index(['あ', 'いい', 'ううう'], dtype='object')""",
+            ),
+            # multiple lines
+            (
+                Index(["あ", "いい", "ううう"] * 10),
+                (
+                    "Index(['あ', 'いい', 'ううう', 'あ', 'いい', 'ううう', "
+                    "'あ', 'いい', 'ううう', 'あ', 'いい', 'ううう',\n"
+                    "       'あ', 'いい', 'ううう', 'あ', 'いい', 'ううう', "
+                    "'あ', 'いい', 'ううう', 'あ', 'いい', 'ううう',\n"
+                    "       'あ', 'いい', 'ううう', 'あ', 'いい', "
+                    "'ううう'],\n"
+                    "      dtype='object')"
+                ),
+            ),
+            # truncated
+            (
+                Index(["あ", "いい", "ううう"] * 100),
+                (
+                    "Index(['あ', 'いい', 'ううう', 'あ', 'いい', 'ううう', "
+                    "'あ', 'いい', 'ううう', 'あ',\n"
+                    "       ...\n"
+                    "       'ううう', 'あ', 'いい', 'ううう', 'あ', 'いい', "
+                    "'ううう', 'あ', 'いい', 'ううう'],\n"
+                    "      dtype='object', length=300)"
+                ),
+            ),
+        ],
+    )
+    def test_string_index_repr(self, index, expected):
+        result = repr(index)
+        assert result == expected
+
+    @pytest.mark.xfail(using_string_dtype(), reason="repr different")
+    @pytest.mark.parametrize(
+        "index,expected",
+        [
+            # short
+            (
+                Index(["あ", "いい", "ううう"]),
+                ("Index(['あ', 'いい', 'ううう'], dtype='object')"),
+            ),
+            # multiple lines
+            (
+                Index(["あ", "いい", "ううう"] * 10),
+                (
+                    "Index(['あ', 'いい', 'ううう', 'あ', 'いい', "
+                    "'ううう', 'あ', 'いい', 'ううう',\n"
+                    "       'あ', 'いい', 'ううう', 'あ', 'いい', "
+                    "'ううう', 'あ', 'いい', 'ううう',\n"
+                    "       'あ', 'いい', 'ううう', 'あ', 'いい', "
+                    "'ううう', 'あ', 'いい', 'ううう',\n"
+                    "       'あ', 'いい', 'ううう'],\n"
+                    "      dtype='object')"
+                    ""
+                ),
+            ),
+            # truncated
+            (
+                Index(["あ", "いい", "ううう"] * 100),
+                (
+                    "Index(['あ', 'いい', 'ううう', 'あ', 'いい', "
+                    "'ううう', 'あ', 'いい', 'ううう',\n"
+                    "       'あ',\n"
+                    "       ...\n"
+                    "       'ううう', 'あ', 'いい', 'ううう', 'あ', "
+                    "'いい', 'ううう', 'あ', 'いい',\n"
+                    "       'ううう'],\n"
+                    "      dtype='object', length=300)"
+                ),
+            ),
+        ],
+    )
+    def test_string_index_repr_with_unicode_option(self, index, expected):
+        # Enable Unicode option -----------------------------------------
+        with cf.option_context("display.unicode.east_asian_width", True):
+            result = repr(index)
+            assert result == expected
+
+    def test_repr_summary(self):
+        with cf.option_context("display.max_seq_items", 10):
+            result = repr(Index(np.arange(1000)))
+            assert len(result) < 200
+            assert "..." in result
+
+    def test_summary_bug(self):
+        # GH#3869
+        ind = Index(["{other}%s", "~:{range}:0"], name="A")
+        result = ind._summary()
+        # shouldn't be formatted accidentally.
+        assert "~:{range}:0" in result
+        assert "{other}%s" in result
+
+    def test_index_repr_bool_nan(self):
+        # GH32146
+        arr = Index([True, False, np.nan], dtype=object)
+        msg = "Index.format is deprecated"
+        with tm.assert_produces_warning(FutureWarning, match=msg):
+            exp1 = arr.format()
+        out1 = ["True", "False", "NaN"]
+        assert out1 == exp1
+
+        exp2 = repr(arr)
+        out2 = "Index([True, False, nan], dtype='object')"
+        assert out2 == exp2
+
+    def test_format_different_scalar_lengths(self):
+        # GH#35439
+        idx = Index(["aaaaaaaaa", "b"])
+        expected = ["aaaaaaaaa", "b"]
+        msg = r"Index\.format is deprecated"
+        with tm.assert_produces_warning(FutureWarning, match=msg):
+            assert idx.format() == expected
+ """
+Tests for CategoricalIndex.__repr__ and related methods.
+"""
+import pytest
+
+from pandas._config import using_string_dtype
+import pandas._config.config as cf
+
+from pandas import CategoricalIndex
+import pandas._testing as tm
+
+
+class TestCategoricalIndexRepr:
+    def test_format_different_scalar_lengths(self):
+        # GH#35439
+        idx = CategoricalIndex(["aaaaaaaaa", "b"])
+        expected = ["aaaaaaaaa", "b"]
+        msg = r"CategoricalIndex\.format is deprecated"
+        with tm.assert_produces_warning(FutureWarning, match=msg):
+            assert idx.format() == expected
+
+    @pytest.mark.xfail(using_string_dtype(), reason="repr different")
+    def test_string_categorical_index_repr(self):
+        # short
+        idx = CategoricalIndex(["a", "bb", "ccc"])
+        expected = """CategoricalIndex(['a', 'bb', 'ccc'], categories=['a', 'bb', 'ccc'], ordered=False, dtype='category')"""  # noqa: E501
+        assert repr(idx) == expected
+
+        # multiple lines
+        idx = CategoricalIndex(["a", "bb", "ccc"] * 10)
+        expected = """CategoricalIndex(['a', 'bb', 'ccc', 'a', 'bb', 'ccc', 'a', 'bb', 'ccc', 'a',
+                  'bb', 'ccc', 'a', 'bb', 'ccc', 'a', 'bb', 'ccc', 'a', 'bb',
+                  'ccc', 'a', 'bb', 'ccc', 'a', 'bb', 'ccc', 'a', 'bb', 'ccc'],
+                 categories=['a', 'bb', 'ccc'], ordered=False, dtype='category')"""  # noqa: E501
+
+        assert repr(idx) == expected
+
+        # truncated
+        idx = CategoricalIndex(["a", "bb", "ccc"] * 100)
+        expected = """CategoricalIndex(['a', 'bb', 'ccc', 'a', 'bb', 'ccc', 'a', 'bb', 'ccc', 'a',
+                  ...
+                  'ccc', 'a', 'bb', 'ccc', 'a', 'bb', 'ccc', 'a', 'bb', 'ccc'],
+                 categories=['a', 'bb', 'ccc'], ordered=False, dtype='category', length=300)"""  # noqa: E501
+
+        assert repr(idx) == expected
+
+        # larger categories
+        idx = CategoricalIndex(list("abcdefghijklmmo"))
+        expected = """CategoricalIndex(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
+                  'm', 'm', 'o'],
+                 categories=['a', 'b', 'c', 'd', ..., 'k', 'l', 'm', 'o'], ordered=False, dtype='category')"""  # noqa: E501
+
+        assert repr(idx) == expected
+
+        # short
+        idx = CategoricalIndex(["あ", "いい", "ううう"])
+        expected = """CategoricalIndex(['あ', 'いい', 'ううう'], categories=['あ', 'いい', 'ううう'], ordered=False, dtype='category')"""  # noqa: E501
+        assert repr(idx) == expected
+
+        # multiple lines
+        idx = CategoricalIndex(["あ", "いい", "ううう"] * 10)
+        expected = """CategoricalIndex(['あ', 'いい', 'ううう', 'あ', 'いい', 'ううう', 'あ', 'いい', 'ううう', 'あ',
+                  'いい', 'ううう', 'あ', 'いい', 'ううう', 'あ', 'いい', 'ううう', 'あ', 'いい',
+                  'ううう', 'あ', 'いい', 'ううう', 'あ', 'いい', 'ううう', 'あ', 'いい', 'ううう'],
+                 categories=['あ', 'いい', 'ううう'], ordered=False, dtype='category')"""  # noqa: E501
+
+        assert repr(idx) == expected
+
+        # truncated
+        idx = CategoricalIndex(["あ", "いい", "ううう"] * 100)
+        expected = """CategoricalIndex(['あ', 'いい', 'ううう', 'あ', 'いい', 'ううう', 'あ', 'いい', 'ううう', 'あ',
+                  ...
+                  'ううう', 'あ', 'いい', 'ううう', 'あ', 'いい', 'ううう', 'あ', 'いい', 'ううう'],
+                 categories=['あ', 'いい', 'ううう'], ordered=False, dtype='category', length=300)"""  # noqa: E501
+
+        assert repr(idx) == expected
+
+        # larger categories
+        idx = CategoricalIndex(list("あいうえおかきくけこさしすせそ"))
+        expected = """CategoricalIndex(['あ', 'い', 'う', 'え', 'お', 'か', 'き', 'く', 'け', 'こ', 'さ', 'し',
+                  'す', 'せ', 'そ'],
+                 categories=['あ', 'い', 'う', 'え', ..., 'し', 'す', 'せ', 'そ'], ordered=False, dtype='category')"""  # noqa: E501
+
+        assert repr(idx) == expected
+
+        # Enable Unicode option -----------------------------------------
+        with cf.option_context("display.unicode.east_asian_width", True):
+            # short
+            idx = CategoricalIndex(["あ", "いい", "ううう"])
+            expected = """CategoricalIndex(['あ', 'いい', 'ううう'], categories=['あ', 'いい', 'ううう'], ordered=False, dtype='category')"""  # noqa: E501
+            assert repr(idx) == expected
+
+            # multiple lines
+            idx = CategoricalIndex(["あ", "いい", "ううう"] * 10)
+            expected = """CategoricalIndex(['あ', 'いい', 'ううう', 'あ', 'いい', 'ううう', 'あ', 'いい',
+                  'ううう', 'あ', 'いい', 'ううう', 'あ', 'いい', 'ううう',
+                  'あ', 'いい', 'ううう', 'あ', 'いい', 'ううう', 'あ', 'いい',
+                  'ううう', 'あ', 'いい', 'ううう', 'あ', 'いい', 'ううう'],
+                 categories=['あ', 'いい', 'ううう'], ordered=False, dtype='category')"""  # noqa: E501
+
+            assert repr(idx) == expected
+
+            # truncated
+            idx = CategoricalIndex(["あ", "いい", "ううう"] * 100)
+            expected = """CategoricalIndex(['あ', 'いい', 'ううう', 'あ', 'いい', 'ううう', 'あ', 'いい',
+                  'ううう', 'あ',
+                  ...
+                  'ううう', 'あ', 'いい', 'ううう', 'あ', 'いい', 'ううう',
+                  'あ', 'いい', 'ううう'],
+                 categories=['あ', 'いい', 'ううう'], ordered=False, dtype='category', length=300)"""  # noqa: E501
+
+            assert repr(idx) == expected
+
+            # larger categories
+            idx = CategoricalIndex(list("あいうえおかきくけこさしすせそ"))
+            expected = """CategoricalIndex(['あ', 'い', 'う', 'え', 'お', 'か', 'き', 'く', 'け', 'こ',
+                  'さ', 'し', 'す', 'せ', 'そ'],
+                 categories=['あ', 'い', 'う', 'え', ..., 'し', 'す', 'せ', 'そ'], ordered=False, dtype='category')"""  # noqa: E501
+
+            assert repr(idx) == expected
+ from datetime import datetime
+
+import dateutil.tz
+import numpy as np
+import pytest
+import pytz
+
+import pandas as pd
+from pandas import (
+    DatetimeIndex,
+    NaT,
+    Series,
+)
+import pandas._testing as tm
+
+
+@pytest.fixture(params=["s", "ms", "us", "ns"])
+def unit(request):
+    return request.param
+
+
+def test_get_values_for_csv():
+    index = pd.date_range(freq="1D", periods=3, start="2017-01-01")
+
+    # First, with no arguments.
+    expected = np.array(["2017-01-01", "2017-01-02", "2017-01-03"], dtype=object)
+
+    result = index._get_values_for_csv()
+    tm.assert_numpy_array_equal(result, expected)
+
+    # No NaN values, so na_rep has no effect
+    result = index._get_values_for_csv(na_rep="pandas")
+    tm.assert_numpy_array_equal(result, expected)
+
+    # Make sure date formatting works
+    expected = np.array(["01-2017-01", "01-2017-02", "01-2017-03"], dtype=object)
+
+    result = index._get_values_for_csv(date_format="%m-%Y-%d")
+    tm.assert_numpy_array_equal(result, expected)
+
+    # NULL object handling should work
+    index = DatetimeIndex(["2017-01-01", NaT, "2017-01-03"])
+    expected = np.array(["2017-01-01", "NaT", "2017-01-03"], dtype=object)
+
+    result = index._get_values_for_csv(na_rep="NaT")
+    tm.assert_numpy_array_equal(result, expected)
+
+    expected = np.array(["2017-01-01", "pandas", "2017-01-03"], dtype=object)
+
+    result = index._get_values_for_csv(na_rep="pandas")
+    tm.assert_numpy_array_equal(result, expected)
+
+    result = index._get_values_for_csv(na_rep="NaT", date_format="%Y-%m-%d %H:%M:%S.%f")
+    expected = np.array(
+        ["2017-01-01 00:00:00.000000", "NaT", "2017-01-03 00:00:00.000000"],
+        dtype=object,
+    )
+    tm.assert_numpy_array_equal(result, expected)
+
+    # invalid format
+    result = index._get_values_for_csv(na_rep="NaT", date_format="foo")
+    expected = np.array(["foo", "NaT", "foo"], dtype=object)
+    tm.assert_numpy_array_equal(result, expected)
+
+
+class TestDatetimeIndexRendering:
+    @pytest.mark.parametrize("tzstr", ["US/Eastern", "dateutil/US/Eastern"])
+    def test_dti_with_timezone_repr(self, tzstr):
+        rng = pd.date_range("4/13/2010", "5/6/2010")
+
+        rng_eastern = rng.tz_localize(tzstr)
+
+        rng_repr = repr(rng_eastern)
+        assert "2010-04-13 00:00:00" in rng_repr
+
+    def test_dti_repr_dates(self):
+        text = str(pd.to_datetime([datetime(2013, 1, 1), datetime(2014, 1, 1)]))
+        assert "['2013-01-01'," in text
+        assert ", '2014-01-01']" in text
+
+    def test_dti_repr_mixed(self):
+        text = str(
+            pd.to_datetime(
+                [datetime(2013, 1, 1), datetime(2014, 1, 1, 12), datetime(2014, 1, 1)]
+            )
+        )
+        assert "'2013-01-01 00:00:00'," in text
+        assert "'2014-01-01 00:00:00']" in text
+
+    def test_dti_repr_short(self):
+        dr = pd.date_range(start="1/1/2012", periods=1)
+        repr(dr)
+
+        dr = pd.date_range(start="1/1/2012", periods=2)
+        repr(dr)
+
+        dr = pd.date_range(start="1/1/2012", periods=3)
+        repr(dr)
+
+    @pytest.mark.parametrize(
+        "dates, freq, expected_repr",
+        [
+            (
+                ["2012-01-01 00:00:00"],
+                "60min",
+                (
+                    "DatetimeIndex(['2012-01-01 00:00:00'], "
+                    "dtype='datetime64[ns]', freq='60min')"
+                ),
+            ),
+            (
+                ["2012-01-01 00:00:00", "2012-01-01 01:00:00"],
+                "60min",
+                "DatetimeIndex(['2012-01-01 00:00:00', '2012-01-01 01:00:00'], "
+                "dtype='datetime64[ns]', freq='60min')",
+            ),
+            (
+                ["2012-01-01"],
+                "24h",
+                "DatetimeIndex(['2012-01-01'], dtype='datetime64[ns]', freq='24h')",
+            ),
+        ],
+    )
+    def test_dti_repr_time_midnight(self, dates, freq, expected_repr, unit):
+        # GH53634
+        dti = DatetimeIndex(dates, freq).as_unit(unit)
+        actual_repr = repr(dti)
+        assert actual_repr == expected_repr.replace("[ns]", f"[{unit}]")
+
+    def test_dti_representation(self, unit):
+        idxs = []
+        idxs.append(DatetimeIndex([], freq="D"))
+        idxs.append(DatetimeIndex(["2011-01-01"], freq="D"))
+        idxs.append(DatetimeIndex(["2011-01-01", "2011-01-02"], freq="D"))
+        idxs.append(DatetimeIndex(["2011-01-01", "2011-01-02", "2011-01-03"], freq="D"))
+        idxs.append(
+            DatetimeIndex(
+                ["2011-01-01 09:00", "2011-01-01 10:00", "2011-01-01 11:00"],
+                freq="h",
+                tz="Asia/Tokyo",
+            )
+        )
+        idxs.append(
+            DatetimeIndex(
+                ["2011-01-01 09:00", "2011-01-01 10:00", NaT], tz="US/Eastern"
+            )
+        )
+        idxs.append(
+            DatetimeIndex(["2011-01-01 09:00", "2011-01-01 10:00", NaT], tz="UTC")
+        )
+
+        exp = []
+        exp.append("DatetimeIndex([], dtype='datetime64[ns]', freq='D')")
+        exp.append("DatetimeIndex(['2011-01-01'], dtype='datetime64[ns]', freq='D')")
+        exp.append(
+            "DatetimeIndex(['2011-01-01', '2011-01-02'], "
+            "dtype='datetime64[ns]', freq='D')"
+        )
+        exp.append(
+            "DatetimeIndex(['2011-01-01', '2011-01-02', '2011-01-03'], "
+            "dtype='datetime64[ns]', freq='D')"
+        )
+        exp.append(
+            "DatetimeIndex(['2011-01-01 09:00:00+09:00', "
+            "'2011-01-01 10:00:00+09:00', '2011-01-01 11:00:00+09:00']"
+            ", dtype='datetime64[ns, Asia/Tokyo]', freq='h')"
+        )
+        exp.append(
+            "DatetimeIndex(['2011-01-01 09:00:00-05:00', "
+            "'2011-01-01 10:00:00-05:00', 'NaT'], "
+            "dtype='datetime64[ns, US/Eastern]', freq=None)"
+        )
+        exp.append(
+            "DatetimeIndex(['2011-01-01 09:00:00+00:00', "
+            "'2011-01-01 10:00:00+00:00', 'NaT'], "
+            "dtype='datetime64[ns, UTC]', freq=None)"
+            ""
+        )
+
+        with pd.option_context("display.width", 300):
+            for index, expected in zip(idxs, exp):
+                index = index.as_unit(unit)
+                expected = expected.replace("[ns", f"[{unit}")
+                result = repr(index)
+                assert result == expected
+                result = str(index)
+                assert result == expected
+
+    # TODO: this is a Series.__repr__ test
+    def test_dti_representation_to_series(self, unit):
+        idx1 = DatetimeIndex([], freq="D")
+        idx2 = DatetimeIndex(["2011-01-01"], freq="D")
+        idx3 = DatetimeIndex(["2011-01-01", "2011-01-02"], freq="D")
+        idx4 = DatetimeIndex(["2011-01-01", "2011-01-02", "2011-01-03"], freq="D")
+        idx5 = DatetimeIndex(
+            ["2011-01-01 09:00", "2011-01-01 10:00", "2011-01-01 11:00"],
+            freq="h",
+            tz="Asia/Tokyo",
+        )
+        idx6 = DatetimeIndex(
+            ["2011-01-01 09:00", "2011-01-01 10:00", NaT], tz="US/Eastern"
+        )
+        idx7 = DatetimeIndex(["2011-01-01 09:00", "2011-01-02 10:15"])
+
+        exp1 = """Series([], dtype: datetime64[ns])"""
+
+        exp2 = "0   2011-01-01\ndtype: datetime64[ns]"
+
+        exp3 = "0   2011-01-01\n1   2011-01-02\ndtype: datetime64[ns]"
+
+        exp4 = (
+            "0   2011-01-01\n"
+            "1   2011-01-02\n"
+            "2   2011-01-03\n"
+            "dtype: datetime64[ns]"
+        )
+
+        exp5 = (
+            "0   2011-01-01 09:00:00+09:00\n"
+            "1   2011-01-01 10:00:00+09:00\n"
+            "2   2011-01-01 11:00:00+09:00\n"
+            "dtype: datetime64[ns, Asia/Tokyo]"
+        )
+
+        exp6 = (
+            "0   2011-01-01 09:00:00-05:00\n"
+            "1   2011-01-01 10:00:00-05:00\n"
+            "2                         NaT\n"
+            "dtype: datetime64[ns, US/Eastern]"
+        )
+
+        exp7 = (
+            "0   2011-01-01 09:00:00\n"
+            "1   2011-01-02 10:15:00\n"
+            "dtype: datetime64[ns]"
+        )
+
+        with pd.option_context("display.width", 300):
+            for idx, expected in zip(
+                [idx1, idx2, idx3, idx4, idx5, idx6, idx7],
+                [exp1, exp2, exp3, exp4, exp5, exp6, exp7],
+            ):
+                ser = Series(idx.as_unit(unit))
+                result = repr(ser)
+                assert result == expected.replace("[ns", f"[{unit}")
+
+    def test_dti_summary(self):
+        # GH#9116
+        idx1 = DatetimeIndex([], freq="D")
+        idx2 = DatetimeIndex(["2011-01-01"], freq="D")
+        idx3 = DatetimeIndex(["2011-01-01", "2011-01-02"], freq="D")
+        idx4 = DatetimeIndex(["2011-01-01", "2011-01-02", "2011-01-03"], freq="D")
+        idx5 = DatetimeIndex(
+            ["2011-01-01 09:00", "2011-01-01 10:00", "2011-01-01 11:00"],
+            freq="h",
+            tz="Asia/Tokyo",
+        )
+        idx6 = DatetimeIndex(
+            ["2011-01-01 09:00", "2011-01-01 10:00", NaT], tz="US/Eastern"
+        )
+
+        exp1 = "DatetimeIndex: 0 entries\nFreq: D"
+
+        exp2 = "DatetimeIndex: 1 entries, 2011-01-01 to 2011-01-01\nFreq: D"
+
+        exp3 = "DatetimeIndex: 2 entries, 2011-01-01 to 2011-01-02\nFreq: D"
+
+        exp4 = "DatetimeIndex: 3 entries, 2011-01-01 to 2011-01-03\nFreq: D"
+
+        exp5 = (
+            "DatetimeIndex: 3 entries, 2011-01-01 09:00:00+09:00 "
+            "to 2011-01-01 11:00:00+09:00\n"
+            "Freq: h"
+        )
+
+        exp6 = """DatetimeIndex: 3 entries, 2011-01-01 09:00:00-05:00 to NaT"""
+
+        for idx, expected in zip(
+            [idx1, idx2, idx3, idx4, idx5, idx6], [exp1, exp2, exp3, exp4, exp5, exp6]
+        ):
+            result = idx._summary()
+            assert result == expected
+
+    @pytest.mark.parametrize("tz", [None, pytz.utc, dateutil.tz.tzutc()])
+    @pytest.mark.parametrize("freq", ["B", "C"])
+    def test_dti_business_repr_etc_smoke(self, tz, freq):
+        # only really care that it works
+        dti = pd.bdate_range(
+            datetime(2009, 1, 1), datetime(2010, 1, 1), tz=tz, freq=freq
+        )
+        repr(dti)
+        dti._summary()
+        dti[2:2]._summary()
+
+
+class TestFormat:
+    def test_format(self):
+        # GH#35439
+        idx = pd.date_range("20130101", periods=5)
+        expected = [f"{x:%Y-%m-%d}" for x in idx]
+        msg = r"DatetimeIndex\.format is deprecated"
+        with tm.assert_produces_warning(FutureWarning, match=msg):
+            assert idx.format() == expected
+
+    def test_format_with_name_time_info(self):
+        # bug I fixed 12/20/2011
+        dates = pd.date_range("2011-01-01 04:00:00", periods=10, name="something")
+
+        msg = "DatetimeIndex.format is deprecated"
+        with tm.assert_produces_warning(FutureWarning, match=msg):
+            formatted = dates.format(name=True)
+        assert formatted[0] == "something"
+
+    def test_format_datetime_with_time(self):
+        dti = DatetimeIndex([datetime(2012, 2, 7), datetime(2012, 2, 7, 23)])
+
+        msg = "DatetimeIndex.format is deprecated"
+        with tm.assert_produces_warning(FutureWarning, match=msg):
+            result = dti.format()
+        expected = ["2012-02-07 00:00:00", "2012-02-07 23:00:00"]
+        assert len(result) == 2
+        assert result == expected
+
+    def test_format_datetime(self):
+        msg = "DatetimeIndex.format is deprecated"
+        with tm.assert_produces_warning(FutureWarning, match=msg):
+            formatted = pd.to_datetime([datetime(2003, 1, 1, 12), NaT]).format()
+        assert formatted[0] == "2003-01-01 12:00:00"
+        assert formatted[1] == "NaT"
+
+    def test_format_date(self):
+        msg = "DatetimeIndex.format is deprecated"
+        with tm.assert_produces_warning(FutureWarning, match=msg):
+            formatted = pd.to_datetime([datetime(2003, 1, 1), NaT]).format()
+        assert formatted[0] == "2003-01-01"
+        assert formatted[1] == "NaT"
+
+    def test_format_date_tz(self):
+        dti = pd.to_datetime([datetime(2013, 1, 1)], utc=True)
+        msg = "DatetimeIndex.format is deprecated"
+        with tm.assert_produces_warning(FutureWarning, match=msg):
+            formatted = dti.format()
+        assert formatted[0] == "2013-01-01 00:00:00+00:00"
+
+        dti = pd.to_datetime([datetime(2013, 1, 1), NaT], utc=True)
+        with tm.assert_produces_warning(FutureWarning, match=msg):
+            formatted = dti.format()
+        assert formatted[0] == "2013-01-01 00:00:00+00:00"
+
+    def test_format_date_explicit_date_format(self):
+        dti = pd.to_datetime([datetime(2003, 2, 1), NaT])
+        msg = "DatetimeIndex.format is deprecated"
+        with tm.assert_produces_warning(FutureWarning, match=msg):
+            formatted = dti.format(date_format="%m-%d-%Y", na_rep="UT")
+        assert formatted[0] == "02-01-2003"
+        assert formatted[1] == "UT"
+ import numpy as np
+import pytest
+
+from pandas import (
+    DataFrame,
+    DatetimeIndex,
+    Index,
+    Interval,
+    IntervalIndex,
+    Series,
+    Timedelta,
+    Timestamp,
+)
+import pandas._testing as tm
+
+
+class TestIntervalIndexRendering:
+    # TODO: this is a test for DataFrame/Series, not IntervalIndex
+    @pytest.mark.parametrize(
+        "constructor,expected",
+        [
+            (
+                Series,
+                (
+                    "(0.0, 1.0]    a\n"
+                    "NaN           b\n"
+                    "(2.0, 3.0]    c\n"
+                    "dtype: object"
+                ),
+            ),
+            (DataFrame, ("            0\n(0.0, 1.0]  a\nNaN         b\n(2.0, 3.0]  c")),
+        ],
+    )
+    def test_repr_missing(self, constructor, expected, using_infer_string, request):
+        # GH 25984
+        if using_infer_string and constructor is Series:
+            request.applymarker(pytest.mark.xfail(reason="repr different"))
+        index = IntervalIndex.from_tuples([(0, 1), np.nan, (2, 3)])
+        obj = constructor(list("abc"), index=index)
+        result = repr(obj)
+        assert result == expected
+
+    def test_repr_floats(self):
+        # GH 32553
+
+        markers = Series(
+            [1, 2],
+            index=IntervalIndex(
+                [
+                    Interval(left, right)
+                    for left, right in zip(
+                        Index([329.973, 345.137], dtype="float64"),
+                        Index([345.137, 360.191], dtype="float64"),
+                    )
+                ]
+            ),
+        )
+        result = str(markers)
+        expected = "(329.973, 345.137]    1\n(345.137, 360.191]    2\ndtype: int64"
+        assert result == expected
+
+    @pytest.mark.filterwarnings(
+        "ignore:invalid value encountered in cast:RuntimeWarning"
+    )
+    @pytest.mark.parametrize(
+        "tuples, closed, expected_data",
+        [
+            ([(0, 1), (1, 2), (2, 3)], "left", ["[0, 1)", "[1, 2)", "[2, 3)"]),
+            (
+                [(0.5, 1.0), np.nan, (2.0, 3.0)],
+                "right",
+                ["(0.5, 1.0]", "NaN", "(2.0, 3.0]"],
+            ),
+            (
+                [
+                    (Timestamp("20180101"), Timestamp("20180102")),
+                    np.nan,
+                    ((Timestamp("20180102"), Timestamp("20180103"))),
+                ],
+                "both",
+                [
+                    "[2018-01-01 00:00:00, 2018-01-02 00:00:00]",
+                    "NaN",
+                    "[2018-01-02 00:00:00, 2018-01-03 00:00:00]",
+                ],
+            ),
+            (
+                [
+                    (Timedelta("0 days"), Timedelta("1 days")),
+                    (Timedelta("1 days"), Timedelta("2 days")),
+                    np.nan,
+                ],
+                "neither",
+                [
+                    "(0 days 00:00:00, 1 days 00:00:00)",
+                    "(1 days 00:00:00, 2 days 00:00:00)",
+                    "NaN",
+                ],
+            ),
+        ],
+    )
+    def test_get_values_for_csv(self, tuples, closed, expected_data):
+        # GH 28210
+        index = IntervalIndex.from_tuples(tuples, closed=closed)
+        result = index._get_values_for_csv(na_rep="NaN")
+        expected = np.array(expected_data)
+        tm.assert_numpy_array_equal(result, expected)
+
+    def test_timestamp_with_timezone(self, unit):
+        # GH 55035
+        left = DatetimeIndex(["2020-01-01"], dtype=f"M8[{unit}, UTC]")
+        right = DatetimeIndex(["2020-01-02"], dtype=f"M8[{unit}, UTC]")
+        index = IntervalIndex.from_arrays(left, right)
+        result = repr(index)
+        expected = (
+            "IntervalIndex([(2020-01-01 00:00:00+00:00, 2020-01-02 00:00:00+00:00]], "
+            f"dtype='interval[datetime64[{unit}, UTC], right]')"
+        )
+        assert result == expected
+ import numpy as np
+import pytest
+
+import pandas as pd
+from pandas import (
+    Index,
+    MultiIndex,
+)
+import pandas._testing as tm
+
+
+def test_format(idx):
+    msg = "MultiIndex.format is deprecated"
+    with tm.assert_produces_warning(FutureWarning, match=msg):
+        idx.format()
+        idx[:0].format()
+
+
+def test_format_integer_names():
+    index = MultiIndex(
+        levels=[[0, 1], [0, 1]], codes=[[0, 0, 1, 1], [0, 1, 0, 1]], names=[0, 1]
+    )
+    msg = "MultiIndex.format is deprecated"
+    with tm.assert_produces_warning(FutureWarning, match=msg):
+        index.format(names=True)
+
+
+def test_format_sparse_config(idx):
+    # GH1538
+    msg = "MultiIndex.format is deprecated"
+    with pd.option_context("display.multi_sparse", False):
+        with tm.assert_produces_warning(FutureWarning, match=msg):
+            result = idx.format()
+    assert result[1] == "foo  two"
+
+
+def test_format_sparse_display():
+    index = MultiIndex(
+        levels=[[0, 1], [0, 1], [0, 1], [0]],
+        codes=[
+            [0, 0, 0, 1, 1, 1],
+            [0, 0, 1, 0, 0, 1],
+            [0, 1, 0, 0, 1, 0],
+            [0, 0, 0, 0, 0, 0],
+        ],
+    )
+    msg = "MultiIndex.format is deprecated"
+    with tm.assert_produces_warning(FutureWarning, match=msg):
+        result = index.format()
+    assert result[3] == "1  0  0  0"
+
+
+def test_repr_with_unicode_data():
+    with pd.option_context("display.encoding", "UTF-8"):
+        d = {"a": ["\u05d0", 2, 3], "b": [4, 5, 6], "c": [7, 8, 9]}
+        index = pd.DataFrame(d).set_index(["a", "b"]).index
+        assert "\\" not in repr(index)  # we don't want unicode-escaped
+
+
+def test_repr_roundtrip_raises():
+    mi = MultiIndex.from_product([list("ab"), range(3)], names=["first", "second"])
+    msg = "Must pass both levels and codes"
+    with pytest.raises(TypeError, match=msg):
+        eval(repr(mi))
+
+
+def test_unicode_string_with_unicode():
+    d = {"a": ["\u05d0", 2, 3], "b": [4, 5, 6], "c": [7, 8, 9]}
+    idx = pd.DataFrame(d).set_index(["a", "b"]).index
+    str(idx)
+
+
+def test_repr_max_seq_item_setting(idx):
+    # GH10182
+    idx = idx.repeat(50)
+    with pd.option_context("display.max_seq_items", None):
+        repr(idx)
+        assert "..." not in str(idx)
+
+
+class TestRepr:
+    def test_unicode_repr_issues(self):
+        levels = [Index(["a/\u03c3", "b/\u03c3", "c/\u03c3"]), Index([0, 1])]
+        codes = [np.arange(3).repeat(2), np.tile(np.arange(2), 3)]
+        index = MultiIndex(levels=levels, codes=codes)
+
+        repr(index.levels)
+        repr(index.get_level_values(1))
+
+    def test_repr_max_seq_items_equal_to_n(self, idx):
+        # display.max_seq_items == n
+        with pd.option_context("display.max_seq_items", 6):
+            result = idx.__repr__()
+            expected = """\
+MultiIndex([('foo', 'one'),
+            ('foo', 'two'),
+            ('bar', 'one'),
+            ('baz', 'two'),
+            ('qux', 'one'),
+            ('qux', 'two')],
+           names=['first', 'second'])"""
+            assert result == expected
+
+    def test_repr(self, idx):
+        result = idx[:1].__repr__()
+        expected = """\
+MultiIndex([('foo', 'one')],
+           names=['first', 'second'])"""
+        assert result == expected
+
+        result = idx.__repr__()
+        expected = """\
+MultiIndex([('foo', 'one'),
+            ('foo', 'two'),
+            ('bar', 'one'),
+            ('baz', 'two'),
+            ('qux', 'one'),
+            ('qux', 'two')],
+           names=['first', 'second'])"""
+        assert result == expected
+
+        with pd.option_context("display.max_seq_items", 5):
+            result = idx.__repr__()
+            expected = """\
+MultiIndex([('foo', 'one'),
+            ('foo', 'two'),
+            ...
+            ('qux', 'one'),
+            ('qux', 'two')],
+           names=['first', 'second'], length=6)"""
+            assert result == expected
+
+        # display.max_seq_items == 1
+        with pd.option_context("display.max_seq_items", 1):
+            result = idx.__repr__()
+            expected = """\
+MultiIndex([...
+            ('qux', 'two')],
+           names=['first', ...], length=6)"""
+            assert result == expected
+
+    def test_rjust(self):
+        n = 1000
+        ci = pd.CategoricalIndex(list("a" * n) + (["abc"] * n))
+        dti = pd.date_range("2000-01-01", freq="s", periods=n * 2)
+        mi = MultiIndex.from_arrays([ci, ci.codes + 9, dti], names=["a", "b", "dti"])
+        result = mi[:1].__repr__()
+        expected = """\
+MultiIndex([('a', 9, '2000-01-01 00:00:00')],
+           names=['a', 'b', 'dti'])"""
+        assert result == expected
+
+        result = mi[::500].__repr__()
+        expected = """\
+MultiIndex([(  'a',  9, '2000-01-01 00:00:00'),
+            (  'a',  9, '2000-01-01 00:08:20'),
+            ('abc', 10, '2000-01-01 00:16:40'),
+            ('abc', 10, '2000-01-01 00:25:00')],
+           names=['a', 'b', 'dti'])"""
+        assert result == expected
+
+        result = mi.__repr__()
+        expected = """\
+MultiIndex([(  'a',  9, '2000-01-01 00:00:00'),
+            (  'a',  9, '2000-01-01 00:00:01'),
+            (  'a',  9, '2000-01-01 00:00:02'),
+            (  'a',  9, '2000-01-01 00:00:03'),
+            (  'a',  9, '2000-01-01 00:00:04'),
+            (  'a',  9, '2000-01-01 00:00:05'),
+            (  'a',  9, '2000-01-01 00:00:06'),
+            (  'a',  9, '2000-01-01 00:00:07'),
+            (  'a',  9, '2000-01-01 00:00:08'),
+            (  'a',  9, '2000-01-01 00:00:09'),
+            ...
+            ('abc', 10, '2000-01-01 00:33:10'),
+            ('abc', 10, '2000-01-01 00:33:11'),
+            ('abc', 10, '2000-01-01 00:33:12'),
+            ('abc', 10, '2000-01-01 00:33:13'),
+            ('abc', 10, '2000-01-01 00:33:14'),
+            ('abc', 10, '2000-01-01 00:33:15'),
+            ('abc', 10, '2000-01-01 00:33:16'),
+            ('abc', 10, '2000-01-01 00:33:17'),
+            ('abc', 10, '2000-01-01 00:33:18'),
+            ('abc', 10, '2000-01-01 00:33:19')],
+           names=['a', 'b', 'dti'], length=2000)"""
+        assert result == expected
+
+    def test_tuple_width(self):
+        n = 1000
+        ci = pd.CategoricalIndex(list("a" * n) + (["abc"] * n))
+        dti = pd.date_range("2000-01-01", freq="s", periods=n * 2)
+        levels = [ci, ci.codes + 9, dti, dti, dti]
+        names = ["a", "b", "dti_1", "dti_2", "dti_3"]
+        mi = MultiIndex.from_arrays(levels, names=names)
+        result = mi[:1].__repr__()
+        expected = """MultiIndex([('a', 9, '2000-01-01 00:00:00', '2000-01-01 00:00:00', ...)],
+           names=['a', 'b', 'dti_1', 'dti_2', 'dti_3'])"""  # noqa: E501
+        assert result == expected
+
+        result = mi[:10].__repr__()
+        expected = """\
+MultiIndex([('a', 9, '2000-01-01 00:00:00', '2000-01-01 00:00:00', ...),
+            ('a', 9, '2000-01-01 00:00:01', '2000-01-01 00:00:01', ...),
+            ('a', 9, '2000-01-01 00:00:02', '2000-01-01 00:00:02', ...),
+            ('a', 9, '2000-01-01 00:00:03', '2000-01-01 00:00:03', ...),
+            ('a', 9, '2000-01-01 00:00:04', '2000-01-01 00:00:04', ...),
+            ('a', 9, '2000-01-01 00:00:05', '2000-01-01 00:00:05', ...),
+            ('a', 9, '2000-01-01 00:00:06', '2000-01-01 00:00:06', ...),
+            ('a', 9, '2000-01-01 00:00:07', '2000-01-01 00:00:07', ...),
+            ('a', 9, '2000-01-01 00:00:08', '2000-01-01 00:00:08', ...),
+            ('a', 9, '2000-01-01 00:00:09', '2000-01-01 00:00:09', ...)],
+           names=['a', 'b', 'dti_1', 'dti_2', 'dti_3'])"""
+        assert result == expected
+
+        result = mi.__repr__()
+        expected = """\
+MultiIndex([(  'a',  9, '2000-01-01 00:00:00', '2000-01-01 00:00:00', ...),
+            (  'a',  9, '2000-01-01 00:00:01', '2000-01-01 00:00:01', ...),
+            (  'a',  9, '2000-01-01 00:00:02', '2000-01-01 00:00:02', ...),
+            (  'a',  9, '2000-01-01 00:00:03', '2000-01-01 00:00:03', ...),
+            (  'a',  9, '2000-01-01 00:00:04', '2000-01-01 00:00:04', ...),
+            (  'a',  9, '2000-01-01 00:00:05', '2000-01-01 00:00:05', ...),
+            (  'a',  9, '2000-01-01 00:00:06', '2000-01-01 00:00:06', ...),
+            (  'a',  9, '2000-01-01 00:00:07', '2000-01-01 00:00:07', ...),
+            (  'a',  9, '2000-01-01 00:00:08', '2000-01-01 00:00:08', ...),
+            (  'a',  9, '2000-01-01 00:00:09', '2000-01-01 00:00:09', ...),
+            ...
+            ('abc', 10, '2000-01-01 00:33:10', '2000-01-01 00:33:10', ...),
+            ('abc', 10, '2000-01-01 00:33:11', '2000-01-01 00:33:11', ...),
+            ('abc', 10, '2000-01-01 00:33:12', '2000-01-01 00:33:12', ...),
+            ('abc', 10, '2000-01-01 00:33:13', '2000-01-01 00:33:13', ...),
+            ('abc', 10, '2000-01-01 00:33:14', '2000-01-01 00:33:14', ...),
+            ('abc', 10, '2000-01-01 00:33:15', '2000-01-01 00:33:15', ...),
+            ('abc', 10, '2000-01-01 00:33:16', '2000-01-01 00:33:16', ...),
+            ('abc', 10, '2000-01-01 00:33:17', '2000-01-01 00:33:17', ...),
+            ('abc', 10, '2000-01-01 00:33:18', '2000-01-01 00:33:18', ...),
+            ('abc', 10, '2000-01-01 00:33:19', '2000-01-01 00:33:19', ...)],
+           names=['a', 'b', 'dti_1', 'dti_2', 'dti_3'], length=2000)"""
+        assert result == expected
+
+    def test_multiindex_long_element(self):
+        # Non-regression test towards GH#52960
+        data = MultiIndex.from_tuples([("c" * 62,)])
+
+        expected = (
+            "MultiIndex([('cccccccccccccccccccccccccccccccccccccccc"
+            "cccccccccccccccccccccc',)],\n           )"
+        )
+        assert str(data) == expected
+ from contextlib import nullcontext
+from datetime import (
+    datetime,
+    time,
+)
+import locale
+
+import numpy as np
+import pytest
+
+import pandas as pd
+from pandas import (
+    PeriodIndex,
+    Series,
+)
+import pandas._testing as tm
+
+
+def get_local_am_pm():
+    """Return the AM and PM strings returned by strftime in current locale."""
+    am_local = time(1).strftime("%p")
+    pm_local = time(13).strftime("%p")
+    return am_local, pm_local
+
+
+def test_get_values_for_csv():
+    index = PeriodIndex(["2017-01-01", "2017-01-02", "2017-01-03"], freq="D")
+
+    # First, with no arguments.
+    expected = np.array(["2017-01-01", "2017-01-02", "2017-01-03"], dtype=object)
+
+    result = index._get_values_for_csv()
+    tm.assert_numpy_array_equal(result, expected)
+
+    # No NaN values, so na_rep has no effect
+    result = index._get_values_for_csv(na_rep="pandas")
+    tm.assert_numpy_array_equal(result, expected)
+
+    # Make sure date formatting works
+    expected = np.array(["01-2017-01", "01-2017-02", "01-2017-03"], dtype=object)
+
+    result = index._get_values_for_csv(date_format="%m-%Y-%d")
+    tm.assert_numpy_array_equal(result, expected)
+
+    # NULL object handling should work
+    index = PeriodIndex(["2017-01-01", pd.NaT, "2017-01-03"], freq="D")
+    expected = np.array(["2017-01-01", "NaT", "2017-01-03"], dtype=object)
+
+    result = index._get_values_for_csv(na_rep="NaT")
+    tm.assert_numpy_array_equal(result, expected)
+
+    expected = np.array(["2017-01-01", "pandas", "2017-01-03"], dtype=object)
+
+    result = index._get_values_for_csv(na_rep="pandas")
+    tm.assert_numpy_array_equal(result, expected)
+
+
+class TestPeriodIndexRendering:
+    def test_format_empty(self):
+        # GH#35712
+        empty_idx = PeriodIndex([], freq="Y")
+        msg = r"PeriodIndex\.format is deprecated"
+        with tm.assert_produces_warning(FutureWarning, match=msg):
+            assert empty_idx.format() == []
+        with tm.assert_produces_warning(FutureWarning, match=msg):
+            assert empty_idx.format(name=True) == [""]
+
+    @pytest.mark.parametrize("method", ["__repr__", "__str__"])
+    def test_representation(self, method):
+        # GH#7601
+        idx1 = PeriodIndex([], freq="D")
+        idx2 = PeriodIndex(["2011-01-01"], freq="D")
+        idx3 = PeriodIndex(["2011-01-01", "2011-01-02"], freq="D")
+        idx4 = PeriodIndex(["2011-01-01", "2011-01-02", "2011-01-03"], freq="D")
+        idx5 = PeriodIndex(["2011", "2012", "2013"], freq="Y")
+        idx6 = PeriodIndex(["2011-01-01 09:00", "2012-02-01 10:00", "NaT"], freq="h")
+        idx7 = pd.period_range("2013Q1", periods=1, freq="Q")
+        idx8 = pd.period_range("2013Q1", periods=2, freq="Q")
+        idx9 = pd.period_range("2013Q1", periods=3, freq="Q")
+        idx10 = PeriodIndex(["2011-01-01", "2011-02-01"], freq="3D")
+
+        exp1 = "PeriodIndex([], dtype='period[D]')"
+
+        exp2 = "PeriodIndex(['2011-01-01'], dtype='period[D]')"
+
+        exp3 = "PeriodIndex(['2011-01-01', '2011-01-02'], dtype='period[D]')"
+
+        exp4 = (
+            "PeriodIndex(['2011-01-01', '2011-01-02', '2011-01-03'], "
+            "dtype='period[D]')"
+        )
+
+        exp5 = "PeriodIndex(['2011', '2012', '2013'], dtype='period[Y-DEC]')"
+
+        exp6 = (
+            "PeriodIndex(['2011-01-01 09:00', '2012-02-01 10:00', 'NaT'], "
+            "dtype='period[h]')"
+        )
+
+        exp7 = "PeriodIndex(['2013Q1'], dtype='period[Q-DEC]')"
+
+        exp8 = "PeriodIndex(['2013Q1', '2013Q2'], dtype='period[Q-DEC]')"
+
+        exp9 = "PeriodIndex(['2013Q1', '2013Q2', '2013Q3'], dtype='period[Q-DEC]')"
+
+        exp10 = "PeriodIndex(['2011-01-01', '2011-02-01'], dtype='period[3D]')"
+
+        for idx, expected in zip(
+            [idx1, idx2, idx3, idx4, idx5, idx6, idx7, idx8, idx9, idx10],
+            [exp1, exp2, exp3, exp4, exp5, exp6, exp7, exp8, exp9, exp10],
+        ):
+            result = getattr(idx, method)()
+            assert result == expected
+
+    # TODO: These are Series.__repr__ tests
+    def test_representation_to_series(self):
+        # GH#10971
+        idx1 = PeriodIndex([], freq="D")
+        idx2 = PeriodIndex(["2011-01-01"], freq="D")
+        idx3 = PeriodIndex(["2011-01-01", "2011-01-02"], freq="D")
+        idx4 = PeriodIndex(["2011-01-01", "2011-01-02", "2011-01-03"], freq="D")
+        idx5 = PeriodIndex(["2011", "2012", "2013"], freq="Y")
+        idx6 = PeriodIndex(["2011-01-01 09:00", "2012-02-01 10:00", "NaT"], freq="h")
+
+        idx7 = pd.period_range("2013Q1", periods=1, freq="Q")
+        idx8 = pd.period_range("2013Q1", periods=2, freq="Q")
+        idx9 = pd.period_range("2013Q1", periods=3, freq="Q")
+
+        exp1 = """Series([], dtype: period[D])"""
+
+        exp2 = """0    2011-01-01
+dtype: period[D]"""
+
+        exp3 = """0    2011-01-01
+1    2011-01-02
+dtype: period[D]"""
+
+        exp4 = """0    2011-01-01
+1    2011-01-02
+2    2011-01-03
+dtype: period[D]"""
+
+        exp5 = """0    2011
+1    2012
+2    2013
+dtype: period[Y-DEC]"""
+
+        exp6 = """0    2011-01-01 09:00
+1    2012-02-01 10:00
+2                 NaT
+dtype: period[h]"""
+
+        exp7 = """0    2013Q1
+dtype: period[Q-DEC]"""
+
+        exp8 = """0    2013Q1
+1    2013Q2
+dtype: period[Q-DEC]"""
+
+        exp9 = """0    2013Q1
+1    2013Q2
+2    2013Q3
+dtype: period[Q-DEC]"""
+
+        for idx, expected in zip(
+            [idx1, idx2, idx3, idx4, idx5, idx6, idx7, idx8, idx9],
+            [exp1, exp2, exp3, exp4, exp5, exp6, exp7, exp8, exp9],
+        ):
+            result = repr(Series(idx))
+            assert result == expected
+
+    def test_summary(self):
+        # GH#9116
+        idx1 = PeriodIndex([], freq="D")
+        idx2 = PeriodIndex(["2011-01-01"], freq="D")
+        idx3 = PeriodIndex(["2011-01-01", "2011-01-02"], freq="D")
+        idx4 = PeriodIndex(["2011-01-01", "2011-01-02", "2011-01-03"], freq="D")
+        idx5 = PeriodIndex(["2011", "2012", "2013"], freq="Y")
+        idx6 = PeriodIndex(["2011-01-01 09:00", "2012-02-01 10:00", "NaT"], freq="h")
+
+        idx7 = pd.period_range("2013Q1", periods=1, freq="Q")
+        idx8 = pd.period_range("2013Q1", periods=2, freq="Q")
+        idx9 = pd.period_range("2013Q1", periods=3, freq="Q")
+
+        exp1 = """PeriodIndex: 0 entries
+Freq: D"""
+
+        exp2 = """PeriodIndex: 1 entries, 2011-01-01 to 2011-01-01
+Freq: D"""
+
+        exp3 = """PeriodIndex: 2 entries, 2011-01-01 to 2011-01-02
+Freq: D"""
+
+        exp4 = """PeriodIndex: 3 entries, 2011-01-01 to 2011-01-03
+Freq: D"""
+
+        exp5 = """PeriodIndex: 3 entries, 2011 to 2013
+Freq: Y-DEC"""
+
+        exp6 = """PeriodIndex: 3 entries, 2011-01-01 09:00 to NaT
+Freq: h"""
+
+        exp7 = """PeriodIndex: 1 entries, 2013Q1 to 2013Q1
+Freq: Q-DEC"""
+
+        exp8 = """PeriodIndex: 2 entries, 2013Q1 to 2013Q2
+Freq: Q-DEC"""
+
+        exp9 = """PeriodIndex: 3 entries, 2013Q1 to 2013Q3
+Freq: Q-DEC"""
+
+        for idx, expected in zip(
+            [idx1, idx2, idx3, idx4, idx5, idx6, idx7, idx8, idx9],
+            [exp1, exp2, exp3, exp4, exp5, exp6, exp7, exp8, exp9],
+        ):
+            result = idx._summary()
+            assert result == expected
+
+
+class TestPeriodIndexFormat:
+    def test_period_format_and_strftime_default(self):
+        per = PeriodIndex([datetime(2003, 1, 1, 12), None], freq="h")
+
+        # Default formatting
+        msg = "PeriodIndex.format is deprecated"
+        with tm.assert_produces_warning(FutureWarning, match=msg):
+            formatted = per.format()
+        assert formatted[0] == "2003-01-01 12:00"  # default: minutes not shown
+        assert formatted[1] == "NaT"
+        # format is equivalent to strftime(None)...
+        assert formatted[0] == per.strftime(None)[0]
+        assert per.strftime(None)[1] is np.nan  # ...except for NaTs
+
+        # Same test with nanoseconds freq
+        per = pd.period_range("2003-01-01 12:01:01.123456789", periods=2, freq="ns")
+        with tm.assert_produces_warning(FutureWarning, match=msg):
+            formatted = per.format()
+        assert (formatted == per.strftime(None)).all()
+        assert formatted[0] == "2003-01-01 12:01:01.123456789"
+        assert formatted[1] == "2003-01-01 12:01:01.123456790"
+
+    def test_period_custom(self):
+        # GH#46252 custom formatting directives %l (ms) and %u (us)
+        msg = "PeriodIndex.format is deprecated"
+
+        # 3 digits
+        per = pd.period_range("2003-01-01 12:01:01.123", periods=2, freq="ms")
+        with tm.assert_produces_warning(FutureWarning, match=msg):
+            formatted = per.format(date_format="%y %I:%M:%S (ms=%l us=%u ns=%n)")
+        assert formatted[0] == "03 12:01:01 (ms=123 us=123000 ns=123000000)"
+        assert formatted[1] == "03 12:01:01 (ms=124 us=124000 ns=124000000)"
+
+        # 6 digits
+        per = pd.period_range("2003-01-01 12:01:01.123456", periods=2, freq="us")
+        with tm.assert_produces_warning(FutureWarning, match=msg):
+            formatted = per.format(date_format="%y %I:%M:%S (ms=%l us=%u ns=%n)")
+        assert formatted[0] == "03 12:01:01 (ms=123 us=123456 ns=123456000)"
+        assert formatted[1] == "03 12:01:01 (ms=123 us=123457 ns=123457000)"
+
+        # 9 digits
+        per = pd.period_range("2003-01-01 12:01:01.123456789", periods=2, freq="ns")
+        with tm.assert_produces_warning(FutureWarning, match=msg):
+            formatted = per.format(date_format="%y %I:%M:%S (ms=%l us=%u ns=%n)")
+        assert formatted[0] == "03 12:01:01 (ms=123 us=123456 ns=123456789)"
+        assert formatted[1] == "03 12:01:01 (ms=123 us=123456 ns=123456790)"
+
+    def test_period_tz(self):
+        # Formatting periods created from a datetime with timezone.
+        msg = r"PeriodIndex\.format is deprecated"
+        # This timestamp is in 2013 in Europe/Paris but is 2012 in UTC
+        dt = pd.to_datetime(["2013-01-01 00:00:00+01:00"], utc=True)
+
+        # Converting to a period looses the timezone information
+        # Since tz is currently set as utc, we'll see 2012
+        with tm.assert_produces_warning(UserWarning, match="will drop timezone"):
+            per = dt.to_period(freq="h")
+        with tm.assert_produces_warning(FutureWarning, match=msg):
+            assert per.format()[0] == "2012-12-31 23:00"
+
+        # If tz is currently set as paris before conversion, we'll see 2013
+        dt = dt.tz_convert("Europe/Paris")
+        with tm.assert_produces_warning(UserWarning, match="will drop timezone"):
+            per = dt.to_period(freq="h")
+        with tm.assert_produces_warning(FutureWarning, match=msg):
+            assert per.format()[0] == "2013-01-01 00:00"
+
+    @pytest.mark.parametrize(
+        "locale_str",
+        [
+            pytest.param(None, id=str(locale.getlocale())),
+            "it_IT.utf8",
+            "it_IT",  # Note: encoding will be 'ISO8859-1'
+            "zh_CN.utf8",
+            "zh_CN",  # Note: encoding will be 'gb2312'
+        ],
+    )
+    def test_period_non_ascii_fmt(self, locale_str):
+        # GH#46468 non-ascii char in input format string leads to wrong output
+
+        # Skip if locale cannot be set
+        if locale_str is not None and not tm.can_set_locale(locale_str, locale.LC_ALL):
+            pytest.skip(f"Skipping as locale '{locale_str}' cannot be set on host.")
+
+        # Change locale temporarily for this test.
+        with tm.set_locale(locale_str, locale.LC_ALL) if locale_str else nullcontext():
+            # Scalar
+            per = pd.Period("2018-03-11 13:00", freq="h")
+            assert per.strftime("%y é") == "18 é"
+
+            # Index
+            per = pd.period_range("2003-01-01 01:00:00", periods=2, freq="12h")
+            msg = "PeriodIndex.format is deprecated"
+            with tm.assert_produces_warning(FutureWarning, match=msg):
+                formatted = per.format(date_format="%y é")
+            assert formatted[0] == "03 é"
+            assert formatted[1] == "03 é"
+
+    @pytest.mark.parametrize(
+        "locale_str",
+        [
+            pytest.param(None, id=str(locale.getlocale())),
+            "it_IT.utf8",
+            "it_IT",  # Note: encoding will be 'ISO8859-1'
+            "zh_CN.utf8",
+            "zh_CN",  # Note: encoding will be 'gb2312'
+        ],
+    )
+    def test_period_custom_locale_directive(self, locale_str):
+        # GH#46319 locale-specific directive leads to non-utf8 c strftime char* result
+
+        # Skip if locale cannot be set
+        if locale_str is not None and not tm.can_set_locale(locale_str, locale.LC_ALL):
+            pytest.skip(f"Skipping as locale '{locale_str}' cannot be set on host.")
+
+        # Change locale temporarily for this test.
+        with tm.set_locale(locale_str, locale.LC_ALL) if locale_str else nullcontext():
+            # Get locale-specific reference
+            am_local, pm_local = get_local_am_pm()
+
+            # Scalar
+            per = pd.Period("2018-03-11 13:00", freq="h")
+            assert per.strftime("%p") == pm_local
+
+            # Index
+            per = pd.period_range("2003-01-01 01:00:00", periods=2, freq="12h")
+            msg = "PeriodIndex.format is deprecated"
+            with tm.assert_produces_warning(FutureWarning, match=msg):
+                formatted = per.format(date_format="%y %I:%M:%S%p")
+            assert formatted[0] == f"03 01:00:00{am_local}"
+            assert formatted[1] == f"03 01:00:00{pm_local}"
+ import pytest
+
+import pandas as pd
+from pandas import (
+    Series,
+    TimedeltaIndex,
+)
+
+
+class TestTimedeltaIndexRendering:
+    def test_repr_round_days_non_nano(self):
+        # GH#55405
+        # we should get "1 days", not "1 days 00:00:00" with non-nano
+        tdi = TimedeltaIndex(["1 days"], freq="D").as_unit("s")
+        result = repr(tdi)
+        expected = "TimedeltaIndex(['1 days'], dtype='timedelta64[s]', freq='D')"
+        assert result == expected
+
+        result2 = repr(Series(tdi))
+        expected2 = "0   1 days\ndtype: timedelta64[s]"
+        assert result2 == expected2
+
+    @pytest.mark.parametrize("method", ["__repr__", "__str__"])
+    def test_representation(self, method):
+        idx1 = TimedeltaIndex([], freq="D")
+        idx2 = TimedeltaIndex(["1 days"], freq="D")
+        idx3 = TimedeltaIndex(["1 days", "2 days"], freq="D")
+        idx4 = TimedeltaIndex(["1 days", "2 days", "3 days"], freq="D")
+        idx5 = TimedeltaIndex(["1 days 00:00:01", "2 days", "3 days"])
+
+        exp1 = "TimedeltaIndex([], dtype='timedelta64[ns]', freq='D')"
+
+        exp2 = "TimedeltaIndex(['1 days'], dtype='timedelta64[ns]', freq='D')"
+
+        exp3 = "TimedeltaIndex(['1 days', '2 days'], dtype='timedelta64[ns]', freq='D')"
+
+        exp4 = (
+            "TimedeltaIndex(['1 days', '2 days', '3 days'], "
+            "dtype='timedelta64[ns]', freq='D')"
+        )
+
+        exp5 = (
+            "TimedeltaIndex(['1 days 00:00:01', '2 days 00:00:00', "
+            "'3 days 00:00:00'], dtype='timedelta64[ns]', freq=None)"
+        )
+
+        with pd.option_context("display.width", 300):
+            for idx, expected in zip(
+                [idx1, idx2, idx3, idx4, idx5], [exp1, exp2, exp3, exp4, exp5]
+            ):
+                result = getattr(idx, method)()
+                assert result == expected
+
+    # TODO: this is a Series.__repr__ test
+    def test_representation_to_series(self):
+        idx1 = TimedeltaIndex([], freq="D")
+        idx2 = TimedeltaIndex(["1 days"], freq="D")
+        idx3 = TimedeltaIndex(["1 days", "2 days"], freq="D")
+        idx4 = TimedeltaIndex(["1 days", "2 days", "3 days"], freq="D")
+        idx5 = TimedeltaIndex(["1 days 00:00:01", "2 days", "3 days"])
+
+        exp1 = """Series([], dtype: timedelta64[ns])"""
+
+        exp2 = "0   1 days\ndtype: timedelta64[ns]"
+
+        exp3 = "0   1 days\n1   2 days\ndtype: timedelta64[ns]"
+
+        exp4 = "0   1 days\n1   2 days\n2   3 days\ndtype: timedelta64[ns]"
+
+        exp5 = (
+            "0   1 days 00:00:01\n"
+            "1   2 days 00:00:00\n"
+            "2   3 days 00:00:00\n"
+            "dtype: timedelta64[ns]"
+        )
+
+        with pd.option_context("display.width", 300):
+            for idx, expected in zip(
+                [idx1, idx2, idx3, idx4, idx5], [exp1, exp2, exp3, exp4, exp5]
+            ):
+                result = repr(Series(idx))
+                assert result == expected
+
+    def test_summary(self):
+        # GH#9116
+        idx1 = TimedeltaIndex([], freq="D")
+        idx2 = TimedeltaIndex(["1 days"], freq="D")
+        idx3 = TimedeltaIndex(["1 days", "2 days"], freq="D")
+        idx4 = TimedeltaIndex(["1 days", "2 days", "3 days"], freq="D")
+        idx5 = TimedeltaIndex(["1 days 00:00:01", "2 days", "3 days"])
+
+        exp1 = "TimedeltaIndex: 0 entries\nFreq: D"
+
+        exp2 = "TimedeltaIndex: 1 entries, 1 days to 1 days\nFreq: D"
+
+        exp3 = "TimedeltaIndex: 2 entries, 1 days to 2 days\nFreq: D"
+
+        exp4 = "TimedeltaIndex: 3 entries, 1 days to 3 days\nFreq: D"
+
+        exp5 = "TimedeltaIndex: 3 entries, 1 days 00:00:01 to 3 days 00:00:00"
+
+        for idx, expected in zip(
+            [idx1, idx2, idx3, idx4, idx5], [exp1, exp2, exp3, exp4, exp5]
+        ):
+            result = idx._summary()
+            assert result == expected
+ from pandas import Interval
+
+
+def test_interval_repr():
+    interval = Interval(0, 1)
+    assert repr(interval) == "Interval(0, 1, closed='right')"
+    assert str(interval) == "(0, 1]"
+
+    interval_left = Interval(0, 1, closed="left")
+    assert repr(interval_left) == "Interval(0, 1, closed='left')"
+    assert str(interval_left) == "[0, 1)"
+ import pytest
+
+from pandas import Timedelta
+
+
+@pytest.mark.parametrize(
+    "td, expected_repr",
+    [
+        (Timedelta(10, unit="d"), "Timedelta('10 days 00:00:00')"),
+        (Timedelta(10, unit="s"), "Timedelta('0 days 00:00:10')"),
+        (Timedelta(10, unit="ms"), "Timedelta('0 days 00:00:00.010000')"),
+        (Timedelta(-10, unit="ms"), "Timedelta('-1 days +23:59:59.990000')"),
+    ],
+)
+def test_repr(td, expected_repr):
+    assert repr(td) == expected_repr
+
+
+@pytest.mark.parametrize(
+    "td, expected_iso",
+    [
+        (
+            Timedelta(
+                days=6,
+                minutes=50,
+                seconds=3,
+                milliseconds=10,
+                microseconds=10,
+                nanoseconds=12,
+            ),
+            "P6DT0H50M3.010010012S",
+        ),
+        (Timedelta(days=4, hours=12, minutes=30, seconds=5), "P4DT12H30M5S"),
+        (Timedelta(nanoseconds=123), "P0DT0H0M0.000000123S"),
+        # trim nano
+        (Timedelta(microseconds=10), "P0DT0H0M0.00001S"),
+        # trim micro
+        (Timedelta(milliseconds=1), "P0DT0H0M0.001S"),
+        # don't strip every 0
+        (Timedelta(minutes=1), "P0DT0H1M0S"),
+    ],
+)
+def test_isoformat(td, expected_iso):
+    assert td.isoformat() == expected_iso
+
+
+class TestReprBase:
+    def test_none(self):
+        delta_1d = Timedelta(1, unit="D")
+        delta_0d = Timedelta(0, unit="D")
+        delta_1s = Timedelta(1, unit="s")
+        delta_500ms = Timedelta(500, unit="ms")
+
+        drepr = lambda x: x._repr_base()
+        assert drepr(delta_1d) == "1 days"
+        assert drepr(-delta_1d) == "-1 days"
+        assert drepr(delta_0d) == "0 days"
+        assert drepr(delta_1s) == "0 days 00:00:01"
+        assert drepr(delta_500ms) == "0 days 00:00:00.500000"
+        assert drepr(delta_1d + delta_1s) == "1 days 00:00:01"
+        assert drepr(-delta_1d + delta_1s) == "-1 days +00:00:01"
+        assert drepr(delta_1d + delta_500ms) == "1 days 00:00:00.500000"
+        assert drepr(-delta_1d + delta_500ms) == "-1 days +00:00:00.500000"
+
+    def test_sub_day(self):
+        delta_1d = Timedelta(1, unit="D")
+        delta_0d = Timedelta(0, unit="D")
+        delta_1s = Timedelta(1, unit="s")
+        delta_500ms = Timedelta(500, unit="ms")
+
+        drepr = lambda x: x._repr_base(format="sub_day")
+        assert drepr(delta_1d) == "1 days"
+        assert drepr(-delta_1d) == "-1 days"
+        assert drepr(delta_0d) == "00:00:00"
+        assert drepr(delta_1s) == "00:00:01"
+        assert drepr(delta_500ms) == "00:00:00.500000"
+        assert drepr(delta_1d + delta_1s) == "1 days 00:00:01"
+        assert drepr(-delta_1d + delta_1s) == "-1 days +00:00:01"
+        assert drepr(delta_1d + delta_500ms) == "1 days 00:00:00.500000"
+        assert drepr(-delta_1d + delta_500ms) == "-1 days +00:00:00.500000"
+
+    def test_long(self):
+        delta_1d = Timedelta(1, unit="D")
+        delta_0d = Timedelta(0, unit="D")
+        delta_1s = Timedelta(1, unit="s")
+        delta_500ms = Timedelta(500, unit="ms")
+
+        drepr = lambda x: x._repr_base(format="long")
+        assert drepr(delta_1d) == "1 days 00:00:00"
+        assert drepr(-delta_1d) == "-1 days +00:00:00"
+        assert drepr(delta_0d) == "0 days 00:00:00"
+        assert drepr(delta_1s) == "0 days 00:00:01"
+        assert drepr(delta_500ms) == "0 days 00:00:00.500000"
+        assert drepr(delta_1d + delta_1s) == "1 days 00:00:01"
+        assert drepr(-delta_1d + delta_1s) == "-1 days +00:00:01"
+        assert drepr(delta_1d + delta_500ms) == "1 days 00:00:00.500000"
+        assert drepr(-delta_1d + delta_500ms) == "-1 days +00:00:00.500000"
+
+    def test_all(self):
+        delta_1d = Timedelta(1, unit="D")
+        delta_0d = Timedelta(0, unit="D")
+        delta_1ns = Timedelta(1, unit="ns")
+
+        drepr = lambda x: x._repr_base(format="all")
+        assert drepr(delta_1d) == "1 days 00:00:00.000000000"
+        assert drepr(-delta_1d) == "-1 days +00:00:00.000000000"
+        assert drepr(delta_0d) == "0 days 00:00:00.000000000"
+        assert drepr(delta_1ns) == "0 days 00:00:00.000000001"
+        assert drepr(-delta_1d + delta_1ns) == "-1 days +00:00:00.000000001"
+ from datetime import datetime
+import pprint
+
+import dateutil.tz
+import pytest
+import pytz  # a test below uses pytz but only inside a `eval` call
+
+from pandas import Timestamp
+
+ts_no_ns = Timestamp(
+    year=2019,
+    month=5,
+    day=18,
+    hour=15,
+    minute=17,
+    second=8,
+    microsecond=132263,
+)
+ts_no_ns_year1 = Timestamp(
+    year=1,
+    month=5,
+    day=18,
+    hour=15,
+    minute=17,
+    second=8,
+    microsecond=132263,
+)
+ts_ns = Timestamp(
+    year=2019,
+    month=5,
+    day=18,
+    hour=15,
+    minute=17,
+    second=8,
+    microsecond=132263,
+    nanosecond=123,
+)
+ts_ns_tz = Timestamp(
+    year=2019,
+    month=5,
+    day=18,
+    hour=15,
+    minute=17,
+    second=8,
+    microsecond=132263,
+    nanosecond=123,
+    tz="UTC",
+)
+ts_no_us = Timestamp(
+    year=2019,
+    month=5,
+    day=18,
+    hour=15,
+    minute=17,
+    second=8,
+    microsecond=0,
+    nanosecond=123,
+)
+
+
+@pytest.mark.parametrize(
+    "ts, timespec, expected_iso",
+    [
+        (ts_no_ns, "auto", "2019-05-18T15:17:08.132263"),
+        (ts_no_ns, "seconds", "2019-05-18T15:17:08"),
+        (ts_no_ns, "nanoseconds", "2019-05-18T15:17:08.132263000"),
+        (ts_no_ns_year1, "seconds", "0001-05-18T15:17:08"),
+        (ts_no_ns_year1, "nanoseconds", "0001-05-18T15:17:08.132263000"),
+        (ts_ns, "auto", "2019-05-18T15:17:08.132263123"),
+        (ts_ns, "hours", "2019-05-18T15"),
+        (ts_ns, "minutes", "2019-05-18T15:17"),
+        (ts_ns, "seconds", "2019-05-18T15:17:08"),
+        (ts_ns, "milliseconds", "2019-05-18T15:17:08.132"),
+        (ts_ns, "microseconds", "2019-05-18T15:17:08.132263"),
+        (ts_ns, "nanoseconds", "2019-05-18T15:17:08.132263123"),
+        (ts_ns_tz, "auto", "2019-05-18T15:17:08.132263123+00:00"),
+        (ts_ns_tz, "hours", "2019-05-18T15+00:00"),
+        (ts_ns_tz, "minutes", "2019-05-18T15:17+00:00"),
+        (ts_ns_tz, "seconds", "2019-05-18T15:17:08+00:00"),
+        (ts_ns_tz, "milliseconds", "2019-05-18T15:17:08.132+00:00"),
+        (ts_ns_tz, "microseconds", "2019-05-18T15:17:08.132263+00:00"),
+        (ts_ns_tz, "nanoseconds", "2019-05-18T15:17:08.132263123+00:00"),
+        (ts_no_us, "auto", "2019-05-18T15:17:08.000000123"),
+    ],
+)
+def test_isoformat(ts, timespec, expected_iso):
+    assert ts.isoformat(timespec=timespec) == expected_iso
+
+
+class TestTimestampRendering:
+    timezones = ["UTC", "Asia/Tokyo", "US/Eastern", "dateutil/America/Los_Angeles"]
+
+    @pytest.mark.parametrize("tz", timezones)
+    @pytest.mark.parametrize("freq", ["D", "M", "S", "N"])
+    @pytest.mark.parametrize(
+        "date", ["2014-03-07", "2014-01-01 09:00", "2014-01-01 00:00:00.000000001"]
+    )
+    def test_repr(self, date, freq, tz):
+        # avoid to match with timezone name
+        freq_repr = f"'{freq}'"
+        if tz.startswith("dateutil"):
+            tz_repr = tz.replace("dateutil", "")
+        else:
+            tz_repr = tz
+
+        date_only = Timestamp(date)
+        assert date in repr(date_only)
+        assert tz_repr not in repr(date_only)
+        assert freq_repr not in repr(date_only)
+        assert date_only == eval(repr(date_only))
+
+        date_tz = Timestamp(date, tz=tz)
+        assert date in repr(date_tz)
+        assert tz_repr in repr(date_tz)
+        assert freq_repr not in repr(date_tz)
+        assert date_tz == eval(repr(date_tz))
+
+    def test_repr_utcoffset(self):
+        # This can cause the tz field to be populated, but it's redundant to
+        # include this information in the date-string.
+        date_with_utc_offset = Timestamp("2014-03-13 00:00:00-0400", tz=None)
+        assert "2014-03-13 00:00:00-0400" in repr(date_with_utc_offset)
+        assert "tzoffset" not in repr(date_with_utc_offset)
+        assert "UTC-04:00" in repr(date_with_utc_offset)
+        expr = repr(date_with_utc_offset)
+        assert date_with_utc_offset == eval(expr)
+
+    def test_timestamp_repr_pre1900(self):
+        # pre-1900
+        stamp = Timestamp("1850-01-01", tz="US/Eastern")
+        repr(stamp)
+
+        iso8601 = "1850-01-01 01:23:45.012345"
+        stamp = Timestamp(iso8601, tz="US/Eastern")
+        result = repr(stamp)
+        assert iso8601 in result
+
+    def test_pprint(self):
+        # GH#12622
+        nested_obj = {"foo": 1, "bar": [{"w": {"a": Timestamp("2011-01-01")}}] * 10}
+        result = pprint.pformat(nested_obj, width=50)
+        expected = r"""{'bar': [{'w': {'a': Timestamp('2011-01-01 00:00:00')}},
+         {'w': {'a': Timestamp('2011-01-01 00:00:00')}},
+         {'w': {'a': Timestamp('2011-01-01 00:00:00')}},
+         {'w': {'a': Timestamp('2011-01-01 00:00:00')}},
+         {'w': {'a': Timestamp('2011-01-01 00:00:00')}},
+         {'w': {'a': Timestamp('2011-01-01 00:00:00')}},
+         {'w': {'a': Timestamp('2011-01-01 00:00:00')}},
+         {'w': {'a': Timestamp('2011-01-01 00:00:00')}},
+         {'w': {'a': Timestamp('2011-01-01 00:00:00')}},
+         {'w': {'a': Timestamp('2011-01-01 00:00:00')}}],
+ 'foo': 1}"""
+        assert result == expected
+
+    def test_to_timestamp_repr_is_code(self):
+        zs = [
+            Timestamp("99-04-17 00:00:00", tz="UTC"),
+            Timestamp("2001-04-17 00:00:00", tz="UTC"),
+            Timestamp("2001-04-17 00:00:00", tz="America/Los_Angeles"),
+            Timestamp("2001-04-17 00:00:00", tz=None),
+        ]
+        for z in zs:
+            assert eval(repr(z)) == z
+
+    def test_repr_matches_pydatetime_no_tz(self):
+        dt_date = datetime(2013, 1, 2)
+        assert str(dt_date) == str(Timestamp(dt_date))
+
+        dt_datetime = datetime(2013, 1, 2, 12, 1, 3)
+        assert str(dt_datetime) == str(Timestamp(dt_datetime))
+
+        dt_datetime_us = datetime(2013, 1, 2, 12, 1, 3, 45)
+        assert str(dt_datetime_us) == str(Timestamp(dt_datetime_us))
+
+        ts_nanos_only = Timestamp(200)
+        assert str(ts_nanos_only) == "1970-01-01 00:00:00.000000200"
+
+        ts_nanos_micros = Timestamp(1200)
+        assert str(ts_nanos_micros) == "1970-01-01 00:00:00.000001200"
+
+    def test_repr_matches_pydatetime_tz_pytz(self):
+        dt_date = datetime(2013, 1, 2, tzinfo=pytz.utc)
+        assert str(dt_date) == str(Timestamp(dt_date))
+
+        dt_datetime = datetime(2013, 1, 2, 12, 1, 3, tzinfo=pytz.utc)
+        assert str(dt_datetime) == str(Timestamp(dt_datetime))
+
+        dt_datetime_us = datetime(2013, 1, 2, 12, 1, 3, 45, tzinfo=pytz.utc)
+        assert str(dt_datetime_us) == str(Timestamp(dt_datetime_us))
+
+    def test_repr_matches_pydatetime_tz_dateutil(self):
+        utc = dateutil.tz.tzutc()
+
+        dt_date = datetime(2013, 1, 2, tzinfo=utc)
+        assert str(dt_date) == str(Timestamp(dt_date))
+
+        dt_datetime = datetime(2013, 1, 2, 12, 1, 3, tzinfo=utc)
+        assert str(dt_datetime) == str(Timestamp(dt_datetime))
+
+        dt_datetime_us = datetime(2013, 1, 2, 12, 1, 3, 45, tzinfo=utc)
+        assert str(dt_datetime_us) == str(Timestamp(dt_datetime_us))
+ from datetime import (
+    datetime,
+    timedelta,
+)
+
+import numpy as np
+import pytest
+
+import pandas as pd
+from pandas import (
+    Categorical,
+    DataFrame,
+    Index,
+    Series,
+    date_range,
+    option_context,
+    period_range,
+    timedelta_range,
+)
+import pandas._testing as tm
+
+
+class TestSeriesRepr:
+    def test_multilevel_name_print_0(self):
+        # GH#55415 None does not get printed, but 0 does
+        # (matching DataFrame and flat index behavior)
+        mi = pd.MultiIndex.from_product([range(2, 3), range(3, 4)], names=[0, None])
+        ser = Series(1.5, index=mi)
+
+        res = repr(ser)
+        expected = "0   \n2  3    1.5\ndtype: float64"
+        assert res == expected
+
+    def test_multilevel_name_print(self, lexsorted_two_level_string_multiindex):
+        index = lexsorted_two_level_string_multiindex
+        ser = Series(range(len(index)), index=index, name="sth")
+        expected = [
+            "first  second",
+            "foo    one       0",
+            "       two       1",
+            "       three     2",
+            "bar    one       3",
+            "       two       4",
+            "baz    two       5",
+            "       three     6",
+            "qux    one       7",
+            "       two       8",
+            "       three     9",
+            "Name: sth, dtype: int64",
+        ]
+        expected = "\n".join(expected)
+        assert repr(ser) == expected
+
+    def test_small_name_printing(self):
+        # Test small Series.
+        s = Series([0, 1, 2])
+
+        s.name = "test"
+        assert "Name: test" in repr(s)
+
+        s.name = None
+        assert "Name:" not in repr(s)
+
+    def test_big_name_printing(self):
+        # Test big Series (diff code path).
+        s = Series(range(1000))
+
+        s.name = "test"
+        assert "Name: test" in repr(s)
+
+        s.name = None
+        assert "Name:" not in repr(s)
+
+    def test_empty_name_printing(self):
+        s = Series(index=date_range("20010101", "20020101"), name="test", dtype=object)
+        assert "Name: test" in repr(s)
+
+    @pytest.mark.parametrize("args", [(), (0, -1)])
+    def test_float_range(self, args):
+        str(
+            Series(
+                np.random.default_rng(2).standard_normal(1000),
+                index=np.arange(1000, *args),
+            )
+        )
+
+    def test_empty_object(self):
+        # empty
+        str(Series(dtype=object))
+
+    def test_string(self, string_series):
+        str(string_series)
+        str(string_series.astype(int))
+
+        # with NaNs
+        string_series[5:7] = np.nan
+        str(string_series)
+
+    def test_object(self, object_series):
+        str(object_series)
+
+    def test_datetime(self, datetime_series):
+        str(datetime_series)
+        # with Nones
+        ots = datetime_series.astype("O")
+        ots[::2] = None
+        repr(ots)
+
+    @pytest.mark.parametrize(
+        "name",
+        [
+            "",
+            1,
+            1.2,
+            "foo",
+            "\u03B1\u03B2\u03B3",
+            "loooooooooooooooooooooooooooooooooooooooooooooooooooong",
+            ("foo", "bar", "baz"),
+            (1, 2),
+            ("foo", 1, 2.3),
+            ("\u03B1", "\u03B2", "\u03B3"),
+            ("\u03B1", "bar"),
+        ],
+    )
+    def test_various_names(self, name, string_series):
+        # various names
+        string_series.name = name
+        repr(string_series)
+
+    def test_tuple_name(self):
+        biggie = Series(
+            np.random.default_rng(2).standard_normal(1000),
+            index=np.arange(1000),
+            name=("foo", "bar", "baz"),
+        )
+        repr(biggie)
+
+    @pytest.mark.parametrize("arg", [100, 1001])
+    def test_tidy_repr_name_0(self, arg):
+        # tidy repr
+        ser = Series(np.random.default_rng(2).standard_normal(arg), name=0)
+        rep_str = repr(ser)
+        assert "Name: 0" in rep_str
+
+    def test_newline(self, any_string_dtype):
+        ser = Series(
+            ["a\n\r\tb"],
+            name="a\n\r\td",
+            index=Index(["a\n\r\tf"], dtype=any_string_dtype),
+            dtype=any_string_dtype,
+        )
+        assert "\t" not in repr(ser)
+        assert "\r" not in repr(ser)
+        assert "a\n" not in repr(ser)
+
+    @pytest.mark.parametrize(
+        "name, expected",
+        [
+            ["foo", "Series([], Name: foo, dtype: int64)"],
+            [None, "Series([], dtype: int64)"],
+        ],
+    )
+    def test_empty_int64(self, name, expected):
+        # with empty series (#4651)
+        s = Series([], dtype=np.int64, name=name)
+        assert repr(s) == expected
+
+    def test_repr_bool_fails(self, capsys):
+        s = Series(
+            [
+                DataFrame(np.random.default_rng(2).standard_normal((2, 2)))
+                for i in range(5)
+            ]
+        )
+
+        # It works (with no Cython exception barf)!
+        repr(s)
+
+        captured = capsys.readouterr()
+        assert captured.err == ""
+
+    def test_repr_name_iterable_indexable(self):
+        s = Series([1, 2, 3], name=np.int64(3))
+
+        # it works!
+        repr(s)
+
+        s.name = ("\u05d0",) * 2
+        repr(s)
+
+    def test_repr_max_rows(self):
+        # GH 6863
+        with option_context("display.max_rows", None):
+            str(Series(range(1001)))  # should not raise exception
+
+    def test_unicode_string_with_unicode(self):
+        df = Series(["\u05d0"], name="\u05d1")
+        str(df)
+
+        ser = Series(["\u03c3"] * 10)
+        repr(ser)
+
+        ser2 = Series(["\u05d0"] * 1000)
+        ser2.name = "title1"
+        repr(ser2)
+
+    def test_str_to_bytes_raises(self):
+        # GH 26447
+        df = Series(["abc"], name="abc")
+        msg = "^'str' object cannot be interpreted as an integer$"
+        with pytest.raises(TypeError, match=msg):
+            bytes(df)
+
+    def test_timeseries_repr_object_dtype(self):
+        index = Index(
+            [datetime(2000, 1, 1) + timedelta(i) for i in range(1000)], dtype=object
+        )
+        ts = Series(np.random.default_rng(2).standard_normal(len(index)), index)
+        repr(ts)
+
+        ts = Series(
+            np.arange(20, dtype=np.float64), index=date_range("2020-01-01", periods=20)
+        )
+        assert repr(ts).splitlines()[-1].startswith("Freq:")
+
+        ts2 = ts.iloc[np.random.default_rng(2).integers(0, len(ts) - 1, 400)]
+        repr(ts2).splitlines()[-1]
+
+    def test_latex_repr(self):
+        pytest.importorskip("jinja2")  # uses Styler implementation
+        result = r"""\begin{tabular}{ll}
+\toprule
+ & 0 \\
+\midrule
+0 & $\alpha$ \\
+1 & b \\
+2 & c \\
+\bottomrule
+\end{tabular}
+"""
+        with option_context(
+            "styler.format.escape", None, "styler.render.repr", "latex"
+        ):
+            s = Series([r"$\alpha$", "b", "c"])
+            assert result == s._repr_latex_()
+
+        assert s._repr_latex_() is None
+
+    def test_index_repr_in_frame_with_nan(self):
+        # see gh-25061
+        i = Index([1, np.nan])
+        s = Series([1, 2], index=i)
+        exp = """1.0    1\nNaN    2\ndtype: int64"""
+
+        assert repr(s) == exp
+
+    def test_format_pre_1900_dates(self):
+        rng = date_range("1/1/1850", "1/1/1950", freq="YE-DEC")
+        msg = "DatetimeIndex.format is deprecated"
+        with tm.assert_produces_warning(FutureWarning, match=msg):
+            rng.format()
+        ts = Series(1, index=rng)
+        repr(ts)
+
+    def test_series_repr_nat(self):
+        series = Series([0, 1000, 2000, pd.NaT._value], dtype="M8[ns]")
+
+        result = repr(series)
+        expected = (
+            "0   1970-01-01 00:00:00.000000\n"
+            "1   1970-01-01 00:00:00.000001\n"
+            "2   1970-01-01 00:00:00.000002\n"
+            "3                          NaT\n"
+            "dtype: datetime64[ns]"
+        )
+        assert result == expected
+
+    def test_float_repr(self):
+        # GH#35603
+        # check float format when cast to object
+        ser = Series([1.0]).astype(object)
+        expected = "0    1.0\ndtype: object"
+        assert repr(ser) == expected
+
+    def test_different_null_objects(self):
+        # GH#45263
+        ser = Series([1, 2, 3, 4], [True, None, np.nan, pd.NaT])
+        result = repr(ser)
+        expected = "True    1\nNone    2\nNaN     3\nNaT     4\ndtype: int64"
+        assert result == expected
+
+
+class TestCategoricalRepr:
+    def test_categorical_repr_unicode(self):
+        # see gh-21002
+
+        class County:
+            name = "San Sebastián"
+            state = "PR"
+
+            def __repr__(self) -> str:
+                return self.name + ", " + self.state
+
+        cat = Categorical([County() for _ in range(61)])
+        idx = Index(cat)
+        ser = idx.to_series()
+
+        repr(ser)
+        str(ser)
+
+    def test_categorical_repr(self, using_infer_string):
+        a = Series(Categorical([1, 2, 3, 4]))
+        exp = (
+            "0    1\n1    2\n2    3\n3    4\n"
+            "dtype: category\nCategories (4, int64): [1, 2, 3, 4]"
+        )
+
+        assert exp == a.__str__()
+
+        a = Series(Categorical(["a", "b"] * 25))
+        exp = (
+            "0     a\n1     b\n"
+            "     ..\n"
+            "48    a\n49    b\n"
+            "Length: 50, dtype: category\nCategories (2, object): ['a', 'b']"
+        )
+        if using_infer_string:
+            exp = exp.replace("object", "str")
+        with option_context("display.max_rows", 5):
+            assert exp == repr(a)
+
+        levs = list("abcdefghijklmnopqrstuvwxyz")
+        a = Series(Categorical(["a", "b"], categories=levs, ordered=True))
+        exp = (
+            "0    a\n1    b\n"
+            "dtype: category\n"
+            "Categories (26, object): ['a' < 'b' < 'c' < 'd' ... "
+            "'w' < 'x' < 'y' < 'z']"
+        )
+        if using_infer_string:
+            exp = exp.replace("object", "str")
+        assert exp == a.__str__()
+
+    def test_categorical_series_repr(self):
+        s = Series(Categorical([1, 2, 3]))
+        exp = """0    1
+1    2
+2    3
+dtype: category
+Categories (3, int64): [1, 2, 3]"""
+
+        assert repr(s) == exp
+
+        s = Series(Categorical(np.arange(10)))
+        exp = f"""0    0
+1    1
+2    2
+3    3
+4    4
+5    5
+6    6
+7    7
+8    8
+9    9
+dtype: category
+Categories (10, {np.dtype(int)}): [0, 1, 2, 3, ..., 6, 7, 8, 9]"""
+
+        assert repr(s) == exp
+
+    def test_categorical_series_repr_ordered(self):
+        s = Series(Categorical([1, 2, 3], ordered=True))
+        exp = """0    1
+1    2
+2    3
+dtype: category
+Categories (3, int64): [1 < 2 < 3]"""
+
+        assert repr(s) == exp
+
+        s = Series(Categorical(np.arange(10), ordered=True))
+        exp = f"""0    0
+1    1
+2    2
+3    3
+4    4
+5    5
+6    6
+7    7
+8    8
+9    9
+dtype: category
+Categories (10, {np.dtype(int)}): [0 < 1 < 2 < 3 ... 6 < 7 < 8 < 9]"""
+
+        assert repr(s) == exp
+
+    def test_categorical_series_repr_datetime(self):
+        idx = date_range("2011-01-01 09:00", freq="h", periods=5)
+        s = Series(Categorical(idx))
+        exp = """0   2011-01-01 09:00:00
+1   2011-01-01 10:00:00
+2   2011-01-01 11:00:00
+3   2011-01-01 12:00:00
+4   2011-01-01 13:00:00
+dtype: category
+Categories (5, datetime64[ns]): [2011-01-01 09:00:00, 2011-01-01 10:00:00, 2011-01-01 11:00:00,
+                                 2011-01-01 12:00:00, 2011-01-01 13:00:00]"""  # noqa: E501
+
+        assert repr(s) == exp
+
+        idx = date_range("2011-01-01 09:00", freq="h", periods=5, tz="US/Eastern")
+        s = Series(Categorical(idx))
+        exp = """0   2011-01-01 09:00:00-05:00
+1   2011-01-01 10:00:00-05:00
+2   2011-01-01 11:00:00-05:00
+3   2011-01-01 12:00:00-05:00
+4   2011-01-01 13:00:00-05:00
+dtype: category
+Categories (5, datetime64[ns, US/Eastern]): [2011-01-01 09:00:00-05:00, 2011-01-01 10:00:00-05:00,
+                                             2011-01-01 11:00:00-05:00, 2011-01-01 12:00:00-05:00,
+                                             2011-01-01 13:00:00-05:00]"""  # noqa: E501
+
+        assert repr(s) == exp
+
+    def test_categorical_series_repr_datetime_ordered(self):
+        idx = date_range("2011-01-01 09:00", freq="h", periods=5)
+        s = Series(Categorical(idx, ordered=True))
+        exp = """0   2011-01-01 09:00:00
+1   2011-01-01 10:00:00
+2   2011-01-01 11:00:00
+3   2011-01-01 12:00:00
+4   2011-01-01 13:00:00
+dtype: category
+Categories (5, datetime64[ns]): [2011-01-01 09:00:00 < 2011-01-01 10:00:00 < 2011-01-01 11:00:00 <
+                                 2011-01-01 12:00:00 < 2011-01-01 13:00:00]"""  # noqa: E501
+
+        assert repr(s) == exp
+
+        idx = date_range("2011-01-01 09:00", freq="h", periods=5, tz="US/Eastern")
+        s = Series(Categorical(idx, ordered=True))
+        exp = """0   2011-01-01 09:00:00-05:00
+1   2011-01-01 10:00:00-05:00
+2   2011-01-01 11:00:00-05:00
+3   2011-01-01 12:00:00-05:00
+4   2011-01-01 13:00:00-05:00
+dtype: category
+Categories (5, datetime64[ns, US/Eastern]): [2011-01-01 09:00:00-05:00 < 2011-01-01 10:00:00-05:00 <
+                                             2011-01-01 11:00:00-05:00 < 2011-01-01 12:00:00-05:00 <
+                                             2011-01-01 13:00:00-05:00]"""  # noqa: E501
+
+        assert repr(s) == exp
+
+    def test_categorical_series_repr_period(self):
+        idx = period_range("2011-01-01 09:00", freq="h", periods=5)
+        s = Series(Categorical(idx))
+        exp = """0    2011-01-01 09:00
+1    2011-01-01 10:00
+2    2011-01-01 11:00
+3    2011-01-01 12:00
+4    2011-01-01 13:00
+dtype: category
+Categories (5, period[h]): [2011-01-01 09:00, 2011-01-01 10:00, 2011-01-01 11:00, 2011-01-01 12:00,
+                            2011-01-01 13:00]"""  # noqa: E501
+
+        assert repr(s) == exp
+
+        idx = period_range("2011-01", freq="M", periods=5)
+        s = Series(Categorical(idx))
+        exp = """0    2011-01
+1    2011-02
+2    2011-03
+3    2011-04
+4    2011-05
+dtype: category
+Categories (5, period[M]): [2011-01, 2011-02, 2011-03, 2011-04, 2011-05]"""
+
+        assert repr(s) == exp
+
+    def test_categorical_series_repr_period_ordered(self):
+        idx = period_range("2011-01-01 09:00", freq="h", periods=5)
+        s = Series(Categorical(idx, ordered=True))
+        exp = """0    2011-01-01 09:00
+1    2011-01-01 10:00
+2    2011-01-01 11:00
+3    2011-01-01 12:00
+4    2011-01-01 13:00
+dtype: category
+Categories (5, period[h]): [2011-01-01 09:00 < 2011-01-01 10:00 < 2011-01-01 11:00 < 2011-01-01 12:00 <
+                            2011-01-01 13:00]"""  # noqa: E501
+
+        assert repr(s) == exp
+
+        idx = period_range("2011-01", freq="M", periods=5)
+        s = Series(Categorical(idx, ordered=True))
+        exp = """0    2011-01
+1    2011-02
+2    2011-03
+3    2011-04
+4    2011-05
+dtype: category
+Categories (5, period[M]): [2011-01 < 2011-02 < 2011-03 < 2011-04 < 2011-05]"""
+
+        assert repr(s) == exp
+
+    def test_categorical_series_repr_timedelta(self):
+        idx = timedelta_range("1 days", periods=5)
+        s = Series(Categorical(idx))
+        exp = """0   1 days
+1   2 days
+2   3 days
+3   4 days
+4   5 days
+dtype: category
+Categories (5, timedelta64[ns]): [1 days, 2 days, 3 days, 4 days, 5 days]"""
+
+        assert repr(s) == exp
+
+        idx = timedelta_range("1 hours", periods=10)
+        s = Series(Categorical(idx))
+        exp = """0   0 days 01:00:00
+1   1 days 01:00:00
+2   2 days 01:00:00
+3   3 days 01:00:00
+4   4 days 01:00:00
+5   5 days 01:00:00
+6   6 days 01:00:00
+7   7 days 01:00:00
+8   8 days 01:00:00
+9   9 days 01:00:00
+dtype: category
+Categories (10, timedelta64[ns]): [0 days 01:00:00, 1 days 01:00:00, 2 days 01:00:00,
+                                   3 days 01:00:00, ..., 6 days 01:00:00, 7 days 01:00:00,
+                                   8 days 01:00:00, 9 days 01:00:00]"""  # noqa: E501
+
+        assert repr(s) == exp
+
+    def test_categorical_series_repr_timedelta_ordered(self):
+        idx = timedelta_range("1 days", periods=5)
+        s = Series(Categorical(idx, ordered=True))
+        exp = """0   1 days
+1   2 days
+2   3 days
+3   4 days
+4   5 days
+dtype: category
+Categories (5, timedelta64[ns]): [1 days < 2 days < 3 days < 4 days < 5 days]"""
+
+        assert repr(s) == exp
+
+        idx = timedelta_range("1 hours", periods=10)
+        s = Series(Categorical(idx, ordered=True))
+        exp = """0   0 days 01:00:00
+1   1 days 01:00:00
+2   2 days 01:00:00
+3   3 days 01:00:00
+4   4 days 01:00:00
+5   5 days 01:00:00
+6   6 days 01:00:00
+7   7 days 01:00:00
+8   8 days 01:00:00
+9   9 days 01:00:00
+dtype: category
+Categories (10, timedelta64[ns]): [0 days 01:00:00 < 1 days 01:00:00 < 2 days 01:00:00 <
+                                   3 days 01:00:00 ... 6 days 01:00:00 < 7 days 01:00:00 <
+                                   8 days 01:00:00 < 9 days 01:00:00]"""  # noqa: E501
+
+        assert repr(s) == exp
+

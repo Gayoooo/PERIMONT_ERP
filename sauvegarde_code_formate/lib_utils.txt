@@ -1,0 +1,27 @@
+#!/usr/bin/env python3
+"""
+Script de lib_utils pour PERIMONT_ERP
+Module: venv.Lib.site-packages.numpy.typing.tests.data.pass.lib_utils.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+from __future__ import annotations
+
+from io import StringIO
+
+import numpy as np
+import numpy.lib.array_utils as array_utils
+
+FILE = StringIO()
+AR = np.arange(10, dtype=np.float64)
+
+
+def func(a: int) -> bool:
+    return True
+
+
+array_utils.byte_bounds(AR)
+array_utils.byte_bounds(np.float64())
+
+np.info(1, output=FILE)
+

@@ -1,0 +1,267 @@
+// Chemin: C:\PERIMONT_ERP\venv\Lib\site-packages\openpyxl\chart\reference.py C:\PERIMONT_ERP\venv\Lib\site-packages\pytz\reference.py
+
+# Copyright (c) 2010-2024 openpyxl
+
+from itertools import chain
+
+from openpyxl.descriptors.serialisable import Serialisable
+from openpyxl.descriptors import (
+    MinMax,
+    Typed,
+    String,
+    Strict,
+)
+from openpyxl.worksheet.worksheet import Worksheet
+from openpyxl.utils import (
+    get_column_letter,
+    range_to_tuple,
+    quote_sheetname
+)
+
+
+class DummyWorksheet:
+
+
+    def __init__(self, title):
+        self.title = title
+
+
+class Reference(Strict):
+
+    """
+    Normalise cell range references
+    """
+
+    min_row = MinMax(min=1, max=1000000, expected_type=int)
+    max_row = MinMax(min=1, max=1000000, expected_type=int)
+    min_col = MinMax(min=1, max=16384, expected_type=int)
+    max_col = MinMax(min=1, max=16384, expected_type=int)
+    range_string = String(allow_none=True)
+
+    def __init__(self,
+                 worksheet=None,
+                 min_col=None,
+                 min_row=None,
+                 max_col=None,
+                 max_row=None,
+                 range_string=None
+                 ):
+        if range_string is not None:
+            sheetname, boundaries = range_to_tuple(range_string)
+            min_col, min_row, max_col, max_row = boundaries
+            worksheet = DummyWorksheet(sheetname)
+
+        self.worksheet = worksheet
+        self.min_col = min_col
+        self.min_row = min_row
+        if max_col is None:
+            max_col = min_col
+        self.max_col = max_col
+        if max_row is None:
+            max_row = min_row
+        self.max_row = max_row
+
+
+    def __repr__(self):
+        return str(self)
+
+
+    def __str__(self):
+        fmt = u"{0}!${1}${2}:${3}${4}"
+        if (self.min_col == self.max_col
+            and self.min_row == self.max_row):
+            fmt = u"{0}!${1}${2}"
+        return fmt.format(self.sheetname,
+                          get_column_letter(self.min_col), self.min_row,
+                          get_column_letter(self.max_col), self.max_row
+                          )
+
+
+    __str__ = __str__
+
+
+
+    def __len__(self):
+        if self.min_row == self.max_row:
+            return 1 + self.max_col - self.min_col
+        return 1 + self.max_row - self.min_row
+
+
+    def __eq__(self, other):
+        return str(self) == str(other)
+
+
+    @property
+    def rows(self):
+        """
+        Return all rows in the range
+        """
+        for row in range(self.min_row, self.max_row+1):
+            yield Reference(self.worksheet, self.min_col, row, self.max_col, row)
+
+
+    @property
+    def cols(self):
+        """
+        Return all columns in the range
+        """
+        for col in range(self.min_col, self.max_col+1):
+            yield Reference(self.worksheet, col, self.min_row, col, self.max_row)
+
+
+    def pop(self):
+        """
+        Return and remove the first cell
+        """
+        cell = "{0}{1}".format(get_column_letter(self.min_col), self.min_row)
+        if self.min_row == self.max_row:
+            self.min_col += 1
+        else:
+            self.min_row += 1
+        return cell
+
+
+    @property
+    def sheetname(self):
+        return quote_sheetname(self.worksheet.title)
+ '''
+Reference tzinfo implementations from the Python docs.
+Used for testing against as they are only correct for the years
+1987 to 2006. Do not use these for real code.
+'''
+
+from datetime import tzinfo, timedelta, datetime
+from pytz import HOUR, ZERO, UTC
+
+__all__ = [
+    'FixedOffset',
+    'LocalTimezone',
+    'USTimeZone',
+    'Eastern',
+    'Central',
+    'Mountain',
+    'Pacific',
+    'UTC'
+]
+
+
+# A class building tzinfo objects for fixed-offset time zones.
+# Note that FixedOffset(0, "UTC") is a different way to build a
+# UTC tzinfo object.
+class FixedOffset(tzinfo):
+    """Fixed offset in minutes east from UTC."""
+
+    def __init__(self, offset, name):
+        self.__offset = timedelta(minutes=offset)
+        self.__name = name
+
+    def utcoffset(self, dt):
+        return self.__offset
+
+    def tzname(self, dt):
+        return self.__name
+
+    def dst(self, dt):
+        return ZERO
+
+
+import time as _time
+
+STDOFFSET = timedelta(seconds=-_time.timezone)
+if _time.daylight:
+    DSTOFFSET = timedelta(seconds=-_time.altzone)
+else:
+    DSTOFFSET = STDOFFSET
+
+DSTDIFF = DSTOFFSET - STDOFFSET
+
+
+# A class capturing the platform's idea of local time.
+class LocalTimezone(tzinfo):
+
+    def utcoffset(self, dt):
+        if self._isdst(dt):
+            return DSTOFFSET
+        else:
+            return STDOFFSET
+
+    def dst(self, dt):
+        if self._isdst(dt):
+            return DSTDIFF
+        else:
+            return ZERO
+
+    def tzname(self, dt):
+        return _time.tzname[self._isdst(dt)]
+
+    def _isdst(self, dt):
+        tt = (dt.year, dt.month, dt.day,
+              dt.hour, dt.minute, dt.second,
+              dt.weekday(), 0, -1)
+        stamp = _time.mktime(tt)
+        tt = _time.localtime(stamp)
+        return tt.tm_isdst > 0
+
+Local = LocalTimezone()
+
+
+def first_sunday_on_or_after(dt):
+    days_to_go = 6 - dt.weekday()
+    if days_to_go:
+        dt += timedelta(days_to_go)
+    return dt
+
+
+# In the US, DST starts at 2am (standard time) on the first Sunday in April.
+DSTSTART = datetime(1, 4, 1, 2)
+# and ends at 2am (DST time; 1am standard time) on the last Sunday of Oct.
+# which is the first Sunday on or after Oct 25.
+DSTEND = datetime(1, 10, 25, 1)
+
+
+# A complete implementation of current DST rules for major US time zones.
+class USTimeZone(tzinfo):
+
+    def __init__(self, hours, reprname, stdname, dstname):
+        self.stdoffset = timedelta(hours=hours)
+        self.reprname = reprname
+        self.stdname = stdname
+        self.dstname = dstname
+
+    def __repr__(self):
+        return self.reprname
+
+    def tzname(self, dt):
+        if self.dst(dt):
+            return self.dstname
+        else:
+            return self.stdname
+
+    def utcoffset(self, dt):
+        return self.stdoffset + self.dst(dt)
+
+    def dst(self, dt):
+        if dt is None or dt.tzinfo is None:
+            # An exception may be sensible here, in one or both cases.
+            # It depends on how you want to treat them.  The default
+            # fromutc() implementation (called by the default astimezone()
+            # implementation) passes a datetime with dt.tzinfo is self.
+            return ZERO
+        assert dt.tzinfo is self
+
+        # Find first Sunday in April & the last in October.
+        start = first_sunday_on_or_after(DSTSTART.replace(year=dt.year))
+        end = first_sunday_on_or_after(DSTEND.replace(year=dt.year))
+
+        # Can't compare naive to aware objects, so strip the timezone from
+        # dt first.
+        if start <= dt.replace(tzinfo=None) < end:
+            return HOUR
+        else:
+            return ZERO
+
+Eastern = USTimeZone(-5, "Eastern", "EST", "EDT")
+Central = USTimeZone(-6, "Central", "CST", "CDT")
+Mountain = USTimeZone(-7, "Mountain", "MST", "MDT")
+Pacific = USTimeZone(-8, "Pacific", "PST", "PDT")
+

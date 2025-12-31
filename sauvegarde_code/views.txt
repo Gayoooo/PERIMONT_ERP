@@ -1,0 +1,364 @@
+// Chemin: C:\PERIMONT_ERP\venv\Lib\site-packages\openpyxl\chartsheet\views.py C:\PERIMONT_ERP\venv\Lib\site-packages\openpyxl\workbook\views.py C:\PERIMONT_ERP\venv\Lib\site-packages\openpyxl\worksheet\views.py
+
+# Copyright (c) 2010-2024 openpyxl
+
+from openpyxl.descriptors import (
+    Bool,
+    Integer,
+    Typed,
+    Sequence
+)
+from openpyxl.descriptors.excel import ExtensionList
+from openpyxl.descriptors.serialisable import Serialisable
+
+
+class ChartsheetView(Serialisable):
+    tagname = "sheetView"
+
+    tabSelected = Bool(allow_none=True)
+    zoomScale = Integer(allow_none=True)
+    workbookViewId = Integer()
+    zoomToFit = Bool(allow_none=True)
+    extLst = Typed(expected_type=ExtensionList, allow_none=True)
+
+    __elements__ = ()
+
+    def __init__(self,
+                 tabSelected=None,
+                 zoomScale=None,
+                 workbookViewId=0,
+                 zoomToFit=True,
+                 extLst=None,
+                 ):
+        self.tabSelected = tabSelected
+        self.zoomScale = zoomScale
+        self.workbookViewId = workbookViewId
+        self.zoomToFit = zoomToFit
+
+
+class ChartsheetViewList(Serialisable):
+    tagname = "sheetViews"
+
+    sheetView = Sequence(expected_type=ChartsheetView, )
+    extLst = Typed(expected_type=ExtensionList, allow_none=True)
+
+    __elements__ = ('sheetView',)
+
+    def __init__(self,
+                 sheetView=None,
+                 extLst=None,
+                 ):
+        if sheetView is None:
+            sheetView = [ChartsheetView()]
+        self.sheetView = sheetView
+ # Copyright (c) 2010-2024 openpyxl
+
+from openpyxl.descriptors.serialisable import Serialisable
+from openpyxl.descriptors import (
+    Typed,
+    Sequence,
+    String,
+    Float,
+    Integer,
+    Bool,
+    NoneSet,
+    Set,
+)
+from openpyxl.descriptors.excel import (
+    ExtensionList,
+    Guid,
+)
+
+
+class BookView(Serialisable):
+
+    tagname = "workbookView"
+
+    visibility = NoneSet(values=(['visible', 'hidden', 'veryHidden']))
+    minimized = Bool(allow_none=True)
+    showHorizontalScroll = Bool(allow_none=True)
+    showVerticalScroll = Bool(allow_none=True)
+    showSheetTabs = Bool(allow_none=True)
+    xWindow = Integer(allow_none=True)
+    yWindow = Integer(allow_none=True)
+    windowWidth = Integer(allow_none=True)
+    windowHeight = Integer(allow_none=True)
+    tabRatio = Integer(allow_none=True)
+    firstSheet = Integer(allow_none=True)
+    activeTab = Integer(allow_none=True)
+    autoFilterDateGrouping = Bool(allow_none=True)
+    extLst = Typed(expected_type=ExtensionList, allow_none=True)
+
+    __elements__ = ()
+
+    def __init__(self,
+                 visibility="visible",
+                 minimized=False,
+                 showHorizontalScroll=True,
+                 showVerticalScroll=True,
+                 showSheetTabs=True,
+                 xWindow=None,
+                 yWindow=None,
+                 windowWidth=None,
+                 windowHeight=None,
+                 tabRatio=600,
+                 firstSheet=0,
+                 activeTab=0,
+                 autoFilterDateGrouping=True,
+                 extLst=None,
+                ):
+        self.visibility = visibility
+        self.minimized = minimized
+        self.showHorizontalScroll = showHorizontalScroll
+        self.showVerticalScroll = showVerticalScroll
+        self.showSheetTabs = showSheetTabs
+        self.xWindow = xWindow
+        self.yWindow = yWindow
+        self.windowWidth = windowWidth
+        self.windowHeight = windowHeight
+        self.tabRatio = tabRatio
+        self.firstSheet = firstSheet
+        self.activeTab = activeTab
+        self.autoFilterDateGrouping = autoFilterDateGrouping
+
+
+class CustomWorkbookView(Serialisable):
+
+    tagname = "customWorkbookView"
+
+    name = String()
+    guid = Guid()
+    autoUpdate = Bool(allow_none=True)
+    mergeInterval = Integer(allow_none=True)
+    changesSavedWin = Bool(allow_none=True)
+    onlySync = Bool(allow_none=True)
+    personalView = Bool(allow_none=True)
+    includePrintSettings = Bool(allow_none=True)
+    includeHiddenRowCol = Bool(allow_none=True)
+    maximized = Bool(allow_none=True)
+    minimized = Bool(allow_none=True)
+    showHorizontalScroll = Bool(allow_none=True)
+    showVerticalScroll = Bool(allow_none=True)
+    showSheetTabs = Bool(allow_none=True)
+    xWindow = Integer(allow_none=True)
+    yWindow = Integer(allow_none=True)
+    windowWidth = Integer()
+    windowHeight = Integer()
+    tabRatio = Integer(allow_none=True)
+    activeSheetId = Integer()
+    showFormulaBar = Bool(allow_none=True)
+    showStatusbar = Bool(allow_none=True)
+    showComments = NoneSet(values=(['commNone', 'commIndicator',
+                                'commIndAndComment']))
+    showObjects = NoneSet(values=(['all', 'placeholders']))
+    extLst = Typed(expected_type=ExtensionList, allow_none=True)
+
+    __elements__ = ()
+
+    def __init__(self,
+                 name=None,
+                 guid=None,
+                 autoUpdate=None,
+                 mergeInterval=None,
+                 changesSavedWin=None,
+                 onlySync=None,
+                 personalView=None,
+                 includePrintSettings=None,
+                 includeHiddenRowCol=None,
+                 maximized=None,
+                 minimized=None,
+                 showHorizontalScroll=None,
+                 showVerticalScroll=None,
+                 showSheetTabs=None,
+                 xWindow=None,
+                 yWindow=None,
+                 windowWidth=None,
+                 windowHeight=None,
+                 tabRatio=None,
+                 activeSheetId=None,
+                 showFormulaBar=None,
+                 showStatusbar=None,
+                 showComments="commIndicator",
+                 showObjects="all",
+                 extLst=None,
+                ):
+        self.name = name
+        self.guid = guid
+        self.autoUpdate = autoUpdate
+        self.mergeInterval = mergeInterval
+        self.changesSavedWin = changesSavedWin
+        self.onlySync = onlySync
+        self.personalView = personalView
+        self.includePrintSettings = includePrintSettings
+        self.includeHiddenRowCol = includeHiddenRowCol
+        self.maximized = maximized
+        self.minimized = minimized
+        self.showHorizontalScroll = showHorizontalScroll
+        self.showVerticalScroll = showVerticalScroll
+        self.showSheetTabs = showSheetTabs
+        self.xWindow = xWindow
+        self.yWindow = yWindow
+        self.windowWidth = windowWidth
+        self.windowHeight = windowHeight
+        self.tabRatio = tabRatio
+        self.activeSheetId = activeSheetId
+        self.showFormulaBar = showFormulaBar
+        self.showStatusbar = showStatusbar
+        self.showComments = showComments
+        self.showObjects = showObjects
+ # Copyright (c) 2010-2024 openpyxl
+
+from openpyxl.descriptors import (
+    Bool,
+    Integer,
+    String,
+    Set,
+    Float,
+    Typed,
+    NoneSet,
+    Sequence,
+)
+from openpyxl.descriptors.excel import ExtensionList
+from openpyxl.descriptors.serialisable import Serialisable
+
+
+class Pane(Serialisable):
+    xSplit = Float(allow_none=True)
+    ySplit = Float(allow_none=True)
+    topLeftCell = String(allow_none=True)
+    activePane = Set(values=("bottomRight", "topRight", "bottomLeft", "topLeft"))
+    state = Set(values=("split", "frozen", "frozenSplit"))
+
+    def __init__(self,
+                 xSplit=None,
+                 ySplit=None,
+                 topLeftCell=None,
+                 activePane="topLeft",
+                 state="split"):
+        self.xSplit = xSplit
+        self.ySplit = ySplit
+        self.topLeftCell = topLeftCell
+        self.activePane = activePane
+        self.state = state
+
+
+class Selection(Serialisable):
+    pane = NoneSet(values=("bottomRight", "topRight", "bottomLeft", "topLeft"))
+    activeCell = String(allow_none=True)
+    activeCellId = Integer(allow_none=True)
+    sqref = String(allow_none=True)
+
+    def __init__(self,
+                 pane=None,
+                 activeCell="A1",
+                 activeCellId=None,
+                 sqref="A1"):
+        self.pane = pane
+        self.activeCell = activeCell
+        self.activeCellId = activeCellId
+        self.sqref = sqref
+
+
+class SheetView(Serialisable):
+
+    """Information about the visible portions of this sheet."""
+
+    tagname = "sheetView"
+
+    windowProtection = Bool(allow_none=True)
+    showFormulas = Bool(allow_none=True)
+    showGridLines = Bool(allow_none=True)
+    showRowColHeaders = Bool(allow_none=True)
+    showZeros = Bool(allow_none=True)
+    rightToLeft = Bool(allow_none=True)
+    tabSelected = Bool(allow_none=True)
+    showRuler = Bool(allow_none=True)
+    showOutlineSymbols = Bool(allow_none=True)
+    defaultGridColor = Bool(allow_none=True)
+    showWhiteSpace = Bool(allow_none=True)
+    view = NoneSet(values=("normal", "pageBreakPreview", "pageLayout"))
+    topLeftCell = String(allow_none=True)
+    colorId = Integer(allow_none=True)
+    zoomScale = Integer(allow_none=True)
+    zoomScaleNormal = Integer(allow_none=True)
+    zoomScaleSheetLayoutView = Integer(allow_none=True)
+    zoomScalePageLayoutView = Integer(allow_none=True)
+    zoomToFit = Bool(allow_none=True) # Chart sheets only
+    workbookViewId = Integer()
+    selection = Sequence(expected_type=Selection)
+    pane = Typed(expected_type=Pane, allow_none=True)
+
+    def __init__(self,
+                 windowProtection=None,
+                 showFormulas=None,
+                 showGridLines=None,
+                 showRowColHeaders=None,
+                 showZeros=None,
+                 rightToLeft=None,
+                 tabSelected=None,
+                 showRuler=None,
+                 showOutlineSymbols=None,
+                 defaultGridColor=None,
+                 showWhiteSpace=None,
+                 view=None,
+                 topLeftCell=None,
+                 colorId=None,
+                 zoomScale=None,
+                 zoomScaleNormal=None,
+                 zoomScaleSheetLayoutView=None,
+                 zoomScalePageLayoutView=None,
+                 zoomToFit=None,
+                 workbookViewId=0,
+                 selection=None,
+                 pane=None,):
+        self.windowProtection = windowProtection
+        self.showFormulas = showFormulas
+        self.showGridLines = showGridLines
+        self.showRowColHeaders = showRowColHeaders
+        self.showZeros = showZeros
+        self.rightToLeft = rightToLeft
+        self.tabSelected = tabSelected
+        self.showRuler = showRuler
+        self.showOutlineSymbols = showOutlineSymbols
+        self.defaultGridColor = defaultGridColor
+        self.showWhiteSpace = showWhiteSpace
+        self.view = view
+        self.topLeftCell = topLeftCell
+        self.colorId = colorId
+        self.zoomScale = zoomScale
+        self.zoomScaleNormal = zoomScaleNormal
+        self.zoomScaleSheetLayoutView = zoomScaleSheetLayoutView
+        self.zoomScalePageLayoutView = zoomScalePageLayoutView
+        self.zoomToFit = zoomToFit
+        self.workbookViewId = workbookViewId
+        self.pane = pane
+        if selection is None:
+            selection = (Selection(), )
+        self.selection = selection
+
+
+class SheetViewList(Serialisable):
+
+    tagname = "sheetViews"
+
+    sheetView = Sequence(expected_type=SheetView, )
+    extLst = Typed(expected_type=ExtensionList, allow_none=True)
+
+    __elements__ = ('sheetView',)
+
+    def __init__(self,
+                 sheetView=None,
+                 extLst=None,
+                ):
+        if sheetView is None:
+            sheetView = [SheetView()]
+        self.sheetView = sheetView
+
+
+    @property
+    def active(self):
+        """
+        Returns the first sheet view which is assumed to be active
+        """
+        return self.sheetView[0]
+

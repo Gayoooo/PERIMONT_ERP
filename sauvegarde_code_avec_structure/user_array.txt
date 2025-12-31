@@ -1,0 +1,4 @@
+// Branche: venv\Lib\site-packages\numpy\lib\user_array.py
+
+from ._user_array_impl import __doc__, container  # noqa: F401
+

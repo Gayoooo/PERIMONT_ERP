@@ -1,0 +1,32 @@
+#!/usr/bin/env python3
+"""
+Script de setup pour PERIMONT_ERP
+Module: venv.Lib.site-packages.numpy._core.tests.examples.limited_api.setup.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+"""
+Build an example package using the limited Python C API.
+"""
+
+import os
+
+from setuptools import Extension, setup
+
+import numpy as np
+
+macros = [("NPY_NO_DEPRECATED_API", 0), ("Py_LIMITED_API", "0x03060000")]
+
+limited_api = Extension(
+    "limited_api",
+    sources=[os.path.join('.', "limited_api.c")],
+    include_dirs=[np.get_include()],
+    define_macros=macros,
+)
+
+extensions = [limited_api]
+
+setup(
+    ext_modules=extensions
+)
+

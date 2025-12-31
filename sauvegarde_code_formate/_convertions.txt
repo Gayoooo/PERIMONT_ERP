@@ -1,0 +1,26 @@
+#!/usr/bin/env python3
+"""
+Script de _convertions pour PERIMONT_ERP
+Module: venv.Lib.site-packages.numpy._utils._convertions.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+"""
+A set of methods retained from np.compat module that
+are still used across codebase.
+"""
+
+__all__ = ["asunicode", "asbytes"]
+
+
+def asunicode(s):
+    if isinstance(s, bytes):
+        return s.decode('latin1')
+    return str(s)
+
+
+def asbytes(s):
+    if isinstance(s, bytes):
+        return s
+    return str(s).encode('latin1')
+

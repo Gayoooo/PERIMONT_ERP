@@ -1,0 +1,103 @@
+// Branche: ui\screens\main_window.py
+
+import customtkinter as ctk
+from config.settings import *
+from datetime import datetime
+from ui.screens.personnel_screen import PersonnelScreen
+
+class MainWindow(ctk.CTkFrame):
+    def __init__(self, parent, user_data):
+        super().__init__(parent, fg_color=COLOR_MAIN_BG)
+        self.user_data = user_data
+        self.current_active_screen = None
+
+        # Configuration de la grille principale
+        # Colonne 0 : Menu latéral (fixe) | Colonne 1 : Contenu (extensible)
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+
+        # --- MENU LATÉRAL ---
+        self.sidebar = ctk.CTkFrame(self, width=240, fg_color=COLOR_CARD_BG, corner_radius=0)
+        self.sidebar.grid(row=0, column=0, sticky="nsew")
+        self.sidebar.grid_propagate(False)
+
+        # Logo / Titre
+        self.logo_label = ctk.CTkLabel(self.sidebar, text="PERIMONT ERP", 
+                                      font=("Segoe UI", 22, "bold"), text_color=COLOR_ACCENT)
+        self.logo_label.pack(pady=(30, 50), padx=20)
+
+        # Configuration de la Navigation
+        # (Nom affiché, Identifiant, Classe de l'écran)
+        self.menu_items = [
+            ("Tableau de bord", "dashboard", None),
+            ("Personnel", "personnel", PersonnelScreen),
+            ("Logistique", "logistique", None),
+            ("Stocks & Carburant", "stock", None),
+            ("Finances", "finances", None),
+            ("Agenda", "agenda", None)
+        ]
+        
+        self.nav_buttons = {}
+        for text, name, screen_class in self.menu_items:
+            self.create_nav_button(text, name, screen_class)
+
+        # --- ZONE DE CONTENU (DROITE) ---
+        self.content_area = ctk.CTkFrame(self, fg_color="transparent")
+        self.content_area.grid(row=0, column=1, sticky="nsew", padx=25, pady=20)
+
+        # --- HEADER (Barre du haut) ---
+        self.header = ctk.CTkFrame(self.content_area, fg_color=COLOR_CARD_BG, height=70, corner_radius=15)
+        self.header.pack(fill="x", pady=(0, 25))
+        self.header.pack_propagate(False)
+        
+        # Horloge avec icône (simulée par texte)
+        self.clock_label = ctk.CTkLabel(self.header, text="", font=("Segoe UI", 16, "bold"), text_color=COLOR_TEXT_MAIN)
+        self.clock_label.pack(side="left", padx=25)
+        
+        # Infos Utilisateur
+        user_info = f"👤 {user_data['username'].upper()}  |  [{user_data['role']}]"
+        self.user_label = ctk.CTkLabel(self.header, text=user_info, 
+                                       font=("Segoe UI", 13), text_color=COLOR_ACCENT)
+        self.user_label.pack(side="right", padx=25)
+
+        # Démarrer l'horloge
+        self.update_clock()
+        
+        # Charger l'écran par défaut (Personnel pour l'instant pour tester)
+        self.switch_screen(PersonnelScreen)
+
+    def create_nav_button(self, text, name, screen_class):
+        btn = ctk.CTkButton(
+            self.sidebar, 
+            text=f"  {text}", 
+            height=50, 
+            fg_color="transparent", 
+            text_color=COLOR_TEXT_MAIN, 
+            anchor="w", 
+            hover_color=COLOR_MAIN_BG,
+            font=("Segoe UI", 14),
+            corner_radius=10,
+            command=lambda: self.switch_screen(screen_class) if screen_class else print(f"Module {text} bientôt disponible")
+        )
+        btn.pack(fill="x", padx=15, pady=5)
+        self.nav_buttons[name] = btn
+
+    def switch_screen(self, screen_class):
+        """Détruit l'ancien écran et affiche le nouveau sans toucher au header."""
+        if screen_class is None:
+            return
+
+        # 1. Nettoyage de la zone de contenu
+        for widget in self.content_area.winfo_children():
+            if widget != self.header:
+                widget.destroy()
+        
+        # 2. Instanciation du nouvel écran
+        self.current_active_screen = screen_class(self.content_area)
+        self.current_active_screen.pack(fill="both", expand=True)
+
+    def update_clock(self):
+        """Mise à jour de l'heure en temps réel."""
+        now = datetime.now().strftime("%H:%M:%S  •  %d %B %Y")
+        self.clock_label.configure(text=now)
+        self.after(1000, self.update_clock)

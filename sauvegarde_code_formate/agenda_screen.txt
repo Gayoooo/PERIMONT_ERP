@@ -1,0 +1,69 @@
+#!/usr/bin/env python3
+"""
+Script de agenda_screen pour PERIMONT_ERP
+Module: ui.screens.agenda_screen.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+import customtkinter as ctk
+from tkinter import ttk
+from database.db_manager import Database
+from config.settings import *
+from datetime import datetime
+
+class AgendaScreen(ctk.CTkFrame):
+    def __init__(self, parent):
+        super().__init__(parent, fg_color="transparent")
+        self.db = Database()
+        
+        # Titre
+        ctk.CTkLabel(self, text="Agenda & Planification", font=("Segoe UI", 24, "bold")).pack(pady=10, anchor="w", padx=20)
+
+        self.container = ctk.CTkFrame(self, fg_color="transparent")
+        self.container.pack(fill="both", expand=True, padx=20)
+
+        # --- GAUCHE : FORMULAIRE D'ÉVÉNEMENT ---
+        self.form = ctk.CTkFrame(self.container, fg_color=COLOR_CARD_BG, width=300)
+        self.form.pack(side="left", fill="y", padx=10, pady=10)
+
+        ctk.CTkLabel(self.form, text="Nouvel Événement", font=("Segoe UI", 16, "bold")).pack(pady=20)
+        
+        self.ent_titre = ctk.CTkEntry(self.form, placeholder_text="Titre (ex: Vidange Camion A1)", width=240)
+        self.ent_titre.pack(pady=10)
+        
+        self.ent_date = ctk.CTkEntry(self.form, placeholder_text="Date (AAAA-MM-JJ)", width=240)
+        self.ent_date.insert(0, datetime.now().strftime("%Y-%m-%d"))
+        self.ent_date.pack(pady=10)
+
+        self.combo_type = ctk.CTkComboBox(self.form, values=["Maintenance", "Réunion", "Paie", "Mission"], width=240)
+        self.combo_type.pack(pady=10)
+
+        ctk.CTkButton(self.form, text="Ajouter à l'agenda", fg_color=COLOR_ACCENT, text_color=COLOR_MAIN_BG,
+                      command=self.ajouter_evenement).pack(pady=30)
+
+        # --- DROITE : LISTE DES ÉVÉNEMENTS ---
+        self.list_frame = ctk.CTkFrame(self.container, fg_color=COLOR_CARD_BG)
+        self.list_frame.pack(side="right", fill="both", expand=True, padx=10, pady=10)
+
+        self.tree = ttk.Treeview(self.list_frame, columns=("date", "titre", "type"), show="headings")
+        self.tree.heading("date", text="DATE")
+        self.tree.heading("titre", text="ÉVÉNEMENT")
+        self.tree.heading("type", text="TYPE")
+        self.tree.pack(fill="both", expand=True, padx=10, pady=10)
+        
+        self.charger_agenda()
+
+    def ajouter_evenement(self):
+        t = self.ent_titre.get()
+        d = self.ent_date.get()
+        tp = self.combo_type.get()
+        if t and d:
+            self.db.query("INSERT INTO agenda (titre, date_evenement, type_evenement) VALUES (?,?,?)", (t, d, tp))
+            self.charger_agenda()
+            self.ent_titre.delete(0, 'end')
+
+    def charger_agenda(self):
+        for i in self.tree.get_children(): self.tree.delete(i)
+        rows = self.db.query("SELECT * FROM agenda ORDER BY date_evenement ASC").fetchall()
+        for r in rows:
+            self.tree.insert("", "end", values=(r['date_evenement'], r['titre'], r['type_evenement']))

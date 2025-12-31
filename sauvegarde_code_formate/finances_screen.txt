@@ -1,0 +1,67 @@
+#!/usr/bin/env python3
+"""
+Script de finances_screen pour PERIMONT_ERP
+Module: ui.screens.finances_screen.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+import customtkinter as ctk
+from tkinter import ttk
+from database.db_manager import Database
+from config.settings import *
+
+class FinancesScreen(ctk.CTkFrame):
+    def __init__(self, parent):
+        super().__init__(parent, fg_color="transparent")
+        self.db = Database()
+        
+        # Table Finances
+        self.db.query("""CREATE TABLE IF NOT EXISTS finances (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            libelle TEXT, montant REAL, type TEXT, date TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
+
+        ctk.CTkLabel(self, text="Flux de Trésorerie", font=("Segoe UI", 24, "bold")).pack(pady=20, padx=30, anchor="w")
+
+        # --- RÉSUMÉ RAPIDE ---
+        self.summary = ctk.CTkFrame(self, fg_color="transparent")
+        self.summary.pack(fill="x", padx=30)
+        
+        self.lbl_solde = ctk.CTkLabel(self.summary, text="SOLDE ACTUEL : 0 FCFA", font=("Segoe UI", 18, "bold"), text_color=COLOR_ACCENT)
+        self.lbl_solde.pack(side="left")
+
+        # --- FORMULAIRE ---
+        self.f_box = ctk.CTkFrame(self, fg_color=COLOR_CARD_BG, corner_radius=15)
+        self.f_box.pack(fill="x", padx=30, pady=15)
+
+        self.ent_lib = ctk.CTkEntry(self.f_box, placeholder_text="Libellé (ex: Vente de service)")
+        self.ent_lib.pack(side="left", padx=10, pady=10)
+
+        self.ent_mt = ctk.CTkEntry(self.f_box, placeholder_text="Montant")
+        self.ent_mt.pack(side="left", padx=10, pady=10)
+
+        self.type_var = ctk.StringVar(value="ENTRÉE")
+        ctk.CTkOptionMenu(self.f_box, values=["ENTRÉE", "SORTIE"], variable=self.type_var).pack(side="left", padx=10)
+
+        ctk.CTkButton(self.f_box, text="Enregistrer", command=self.ajouter_transaction).pack(side="left", padx=10)
+
+        # --- TABLEAU ---
+        self.tree = ttk.Treeview(self, columns=("date", "lib", "mt", "tp"), show="headings")
+        self.tree.heading("date", text="DATE"); self.tree.heading("lib", text="LIBELLÉ")
+        self.tree.heading("mt", text="MONTANT"); self.tree.heading("tp", text="TYPE")
+        self.tree.pack(fill="both", expand=True, padx=30, pady=10)
+
+        self.refresh()
+
+    def ajouter_transaction(self):
+        l, m, t = self.ent_lib.get(), self.ent_mt.get(), self.type_var.get()
+        if l and m:
+            self.db.query("INSERT INTO finances (libelle, montant, type) VALUES (?,?,?)", (l, float(m), t))
+            self.refresh()
+
+    def refresh(self):
+        for i in self.tree.get_children(): self.tree.delete(i)
+        total = 0
+        for r in self.db.query("SELECT * FROM finances ORDER BY date DESC").fetchall():
+            self.tree.insert("", "end", values=(r['date'], r['libelle'], r['montant'], r['type']))
+            total += r['montant'] if r['type'] == "ENTRÉE" else -r['montant']
+        self.lbl_solde.configure(text=f"SOLDE ACTUEL : {total:,.0f} FCFA")

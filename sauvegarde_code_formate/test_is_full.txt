@@ -1,0 +1,31 @@
+#!/usr/bin/env python3
+"""
+Script de test_is_full pour PERIMONT_ERP
+Module: venv.Lib.site-packages.pandas.tests.indexes.period.methods.test_is_full.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+import pytest
+
+from pandas import PeriodIndex
+
+
+def test_is_full():
+    index = PeriodIndex([2005, 2007, 2009], freq="Y")
+    assert not index.is_full
+
+    index = PeriodIndex([2005, 2006, 2007], freq="Y")
+    assert index.is_full
+
+    index = PeriodIndex([2005, 2005, 2007], freq="Y")
+    assert not index.is_full
+
+    index = PeriodIndex([2005, 2005, 2006], freq="Y")
+    assert index.is_full
+
+    index = PeriodIndex([2006, 2005, 2005], freq="Y")
+    with pytest.raises(ValueError, match="Index is not monotonic"):
+        index.is_full
+
+    assert index[:0].is_full
+

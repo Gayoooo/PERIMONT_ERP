@@ -1,0 +1,4 @@
+// Chemin: C:\PERIMONT_ERP\venv\Lib\site-packages\pip\_vendor\idna\package_data.py
+
+__version__ = "3.10"
+

@@ -1,0 +1,46 @@
+// Chemin: C:\PERIMONT_ERP\database\db_manager.py
+
+import sqlite3
+import sys
+from config.settings import DB_PATH
+
+class Database:
+    def __init__(self):
+        try:
+            self.conn = sqlite3.connect(DB_PATH)
+            self.conn.row_factory = sqlite3.Row
+            self.cursor = self.conn.cursor()
+            self.create_tables()
+        except sqlite3.Error as e:
+            print(f"Erreur lors de la connexion à SQLite: {e}")
+            sys.exit(1)
+
+    def create_tables(self):
+        # On définit ici les tables obligatoires
+        queries = [
+            """CREATE TABLE IF NOT EXISTS utilisateurs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE,
+                password TEXT,
+                role TEXT
+            )""",
+           """CREATE TABLE IF NOT EXISTS personnel (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    matricule TEXT UNIQUE,
+    nom TEXT,
+    prenom TEXT,
+    fonction TEXT,
+    contrat TEXT,
+    salaire_base REAL,
+    statut TEXT DEFAULT 'Actif',
+    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)"""
+        ]
+        for q in queries:
+            self.cursor.execute(q)
+        self.conn.commit()
+
+    def query(self, sql, params=()):
+        self.cursor.execute(sql, params)
+        self.conn.commit()
+        return self.cursor

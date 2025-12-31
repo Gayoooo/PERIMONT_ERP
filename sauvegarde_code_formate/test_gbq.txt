@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+"""
+Script de test_gbq pour PERIMONT_ERP
+Module: venv.Lib.site-packages.pandas.tests.io.test_gbq.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+import pandas as pd
+import pandas._testing as tm
+
+
+def test_read_gbq_deprecated():
+    with tm.assert_produces_warning(FutureWarning):
+        with tm.external_error_raised(Exception):
+            pd.read_gbq("fake")
+
+
+def test_to_gbq_deprecated():
+    with tm.assert_produces_warning(FutureWarning):
+        with tm.external_error_raised(Exception):
+            pd.DataFrame(range(1)).to_gbq("fake")
+

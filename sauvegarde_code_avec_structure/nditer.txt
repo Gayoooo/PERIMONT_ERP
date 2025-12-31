@@ -1,0 +1,7 @@
+// Branche: venv\Lib\site-packages\numpy\typing\tests\data\pass\nditer.py
+
+import numpy as np
+
+arr = np.array([1])
+np.nditer([arr, None])
+

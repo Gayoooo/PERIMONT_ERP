@@ -1,0 +1,26 @@
+#!/usr/bin/env python3
+"""
+Script de lib_version pour PERIMONT_ERP
+Module: venv.Lib.site-packages.numpy.typing.tests.data.pass.lib_version.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+from numpy.lib import NumpyVersion
+
+version = NumpyVersion("1.8.0")
+
+version.vstring
+version.version
+version.major
+version.minor
+version.bugfix
+version.pre_release
+version.is_devversion
+
+version == version
+version != version
+version < "1.8.0"
+version <= version
+version > version
+version >= "1.8.0"
+

@@ -1,0 +1,71 @@
+#!/usr/bin/env python3
+"""
+Script de logistique_screen pour PERIMONT_ERP
+Module: ui.screens.logistique_screen.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+import customtkinter as ctk
+from tkinter import ttk
+from database.db_manager import Database
+from config.settings import *
+
+class LogistiqueScreen(ctk.CTkFrame):
+    def __init__(self, parent):
+        super().__init__(parent, fg_color="transparent")
+        self.db = Database()
+        
+        # Titre
+        ctk.CTkLabel(self, text="Logistique & Transport", font=("Segoe UI", 24, "bold")).pack(pady=10, anchor="w", padx=20)
+
+        # Onglets (Tabs) pour séparer Camions et Trajets
+        self.tabview = ctk.CTkTabview(self, fg_color=COLOR_CARD_BG, segmented_button_selected_color=COLOR_ACCENT)
+        self.tabview.pack(fill="both", expand=True, padx=20, pady=10)
+        
+        self.tab_camions = self.tabview.add("Flotte de Camions")
+        self.tab_trajets = self.tabview.add("Historique des Trajets")
+
+        self.setup_camions_tab()
+        self.setup_trajets_tab()
+
+    def setup_camions_tab(self):
+        # Formulaire Camion
+        form = ctk.CTkFrame(self.tab_camions, fg_color="transparent")
+        form.pack(side="left", fill="y", padx=20, pady=20)
+
+        self.ent_immat = ctk.CTkEntry(form, placeholder_text="Immatriculation", width=200)
+        self.ent_immat.pack(pady=10)
+        self.ent_modele = ctk.CTkEntry(form, placeholder_text="Modèle / Marque", width=200)
+        self.ent_modele.pack(pady=10)
+        self.ent_capa = ctk.CTkEntry(form, placeholder_text="Capacité Réservoir (L)", width=200)
+        self.ent_capa.pack(pady=10)
+
+        ctk.CTkButton(form, text="Ajouter Camion", fg_color=COLOR_ACCENT, text_color=COLOR_MAIN_BG, 
+                      command=self.ajouter_camion).pack(pady=20)
+
+        # Tableau Camions
+        self.tree_cam = ttk.Treeview(self.tab_camions, columns=("id", "immat", "mod", "cap"), show="headings")
+        self.tree_cam.heading("immat", text="IMMATRICULATION")
+        self.tree_cam.heading("mod", text="MODÈLE")
+        self.tree_cam.heading("cap", text="CAPACITÉ (L)")
+        self.tree_cam.pack(side="right", fill="both", expand=True, padx=10, pady=10)
+        self.charger_camions()
+
+    def setup_trajets_tab(self):
+        # Pour simplifier, on met juste un message pour l'instant
+        ctk.CTkLabel(self.tab_trajets, text="Enregistrement des missions interville").pack(pady=50)
+
+    def ajouter_camion(self):
+        imm = self.ent_immat.get()
+        mod = self.ent_modele.get()
+        cap = self.ent_capa.get()
+        if imm:
+            self.db.query("INSERT INTO camions (immatriculation, modele, capacite) VALUES (?,?,?)", (imm, mod, cap))
+            self.charger_camions()
+            self.ent_immat.delete(0, 'end')
+
+    def charger_camions(self):
+        for i in self.tree_cam.get_children(): self.tree_cam.delete(i)
+        rows = self.db.query("SELECT * FROM camions").fetchall()
+        for r in rows:
+            self.tree_cam.insert("", "end", values=(r['id'], r['immatriculation'], r['modele'], r['capacite']))

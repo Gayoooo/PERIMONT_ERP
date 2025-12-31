@@ -1,0 +1,18 @@
+#!/usr/bin/env python3
+"""
+Script de _types pour PERIMONT_ERP
+Module: venv.Lib.site-packages.pip._vendor.tomli._types.py
+Auteur: PERIMONT S.A.S
+Date: 2025-12-29
+"""
+# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: 2021 Taneli Hukkinen
+# Licensed to PSF under a Contributor Agreement.
+
+from typing import Any, Callable, Tuple
+
+# Type annotations
+ParseFloat = Callable[[str], Any]
+Key = Tuple[str, ...]
+Pos = int
+

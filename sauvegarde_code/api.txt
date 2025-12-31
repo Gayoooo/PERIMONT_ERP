@@ -1,0 +1,2020 @@
+// Chemin: C:\PERIMONT_ERP\venv\Lib\site-packages\charset_normalizer\api.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\core\api.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\core\computation\api.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\core\dtypes\api.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\core\indexes\api.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\core\internals\api.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\core\reshape\api.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\core\sparse\api.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\io\api.py C:\PERIMONT_ERP\venv\Lib\site-packages\pandas\tseries\api.py C:\PERIMONT_ERP\venv\Lib\site-packages\pip\_vendor\platformdirs\api.py C:\PERIMONT_ERP\venv\Lib\site-packages\pip\_vendor\requests\api.py
+
+from __future__ import annotations
+
+import logging
+from os import PathLike
+from typing import BinaryIO
+
+from .cd import (
+    coherence_ratio,
+    encoding_languages,
+    mb_encoding_languages,
+    merge_coherence_ratios,
+)
+from .constant import IANA_SUPPORTED, TOO_BIG_SEQUENCE, TOO_SMALL_SEQUENCE, TRACE
+from .md import mess_ratio
+from .models import CharsetMatch, CharsetMatches
+from .utils import (
+    any_specified_encoding,
+    cut_sequence_chunks,
+    iana_name,
+    identify_sig_or_bom,
+    is_cp_similar,
+    is_multi_byte_encoding,
+    should_strip_sig_or_bom,
+)
+
+logger = logging.getLogger("charset_normalizer")
+explain_handler = logging.StreamHandler()
+explain_handler.setFormatter(
+    logging.Formatter("%(asctime)s | %(levelname)s | %(message)s")
+)
+
+
+def from_bytes(
+    sequences: bytes | bytearray,
+    steps: int = 5,
+    chunk_size: int = 512,
+    threshold: float = 0.2,
+    cp_isolation: list[str] | None = None,
+    cp_exclusion: list[str] | None = None,
+    preemptive_behaviour: bool = True,
+    explain: bool = False,
+    language_threshold: float = 0.1,
+    enable_fallback: bool = True,
+) -> CharsetMatches:
+    """
+    Given a raw bytes sequence, return the best possibles charset usable to render str objects.
+    If there is no results, it is a strong indicator that the source is binary/not text.
+    By default, the process will extract 5 blocks of 512o each to assess the mess and coherence of a given sequence.
+    And will give up a particular code page after 20% of measured mess. Those criteria are customizable at will.
+
+    The preemptive behavior DOES NOT replace the traditional detection workflow, it prioritize a particular code page
+    but never take it for granted. Can improve the performance.
+
+    You may want to focus your attention to some code page or/and not others, use cp_isolation and cp_exclusion for that
+    purpose.
+
+    This function will strip the SIG in the payload/sequence every time except on UTF-16, UTF-32.
+    By default the library does not setup any handler other than the NullHandler, if you choose to set the 'explain'
+    toggle to True it will alter the logger configuration to add a StreamHandler that is suitable for debugging.
+    Custom logging format and handler can be set manually.
+    """
+
+    if not isinstance(sequences, (bytearray, bytes)):
+        raise TypeError(
+            "Expected object of type bytes or bytearray, got: {}".format(
+                type(sequences)
+            )
+        )
+
+    if explain:
+        previous_logger_level: int = logger.level
+        logger.addHandler(explain_handler)
+        logger.setLevel(TRACE)
+
+    length: int = len(sequences)
+
+    if length == 0:
+        logger.debug("Encoding detection on empty bytes, assuming utf_8 intention.")
+        if explain:  # Defensive: ensure exit path clean handler
+            logger.removeHandler(explain_handler)
+            logger.setLevel(previous_logger_level or logging.WARNING)
+        return CharsetMatches([CharsetMatch(sequences, "utf_8", 0.0, False, [], "")])
+
+    if cp_isolation is not None:
+        logger.log(
+            TRACE,
+            "cp_isolation is set. use this flag for debugging purpose. "
+            "limited list of encoding allowed : %s.",
+            ", ".join(cp_isolation),
+        )
+        cp_isolation = [iana_name(cp, False) for cp in cp_isolation]
+    else:
+        cp_isolation = []
+
+    if cp_exclusion is not None:
+        logger.log(
+            TRACE,
+            "cp_exclusion is set. use this flag for debugging purpose. "
+            "limited list of encoding excluded : %s.",
+            ", ".join(cp_exclusion),
+        )
+        cp_exclusion = [iana_name(cp, False) for cp in cp_exclusion]
+    else:
+        cp_exclusion = []
+
+    if length <= (chunk_size * steps):
+        logger.log(
+            TRACE,
+            "override steps (%i) and chunk_size (%i) as content does not fit (%i byte(s) given) parameters.",
+            steps,
+            chunk_size,
+            length,
+        )
+        steps = 1
+        chunk_size = length
+
+    if steps > 1 and length / steps < chunk_size:
+        chunk_size = int(length / steps)
+
+    is_too_small_sequence: bool = len(sequences) < TOO_SMALL_SEQUENCE
+    is_too_large_sequence: bool = len(sequences) >= TOO_BIG_SEQUENCE
+
+    if is_too_small_sequence:
+        logger.log(
+            TRACE,
+            "Trying to detect encoding from a tiny portion of ({}) byte(s).".format(
+                length
+            ),
+        )
+    elif is_too_large_sequence:
+        logger.log(
+            TRACE,
+            "Using lazy str decoding because the payload is quite large, ({}) byte(s).".format(
+                length
+            ),
+        )
+
+    prioritized_encodings: list[str] = []
+
+    specified_encoding: str | None = (
+        any_specified_encoding(sequences) if preemptive_behaviour else None
+    )
+
+    if specified_encoding is not None:
+        prioritized_encodings.append(specified_encoding)
+        logger.log(
+            TRACE,
+            "Detected declarative mark in sequence. Priority +1 given for %s.",
+            specified_encoding,
+        )
+
+    tested: set[str] = set()
+    tested_but_hard_failure: list[str] = []
+    tested_but_soft_failure: list[str] = []
+
+    fallback_ascii: CharsetMatch | None = None
+    fallback_u8: CharsetMatch | None = None
+    fallback_specified: CharsetMatch | None = None
+
+    results: CharsetMatches = CharsetMatches()
+
+    early_stop_results: CharsetMatches = CharsetMatches()
+
+    sig_encoding, sig_payload = identify_sig_or_bom(sequences)
+
+    if sig_encoding is not None:
+        prioritized_encodings.append(sig_encoding)
+        logger.log(
+            TRACE,
+            "Detected a SIG or BOM mark on first %i byte(s). Priority +1 given for %s.",
+            len(sig_payload),
+            sig_encoding,
+        )
+
+    prioritized_encodings.append("ascii")
+
+    if "utf_8" not in prioritized_encodings:
+        prioritized_encodings.append("utf_8")
+
+    for encoding_iana in prioritized_encodings + IANA_SUPPORTED:
+        if cp_isolation and encoding_iana not in cp_isolation:
+            continue
+
+        if cp_exclusion and encoding_iana in cp_exclusion:
+            continue
+
+        if encoding_iana in tested:
+            continue
+
+        tested.add(encoding_iana)
+
+        decoded_payload: str | None = None
+        bom_or_sig_available: bool = sig_encoding == encoding_iana
+        strip_sig_or_bom: bool = bom_or_sig_available and should_strip_sig_or_bom(
+            encoding_iana
+        )
+
+        if encoding_iana in {"utf_16", "utf_32"} and not bom_or_sig_available:
+            logger.log(
+                TRACE,
+                "Encoding %s won't be tested as-is because it require a BOM. Will try some sub-encoder LE/BE.",
+                encoding_iana,
+            )
+            continue
+        if encoding_iana in {"utf_7"} and not bom_or_sig_available:
+            logger.log(
+                TRACE,
+                "Encoding %s won't be tested as-is because detection is unreliable without BOM/SIG.",
+                encoding_iana,
+            )
+            continue
+
+        try:
+            is_multi_byte_decoder: bool = is_multi_byte_encoding(encoding_iana)
+        except (ModuleNotFoundError, ImportError):
+            logger.log(
+                TRACE,
+                "Encoding %s does not provide an IncrementalDecoder",
+                encoding_iana,
+            )
+            continue
+
+        try:
+            if is_too_large_sequence and is_multi_byte_decoder is False:
+                str(
+                    (
+                        sequences[: int(50e4)]
+                        if strip_sig_or_bom is False
+                        else sequences[len(sig_payload) : int(50e4)]
+                    ),
+                    encoding=encoding_iana,
+                )
+            else:
+                decoded_payload = str(
+                    (
+                        sequences
+                        if strip_sig_or_bom is False
+                        else sequences[len(sig_payload) :]
+                    ),
+                    encoding=encoding_iana,
+                )
+        except (UnicodeDecodeError, LookupError) as e:
+            if not isinstance(e, LookupError):
+                logger.log(
+                    TRACE,
+                    "Code page %s does not fit given bytes sequence at ALL. %s",
+                    encoding_iana,
+                    str(e),
+                )
+            tested_but_hard_failure.append(encoding_iana)
+            continue
+
+        similar_soft_failure_test: bool = False
+
+        for encoding_soft_failed in tested_but_soft_failure:
+            if is_cp_similar(encoding_iana, encoding_soft_failed):
+                similar_soft_failure_test = True
+                break
+
+        if similar_soft_failure_test:
+            logger.log(
+                TRACE,
+                "%s is deemed too similar to code page %s and was consider unsuited already. Continuing!",
+                encoding_iana,
+                encoding_soft_failed,
+            )
+            continue
+
+        r_ = range(
+            0 if not bom_or_sig_available else len(sig_payload),
+            length,
+            int(length / steps),
+        )
+
+        multi_byte_bonus: bool = (
+            is_multi_byte_decoder
+            and decoded_payload is not None
+            and len(decoded_payload) < length
+        )
+
+        if multi_byte_bonus:
+            logger.log(
+                TRACE,
+                "Code page %s is a multi byte encoding table and it appear that at least one character "
+                "was encoded using n-bytes.",
+                encoding_iana,
+            )
+
+        max_chunk_gave_up: int = int(len(r_) / 4)
+
+        max_chunk_gave_up = max(max_chunk_gave_up, 2)
+        early_stop_count: int = 0
+        lazy_str_hard_failure = False
+
+        md_chunks: list[str] = []
+        md_ratios = []
+
+        try:
+            for chunk in cut_sequence_chunks(
+                sequences,
+                encoding_iana,
+                r_,
+                chunk_size,
+                bom_or_sig_available,
+                strip_sig_or_bom,
+                sig_payload,
+                is_multi_byte_decoder,
+                decoded_payload,
+            ):
+                md_chunks.append(chunk)
+
+                md_ratios.append(
+                    mess_ratio(
+                        chunk,
+                        threshold,
+                        explain is True and 1 <= len(cp_isolation) <= 2,
+                    )
+                )
+
+                if md_ratios[-1] >= threshold:
+                    early_stop_count += 1
+
+                if (early_stop_count >= max_chunk_gave_up) or (
+                    bom_or_sig_available and strip_sig_or_bom is False
+                ):
+                    break
+        except (
+            UnicodeDecodeError
+        ) as e:  # Lazy str loading may have missed something there
+            logger.log(
+                TRACE,
+                "LazyStr Loading: After MD chunk decode, code page %s does not fit given bytes sequence at ALL. %s",
+                encoding_iana,
+                str(e),
+            )
+            early_stop_count = max_chunk_gave_up
+            lazy_str_hard_failure = True
+
+        # We might want to check the sequence again with the whole content
+        # Only if initial MD tests passes
+        if (
+            not lazy_str_hard_failure
+            and is_too_large_sequence
+            and not is_multi_byte_decoder
+        ):
+            try:
+                sequences[int(50e3) :].decode(encoding_iana, errors="strict")
+            except UnicodeDecodeError as e:
+                logger.log(
+                    TRACE,
+                    "LazyStr Loading: After final lookup, code page %s does not fit given bytes sequence at ALL. %s",
+                    encoding_iana,
+                    str(e),
+                )
+                tested_but_hard_failure.append(encoding_iana)
+                continue
+
+        mean_mess_ratio: float = sum(md_ratios) / len(md_ratios) if md_ratios else 0.0
+        if mean_mess_ratio >= threshold or early_stop_count >= max_chunk_gave_up:
+            tested_but_soft_failure.append(encoding_iana)
+            logger.log(
+                TRACE,
+                "%s was excluded because of initial chaos probing. Gave up %i time(s). "
+                "Computed mean chaos is %f %%.",
+                encoding_iana,
+                early_stop_count,
+                round(mean_mess_ratio * 100, ndigits=3),
+            )
+            # Preparing those fallbacks in case we got nothing.
+            if (
+                enable_fallback
+                and encoding_iana
+                in ["ascii", "utf_8", specified_encoding, "utf_16", "utf_32"]
+                and not lazy_str_hard_failure
+            ):
+                fallback_entry = CharsetMatch(
+                    sequences,
+                    encoding_iana,
+                    threshold,
+                    bom_or_sig_available,
+                    [],
+                    decoded_payload,
+                    preemptive_declaration=specified_encoding,
+                )
+                if encoding_iana == specified_encoding:
+                    fallback_specified = fallback_entry
+                elif encoding_iana == "ascii":
+                    fallback_ascii = fallback_entry
+                else:
+                    fallback_u8 = fallback_entry
+            continue
+
+        logger.log(
+            TRACE,
+            "%s passed initial chaos probing. Mean measured chaos is %f %%",
+            encoding_iana,
+            round(mean_mess_ratio * 100, ndigits=3),
+        )
+
+        if not is_multi_byte_decoder:
+            target_languages: list[str] = encoding_languages(encoding_iana)
+        else:
+            target_languages = mb_encoding_languages(encoding_iana)
+
+        if target_languages:
+            logger.log(
+                TRACE,
+                "{} should target any language(s) of {}".format(
+                    encoding_iana, str(target_languages)
+                ),
+            )
+
+        cd_ratios = []
+
+        # We shall skip the CD when its about ASCII
+        # Most of the time its not relevant to run "language-detection" on it.
+        if encoding_iana != "ascii":
+            for chunk in md_chunks:
+                chunk_languages = coherence_ratio(
+                    chunk,
+                    language_threshold,
+                    ",".join(target_languages) if target_languages else None,
+                )
+
+                cd_ratios.append(chunk_languages)
+
+        cd_ratios_merged = merge_coherence_ratios(cd_ratios)
+
+        if cd_ratios_merged:
+            logger.log(
+                TRACE,
+                "We detected language {} using {}".format(
+                    cd_ratios_merged, encoding_iana
+                ),
+            )
+
+        current_match = CharsetMatch(
+            sequences,
+            encoding_iana,
+            mean_mess_ratio,
+            bom_or_sig_available,
+            cd_ratios_merged,
+            (
+                decoded_payload
+                if (
+                    is_too_large_sequence is False
+                    or encoding_iana in [specified_encoding, "ascii", "utf_8"]
+                )
+                else None
+            ),
+            preemptive_declaration=specified_encoding,
+        )
+
+        results.append(current_match)
+
+        if (
+            encoding_iana in [specified_encoding, "ascii", "utf_8"]
+            and mean_mess_ratio < 0.1
+        ):
+            # If md says nothing to worry about, then... stop immediately!
+            if mean_mess_ratio == 0.0:
+                logger.debug(
+                    "Encoding detection: %s is most likely the one.",
+                    current_match.encoding,
+                )
+                if explain:  # Defensive: ensure exit path clean handler
+                    logger.removeHandler(explain_handler)
+                    logger.setLevel(previous_logger_level)
+                return CharsetMatches([current_match])
+
+            early_stop_results.append(current_match)
+
+        if (
+            len(early_stop_results)
+            and (specified_encoding is None or specified_encoding in tested)
+            and "ascii" in tested
+            and "utf_8" in tested
+        ):
+            probable_result: CharsetMatch = early_stop_results.best()  # type: ignore[assignment]
+            logger.debug(
+                "Encoding detection: %s is most likely the one.",
+                probable_result.encoding,
+            )
+            if explain:  # Defensive: ensure exit path clean handler
+                logger.removeHandler(explain_handler)
+                logger.setLevel(previous_logger_level)
+
+            return CharsetMatches([probable_result])
+
+        if encoding_iana == sig_encoding:
+            logger.debug(
+                "Encoding detection: %s is most likely the one as we detected a BOM or SIG within "
+                "the beginning of the sequence.",
+                encoding_iana,
+            )
+            if explain:  # Defensive: ensure exit path clean handler
+                logger.removeHandler(explain_handler)
+                logger.setLevel(previous_logger_level)
+            return CharsetMatches([results[encoding_iana]])
+
+    if len(results) == 0:
+        if fallback_u8 or fallback_ascii or fallback_specified:
+            logger.log(
+                TRACE,
+                "Nothing got out of the detection process. Using ASCII/UTF-8/Specified fallback.",
+            )
+
+        if fallback_specified:
+            logger.debug(
+                "Encoding detection: %s will be used as a fallback match",
+                fallback_specified.encoding,
+            )
+            results.append(fallback_specified)
+        elif (
+            (fallback_u8 and fallback_ascii is None)
+            or (
+                fallback_u8
+                and fallback_ascii
+                and fallback_u8.fingerprint != fallback_ascii.fingerprint
+            )
+            or (fallback_u8 is not None)
+        ):
+            logger.debug("Encoding detection: utf_8 will be used as a fallback match")
+            results.append(fallback_u8)
+        elif fallback_ascii:
+            logger.debug("Encoding detection: ascii will be used as a fallback match")
+            results.append(fallback_ascii)
+
+    if results:
+        logger.debug(
+            "Encoding detection: Found %s as plausible (best-candidate) for content. With %i alternatives.",
+            results.best().encoding,  # type: ignore
+            len(results) - 1,
+        )
+    else:
+        logger.debug("Encoding detection: Unable to determine any suitable charset.")
+
+    if explain:
+        logger.removeHandler(explain_handler)
+        logger.setLevel(previous_logger_level)
+
+    return results
+
+
+def from_fp(
+    fp: BinaryIO,
+    steps: int = 5,
+    chunk_size: int = 512,
+    threshold: float = 0.20,
+    cp_isolation: list[str] | None = None,
+    cp_exclusion: list[str] | None = None,
+    preemptive_behaviour: bool = True,
+    explain: bool = False,
+    language_threshold: float = 0.1,
+    enable_fallback: bool = True,
+) -> CharsetMatches:
+    """
+    Same thing than the function from_bytes but using a file pointer that is already ready.
+    Will not close the file pointer.
+    """
+    return from_bytes(
+        fp.read(),
+        steps,
+        chunk_size,
+        threshold,
+        cp_isolation,
+        cp_exclusion,
+        preemptive_behaviour,
+        explain,
+        language_threshold,
+        enable_fallback,
+    )
+
+
+def from_path(
+    path: str | bytes | PathLike,  # type: ignore[type-arg]
+    steps: int = 5,
+    chunk_size: int = 512,
+    threshold: float = 0.20,
+    cp_isolation: list[str] | None = None,
+    cp_exclusion: list[str] | None = None,
+    preemptive_behaviour: bool = True,
+    explain: bool = False,
+    language_threshold: float = 0.1,
+    enable_fallback: bool = True,
+) -> CharsetMatches:
+    """
+    Same thing than the function from_bytes but with one extra step. Opening and reading given file path in binary mode.
+    Can raise IOError.
+    """
+    with open(path, "rb") as fp:
+        return from_fp(
+            fp,
+            steps,
+            chunk_size,
+            threshold,
+            cp_isolation,
+            cp_exclusion,
+            preemptive_behaviour,
+            explain,
+            language_threshold,
+            enable_fallback,
+        )
+
+
+def is_binary(
+    fp_or_path_or_payload: PathLike | str | BinaryIO | bytes,  # type: ignore[type-arg]
+    steps: int = 5,
+    chunk_size: int = 512,
+    threshold: float = 0.20,
+    cp_isolation: list[str] | None = None,
+    cp_exclusion: list[str] | None = None,
+    preemptive_behaviour: bool = True,
+    explain: bool = False,
+    language_threshold: float = 0.1,
+    enable_fallback: bool = False,
+) -> bool:
+    """
+    Detect if the given input (file, bytes, or path) points to a binary file. aka. not a string.
+    Based on the same main heuristic algorithms and default kwargs at the sole exception that fallbacks match
+    are disabled to be stricter around ASCII-compatible but unlikely to be a string.
+    """
+    if isinstance(fp_or_path_or_payload, (str, PathLike)):
+        guesses = from_path(
+            fp_or_path_or_payload,
+            steps=steps,
+            chunk_size=chunk_size,
+            threshold=threshold,
+            cp_isolation=cp_isolation,
+            cp_exclusion=cp_exclusion,
+            preemptive_behaviour=preemptive_behaviour,
+            explain=explain,
+            language_threshold=language_threshold,
+            enable_fallback=enable_fallback,
+        )
+    elif isinstance(
+        fp_or_path_or_payload,
+        (
+            bytes,
+            bytearray,
+        ),
+    ):
+        guesses = from_bytes(
+            fp_or_path_or_payload,
+            steps=steps,
+            chunk_size=chunk_size,
+            threshold=threshold,
+            cp_isolation=cp_isolation,
+            cp_exclusion=cp_exclusion,
+            preemptive_behaviour=preemptive_behaviour,
+            explain=explain,
+            language_threshold=language_threshold,
+            enable_fallback=enable_fallback,
+        )
+    else:
+        guesses = from_fp(
+            fp_or_path_or_payload,
+            steps=steps,
+            chunk_size=chunk_size,
+            threshold=threshold,
+            cp_isolation=cp_isolation,
+            cp_exclusion=cp_exclusion,
+            preemptive_behaviour=preemptive_behaviour,
+            explain=explain,
+            language_threshold=language_threshold,
+            enable_fallback=enable_fallback,
+        )
+
+    return not guesses
+ from pandas._libs import (
+    NaT,
+    Period,
+    Timedelta,
+    Timestamp,
+)
+from pandas._libs.missing import NA
+
+from pandas.core.dtypes.dtypes import (
+    ArrowDtype,
+    CategoricalDtype,
+    DatetimeTZDtype,
+    IntervalDtype,
+    PeriodDtype,
+)
+from pandas.core.dtypes.missing import (
+    isna,
+    isnull,
+    notna,
+    notnull,
+)
+
+from pandas.core.algorithms import (
+    factorize,
+    unique,
+    value_counts,
+)
+from pandas.core.arrays import Categorical
+from pandas.core.arrays.boolean import BooleanDtype
+from pandas.core.arrays.floating import (
+    Float32Dtype,
+    Float64Dtype,
+)
+from pandas.core.arrays.integer import (
+    Int8Dtype,
+    Int16Dtype,
+    Int32Dtype,
+    Int64Dtype,
+    UInt8Dtype,
+    UInt16Dtype,
+    UInt32Dtype,
+    UInt64Dtype,
+)
+from pandas.core.arrays.string_ import StringDtype
+from pandas.core.construction import array
+from pandas.core.flags import Flags
+from pandas.core.groupby import (
+    Grouper,
+    NamedAgg,
+)
+from pandas.core.indexes.api import (
+    CategoricalIndex,
+    DatetimeIndex,
+    Index,
+    IntervalIndex,
+    MultiIndex,
+    PeriodIndex,
+    RangeIndex,
+    TimedeltaIndex,
+)
+from pandas.core.indexes.datetimes import (
+    bdate_range,
+    date_range,
+)
+from pandas.core.indexes.interval import (
+    Interval,
+    interval_range,
+)
+from pandas.core.indexes.period import period_range
+from pandas.core.indexes.timedeltas import timedelta_range
+from pandas.core.indexing import IndexSlice
+from pandas.core.series import Series
+from pandas.core.tools.datetimes import to_datetime
+from pandas.core.tools.numeric import to_numeric
+from pandas.core.tools.timedeltas import to_timedelta
+
+from pandas.io.formats.format import set_eng_float_format
+from pandas.tseries.offsets import DateOffset
+
+# DataFrame needs to be imported after NamedAgg to avoid a circular import
+from pandas.core.frame import DataFrame  # isort:skip
+
+__all__ = [
+    "array",
+    "ArrowDtype",
+    "bdate_range",
+    "BooleanDtype",
+    "Categorical",
+    "CategoricalDtype",
+    "CategoricalIndex",
+    "DataFrame",
+    "DateOffset",
+    "date_range",
+    "DatetimeIndex",
+    "DatetimeTZDtype",
+    "factorize",
+    "Flags",
+    "Float32Dtype",
+    "Float64Dtype",
+    "Grouper",
+    "Index",
+    "IndexSlice",
+    "Int16Dtype",
+    "Int32Dtype",
+    "Int64Dtype",
+    "Int8Dtype",
+    "Interval",
+    "IntervalDtype",
+    "IntervalIndex",
+    "interval_range",
+    "isna",
+    "isnull",
+    "MultiIndex",
+    "NA",
+    "NamedAgg",
+    "NaT",
+    "notna",
+    "notnull",
+    "Period",
+    "PeriodDtype",
+    "PeriodIndex",
+    "period_range",
+    "RangeIndex",
+    "Series",
+    "set_eng_float_format",
+    "StringDtype",
+    "Timedelta",
+    "TimedeltaIndex",
+    "timedelta_range",
+    "Timestamp",
+    "to_datetime",
+    "to_numeric",
+    "to_timedelta",
+    "UInt16Dtype",
+    "UInt32Dtype",
+    "UInt64Dtype",
+    "UInt8Dtype",
+    "unique",
+    "value_counts",
+]
+ __all__ = ["eval"]
+from pandas.core.computation.eval import eval
+ from pandas.core.dtypes.common import (
+    is_any_real_numeric_dtype,
+    is_array_like,
+    is_bool,
+    is_bool_dtype,
+    is_categorical_dtype,
+    is_complex,
+    is_complex_dtype,
+    is_datetime64_any_dtype,
+    is_datetime64_dtype,
+    is_datetime64_ns_dtype,
+    is_datetime64tz_dtype,
+    is_dict_like,
+    is_dtype_equal,
+    is_extension_array_dtype,
+    is_file_like,
+    is_float,
+    is_float_dtype,
+    is_hashable,
+    is_int64_dtype,
+    is_integer,
+    is_integer_dtype,
+    is_interval,
+    is_interval_dtype,
+    is_iterator,
+    is_list_like,
+    is_named_tuple,
+    is_number,
+    is_numeric_dtype,
+    is_object_dtype,
+    is_period_dtype,
+    is_re,
+    is_re_compilable,
+    is_scalar,
+    is_signed_integer_dtype,
+    is_sparse,
+    is_string_dtype,
+    is_timedelta64_dtype,
+    is_timedelta64_ns_dtype,
+    is_unsigned_integer_dtype,
+    pandas_dtype,
+)
+
+__all__ = [
+    "is_any_real_numeric_dtype",
+    "is_array_like",
+    "is_bool",
+    "is_bool_dtype",
+    "is_categorical_dtype",
+    "is_complex",
+    "is_complex_dtype",
+    "is_datetime64_any_dtype",
+    "is_datetime64_dtype",
+    "is_datetime64_ns_dtype",
+    "is_datetime64tz_dtype",
+    "is_dict_like",
+    "is_dtype_equal",
+    "is_extension_array_dtype",
+    "is_file_like",
+    "is_float",
+    "is_float_dtype",
+    "is_hashable",
+    "is_int64_dtype",
+    "is_integer",
+    "is_integer_dtype",
+    "is_interval",
+    "is_interval_dtype",
+    "is_iterator",
+    "is_list_like",
+    "is_named_tuple",
+    "is_number",
+    "is_numeric_dtype",
+    "is_object_dtype",
+    "is_period_dtype",
+    "is_re",
+    "is_re_compilable",
+    "is_scalar",
+    "is_signed_integer_dtype",
+    "is_sparse",
+    "is_string_dtype",
+    "is_timedelta64_dtype",
+    "is_timedelta64_ns_dtype",
+    "is_unsigned_integer_dtype",
+    "pandas_dtype",
+]
+ from __future__ import annotations
+
+import textwrap
+from typing import (
+    TYPE_CHECKING,
+    cast,
+)
+
+import numpy as np
+
+from pandas._libs import (
+    NaT,
+    lib,
+)
+from pandas.errors import InvalidIndexError
+
+from pandas.core.dtypes.cast import find_common_type
+
+from pandas.core.algorithms import safe_sort
+from pandas.core.indexes.base import (
+    Index,
+    _new_Index,
+    ensure_index,
+    ensure_index_from_sequences,
+    get_unanimous_names,
+)
+from pandas.core.indexes.category import CategoricalIndex
+from pandas.core.indexes.datetimes import DatetimeIndex
+from pandas.core.indexes.interval import IntervalIndex
+from pandas.core.indexes.multi import MultiIndex
+from pandas.core.indexes.period import PeriodIndex
+from pandas.core.indexes.range import RangeIndex
+from pandas.core.indexes.timedeltas import TimedeltaIndex
+
+if TYPE_CHECKING:
+    from pandas._typing import Axis
+_sort_msg = textwrap.dedent(
+    """\
+Sorting because non-concatenation axis is not aligned. A future version
+of pandas will change to not sort by default.
+
+To accept the future behavior, pass 'sort=False'.
+
+To retain the current behavior and silence the warning, pass 'sort=True'.
+"""
+)
+
+
+__all__ = [
+    "Index",
+    "MultiIndex",
+    "CategoricalIndex",
+    "IntervalIndex",
+    "RangeIndex",
+    "InvalidIndexError",
+    "TimedeltaIndex",
+    "PeriodIndex",
+    "DatetimeIndex",
+    "_new_Index",
+    "NaT",
+    "ensure_index",
+    "ensure_index_from_sequences",
+    "get_objs_combined_axis",
+    "union_indexes",
+    "get_unanimous_names",
+    "all_indexes_same",
+    "default_index",
+    "safe_sort_index",
+]
+
+
+def get_objs_combined_axis(
+    objs,
+    intersect: bool = False,
+    axis: Axis = 0,
+    sort: bool = True,
+    copy: bool = False,
+) -> Index:
+    """
+    Extract combined index: return intersection or union (depending on the
+    value of "intersect") of indexes on given axis, or None if all objects
+    lack indexes (e.g. they are numpy arrays).
+
+    Parameters
+    ----------
+    objs : list
+        Series or DataFrame objects, may be mix of the two.
+    intersect : bool, default False
+        If True, calculate the intersection between indexes. Otherwise,
+        calculate the union.
+    axis : {0 or 'index', 1 or 'outer'}, default 0
+        The axis to extract indexes from.
+    sort : bool, default True
+        Whether the result index should come out sorted or not.
+    copy : bool, default False
+        If True, return a copy of the combined index.
+
+    Returns
+    -------
+    Index
+    """
+    obs_idxes = [obj._get_axis(axis) for obj in objs]
+    return _get_combined_index(obs_idxes, intersect=intersect, sort=sort, copy=copy)
+
+
+def _get_distinct_objs(objs: list[Index]) -> list[Index]:
+    """
+    Return a list with distinct elements of "objs" (different ids).
+    Preserves order.
+    """
+    ids: set[int] = set()
+    res = []
+    for obj in objs:
+        if id(obj) not in ids:
+            ids.add(id(obj))
+            res.append(obj)
+    return res
+
+
+def _get_combined_index(
+    indexes: list[Index],
+    intersect: bool = False,
+    sort: bool = False,
+    copy: bool = False,
+) -> Index:
+    """
+    Return the union or intersection of indexes.
+
+    Parameters
+    ----------
+    indexes : list of Index or list objects
+        When intersect=True, do not accept list of lists.
+    intersect : bool, default False
+        If True, calculate the intersection between indexes. Otherwise,
+        calculate the union.
+    sort : bool, default False
+        Whether the result index should come out sorted or not.
+    copy : bool, default False
+        If True, return a copy of the combined index.
+
+    Returns
+    -------
+    Index
+    """
+    # TODO: handle index names!
+    indexes = _get_distinct_objs(indexes)
+    if len(indexes) == 0:
+        index = Index([])
+    elif len(indexes) == 1:
+        index = indexes[0]
+    elif intersect:
+        index = indexes[0]
+        for other in indexes[1:]:
+            index = index.intersection(other)
+    else:
+        index = union_indexes(indexes, sort=False)
+        index = ensure_index(index)
+
+    if sort:
+        index = safe_sort_index(index)
+    # GH 29879
+    if copy:
+        index = index.copy()
+
+    return index
+
+
+def safe_sort_index(index: Index) -> Index:
+    """
+    Returns the sorted index
+
+    We keep the dtypes and the name attributes.
+
+    Parameters
+    ----------
+    index : an Index
+
+    Returns
+    -------
+    Index
+    """
+    if index.is_monotonic_increasing:
+        return index
+
+    try:
+        array_sorted = safe_sort(index)
+    except TypeError:
+        pass
+    else:
+        if isinstance(array_sorted, Index):
+            return array_sorted
+
+        array_sorted = cast(np.ndarray, array_sorted)
+        if isinstance(index, MultiIndex):
+            index = MultiIndex.from_tuples(array_sorted, names=index.names)
+        else:
+            index = Index(array_sorted, name=index.name, dtype=index.dtype)
+
+    return index
+
+
+def union_indexes(indexes, sort: bool | None = True) -> Index:
+    """
+    Return the union of indexes.
+
+    The behavior of sort and names is not consistent.
+
+    Parameters
+    ----------
+    indexes : list of Index or list objects
+    sort : bool, default True
+        Whether the result index should come out sorted or not.
+
+    Returns
+    -------
+    Index
+    """
+    if len(indexes) == 0:
+        raise AssertionError("Must have at least 1 Index to union")
+    if len(indexes) == 1:
+        result = indexes[0]
+        if isinstance(result, list):
+            if not sort:
+                result = Index(result)
+            else:
+                result = Index(sorted(result))
+        return result
+
+    indexes, kind = _sanitize_and_check(indexes)
+
+    def _unique_indices(inds, dtype) -> Index:
+        """
+        Concatenate indices and remove duplicates.
+
+        Parameters
+        ----------
+        inds : list of Index or list objects
+        dtype : dtype to set for the resulting Index
+
+        Returns
+        -------
+        Index
+        """
+        if all(isinstance(ind, Index) for ind in inds):
+            inds = [ind.astype(dtype, copy=False) for ind in inds]
+            result = inds[0].unique()
+            other = inds[1].append(inds[2:])
+            diff = other[result.get_indexer_for(other) == -1]
+            if len(diff):
+                result = result.append(diff.unique())
+            if sort:
+                result = result.sort_values()
+            return result
+
+        def conv(i):
+            if isinstance(i, Index):
+                i = i.tolist()
+            return i
+
+        return Index(
+            lib.fast_unique_multiple_list([conv(i) for i in inds], sort=sort),
+            dtype=dtype,
+        )
+
+    def _find_common_index_dtype(inds):
+        """
+        Finds a common type for the indexes to pass through to resulting index.
+
+        Parameters
+        ----------
+        inds: list of Index or list objects
+
+        Returns
+        -------
+        The common type or None if no indexes were given
+        """
+        dtypes = [idx.dtype for idx in indexes if isinstance(idx, Index)]
+        if dtypes:
+            dtype = find_common_type(dtypes)
+        else:
+            dtype = None
+
+        return dtype
+
+    if kind == "special":
+        result = indexes[0]
+
+        dtis = [x for x in indexes if isinstance(x, DatetimeIndex)]
+        dti_tzs = [x for x in dtis if x.tz is not None]
+        if len(dti_tzs) not in [0, len(dtis)]:
+            # TODO: this behavior is not tested (so may not be desired),
+            #  but is kept in order to keep behavior the same when
+            #  deprecating union_many
+            # test_frame_from_dict_with_mixed_indexes
+            raise TypeError("Cannot join tz-naive with tz-aware DatetimeIndex")
+
+        if len(dtis) == len(indexes):
+            sort = True
+            result = indexes[0]
+
+        elif len(dtis) > 1:
+            # If we have mixed timezones, our casting behavior may depend on
+            #  the order of indexes, which we don't want.
+            sort = False
+
+            # TODO: what about Categorical[dt64]?
+            # test_frame_from_dict_with_mixed_indexes
+            indexes = [x.astype(object, copy=False) for x in indexes]
+            result = indexes[0]
+
+        for other in indexes[1:]:
+            result = result.union(other, sort=None if sort else False)
+        return result
+
+    elif kind == "array":
+        dtype = _find_common_index_dtype(indexes)
+        index = indexes[0]
+        if not all(index.equals(other) for other in indexes[1:]):
+            index = _unique_indices(indexes, dtype)
+
+        name = get_unanimous_names(*indexes)[0]
+        if name != index.name:
+            index = index.rename(name)
+        return index
+    else:  # kind='list'
+        dtype = _find_common_index_dtype(indexes)
+        return _unique_indices(indexes, dtype)
+
+
+def _sanitize_and_check(indexes):
+    """
+    Verify the type of indexes and convert lists to Index.
+
+    Cases:
+
+    - [list, list, ...]: Return ([list, list, ...], 'list')
+    - [list, Index, ...]: Return _sanitize_and_check([Index, Index, ...])
+        Lists are sorted and converted to Index.
+    - [Index, Index, ...]: Return ([Index, Index, ...], TYPE)
+        TYPE = 'special' if at least one special type, 'array' otherwise.
+
+    Parameters
+    ----------
+    indexes : list of Index or list objects
+
+    Returns
+    -------
+    sanitized_indexes : list of Index or list objects
+    type : {'list', 'array', 'special'}
+    """
+    kinds = list({type(index) for index in indexes})
+
+    if list in kinds:
+        if len(kinds) > 1:
+            indexes = [
+                Index(list(x)) if not isinstance(x, Index) else x for x in indexes
+            ]
+            kinds.remove(list)
+        else:
+            return indexes, "list"
+
+    if len(kinds) > 1 or Index not in kinds:
+        return indexes, "special"
+    else:
+        return indexes, "array"
+
+
+def all_indexes_same(indexes) -> bool:
+    """
+    Determine if all indexes contain the same elements.
+
+    Parameters
+    ----------
+    indexes : iterable of Index objects
+
+    Returns
+    -------
+    bool
+        True if all indexes contain the same elements, False otherwise.
+    """
+    itr = iter(indexes)
+    first = next(itr)
+    return all(first.equals(index) for index in itr)
+
+
+def default_index(n: int) -> RangeIndex:
+    rng = range(n)
+    return RangeIndex._simple_new(rng, name=None)
+ """
+This is a pseudo-public API for downstream libraries.  We ask that downstream
+authors
+
+1) Try to avoid using internals directly altogether, and failing that,
+2) Use only functions exposed here (or in core.internals)
+
+"""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+import numpy as np
+
+from pandas._libs.internals import BlockPlacement
+
+from pandas.core.dtypes.common import pandas_dtype
+from pandas.core.dtypes.dtypes import (
+    DatetimeTZDtype,
+    PeriodDtype,
+)
+
+from pandas.core.arrays import DatetimeArray
+from pandas.core.construction import extract_array
+from pandas.core.internals.blocks import (
+    check_ndim,
+    ensure_block_shape,
+    extract_pandas_array,
+    get_block_type,
+    maybe_coerce_values,
+)
+
+if TYPE_CHECKING:
+    from pandas._typing import Dtype
+
+    from pandas.core.internals.blocks import Block
+
+
+def make_block(
+    values, placement, klass=None, ndim=None, dtype: Dtype | None = None
+) -> Block:
+    """
+    This is a pseudo-public analogue to blocks.new_block.
+
+    We ask that downstream libraries use this rather than any fully-internal
+    APIs, including but not limited to:
+
+    - core.internals.blocks.make_block
+    - Block.make_block
+    - Block.make_block_same_class
+    - Block.__init__
+    """
+    if dtype is not None:
+        dtype = pandas_dtype(dtype)
+
+    values, dtype = extract_pandas_array(values, dtype, ndim)
+
+    from pandas.core.internals.blocks import (
+        DatetimeTZBlock,
+        ExtensionBlock,
+    )
+
+    if klass is ExtensionBlock and isinstance(values.dtype, PeriodDtype):
+        # GH-44681 changed PeriodArray to be stored in the 2D
+        # NDArrayBackedExtensionBlock instead of ExtensionBlock
+        # -> still allow ExtensionBlock to be passed in this case for back compat
+        klass = None
+
+    if klass is None:
+        dtype = dtype or values.dtype
+        klass = get_block_type(dtype)
+
+    elif klass is DatetimeTZBlock and not isinstance(values.dtype, DatetimeTZDtype):
+        # pyarrow calls get here
+        values = DatetimeArray._simple_new(
+            # error: Argument "dtype" to "_simple_new" of "DatetimeArray" has
+            # incompatible type "Union[ExtensionDtype, dtype[Any], None]";
+            # expected "Union[dtype[datetime64], DatetimeTZDtype]"
+            values,
+            dtype=dtype,  # type: ignore[arg-type]
+        )
+
+    if not isinstance(placement, BlockPlacement):
+        placement = BlockPlacement(placement)
+
+    ndim = maybe_infer_ndim(values, placement, ndim)
+    if isinstance(values.dtype, (PeriodDtype, DatetimeTZDtype)):
+        # GH#41168 ensure we can pass 1D dt64tz values
+        # More generally, any EA dtype that isn't is_1d_only_ea_dtype
+        values = extract_array(values, extract_numpy=True)
+        values = ensure_block_shape(values, ndim)
+
+    check_ndim(values, placement, ndim)
+    values = maybe_coerce_values(values)
+    return klass(values, ndim=ndim, placement=placement)
+
+
+def maybe_infer_ndim(values, placement: BlockPlacement, ndim: int | None) -> int:
+    """
+    If `ndim` is not provided, infer it from placement and values.
+    """
+    if ndim is None:
+        # GH#38134 Block constructor now assumes ndim is not None
+        if not isinstance(values.dtype, np.dtype):
+            if len(placement) != 1:
+                ndim = 1
+            else:
+                ndim = 2
+        else:
+            ndim = values.ndim
+    return ndim
+
+
+def __getattr__(name: str):
+    # GH#55139
+    import warnings
+
+    if name in [
+        "Block",
+        "ExtensionBlock",
+        "DatetimeTZBlock",
+        "create_block_manager_from_blocks",
+    ]:
+        # GH#33892
+        warnings.warn(
+            f"{name} is deprecated and will be removed in a future version. "
+            "Use public APIs instead.",
+            DeprecationWarning,
+            # https://github.com/pandas-dev/pandas/pull/55139#pullrequestreview-1720690758
+            # on hard-coding stacklevel
+            stacklevel=2,
+        )
+
+        if name == "create_block_manager_from_blocks":
+            from pandas.core.internals.managers import create_block_manager_from_blocks
+
+            return create_block_manager_from_blocks
+
+        elif name == "Block":
+            from pandas.core.internals.blocks import Block
+
+            return Block
+
+        elif name == "DatetimeTZBlock":
+            from pandas.core.internals.blocks import DatetimeTZBlock
+
+            return DatetimeTZBlock
+
+        elif name == "ExtensionBlock":
+            from pandas.core.internals.blocks import ExtensionBlock
+
+            return ExtensionBlock
+
+    raise AttributeError(
+        f"module 'pandas.core.internals.api' has no attribute '{name}'"
+    )
+ from pandas.core.reshape.concat import concat
+from pandas.core.reshape.encoding import (
+    from_dummies,
+    get_dummies,
+)
+from pandas.core.reshape.melt import (
+    lreshape,
+    melt,
+    wide_to_long,
+)
+from pandas.core.reshape.merge import (
+    merge,
+    merge_asof,
+    merge_ordered,
+)
+from pandas.core.reshape.pivot import (
+    crosstab,
+    pivot,
+    pivot_table,
+)
+from pandas.core.reshape.tile import (
+    cut,
+    qcut,
+)
+
+__all__ = [
+    "concat",
+    "crosstab",
+    "cut",
+    "from_dummies",
+    "get_dummies",
+    "lreshape",
+    "melt",
+    "merge",
+    "merge_asof",
+    "merge_ordered",
+    "pivot",
+    "pivot_table",
+    "qcut",
+    "wide_to_long",
+]
+ from pandas.core.dtypes.dtypes import SparseDtype
+
+from pandas.core.arrays.sparse import SparseArray
+
+__all__ = ["SparseArray", "SparseDtype"]
+ """
+Data IO api
+"""
+
+from pandas.io.clipboards import read_clipboard
+from pandas.io.excel import (
+    ExcelFile,
+    ExcelWriter,
+    read_excel,
+)
+from pandas.io.feather_format import read_feather
+from pandas.io.gbq import read_gbq
+from pandas.io.html import read_html
+from pandas.io.json import read_json
+from pandas.io.orc import read_orc
+from pandas.io.parquet import read_parquet
+from pandas.io.parsers import (
+    read_csv,
+    read_fwf,
+    read_table,
+)
+from pandas.io.pickle import (
+    read_pickle,
+    to_pickle,
+)
+from pandas.io.pytables import (
+    HDFStore,
+    read_hdf,
+)
+from pandas.io.sas import read_sas
+from pandas.io.spss import read_spss
+from pandas.io.sql import (
+    read_sql,
+    read_sql_query,
+    read_sql_table,
+)
+from pandas.io.stata import read_stata
+from pandas.io.xml import read_xml
+
+__all__ = [
+    "ExcelFile",
+    "ExcelWriter",
+    "HDFStore",
+    "read_clipboard",
+    "read_csv",
+    "read_excel",
+    "read_feather",
+    "read_fwf",
+    "read_gbq",
+    "read_hdf",
+    "read_html",
+    "read_json",
+    "read_orc",
+    "read_parquet",
+    "read_pickle",
+    "read_sas",
+    "read_spss",
+    "read_sql",
+    "read_sql_query",
+    "read_sql_table",
+    "read_stata",
+    "read_table",
+    "read_xml",
+    "to_pickle",
+]
+ """
+Timeseries API
+"""
+
+from pandas._libs.tslibs.parsing import guess_datetime_format
+
+from pandas.tseries import offsets
+from pandas.tseries.frequencies import infer_freq
+
+__all__ = ["infer_freq", "offsets", "guess_datetime_format"]
+ """Base API."""
+
+from __future__ import annotations
+
+import os
+from abc import ABC, abstractmethod
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+    from typing import Literal
+
+
+class PlatformDirsABC(ABC):  # noqa: PLR0904
+    """Abstract base class for platform directories."""
+
+    def __init__(  # noqa: PLR0913, PLR0917
+        self,
+        appname: str | None = None,
+        appauthor: str | Literal[False] | None = None,
+        version: str | None = None,
+        roaming: bool = False,  # noqa: FBT001, FBT002
+        multipath: bool = False,  # noqa: FBT001, FBT002
+        opinion: bool = True,  # noqa: FBT001, FBT002
+        ensure_exists: bool = False,  # noqa: FBT001, FBT002
+    ) -> None:
+        """
+        Create a new platform directory.
+
+        :param appname: See `appname`.
+        :param appauthor: See `appauthor`.
+        :param version: See `version`.
+        :param roaming: See `roaming`.
+        :param multipath: See `multipath`.
+        :param opinion: See `opinion`.
+        :param ensure_exists: See `ensure_exists`.
+
+        """
+        self.appname = appname  #: The name of application.
+        self.appauthor = appauthor
+        """
+        The name of the app author or distributing body for this application.
+
+        Typically, it is the owning company name. Defaults to `appname`. You may pass ``False`` to disable it.
+
+        """
+        self.version = version
+        """
+        An optional version path element to append to the path.
+
+        You might want to use this if you want multiple versions of your app to be able to run independently. If used,
+        this would typically be ``<major>.<minor>``.
+
+        """
+        self.roaming = roaming
+        """
+        Whether to use the roaming appdata directory on Windows.
+
+        That means that for users on a Windows network setup for roaming profiles, this user data will be synced on
+        login (see
+        `here <https://technet.microsoft.com/en-us/library/cc766489(WS.10).aspx>`_).
+
+        """
+        self.multipath = multipath
+        """
+        An optional parameter which indicates that the entire list of data dirs should be returned.
+
+        By default, the first item would only be returned.
+
+        """
+        self.opinion = opinion  #: A flag to indicating to use opinionated values.
+        self.ensure_exists = ensure_exists
+        """
+        Optionally create the directory (and any missing parents) upon access if it does not exist.
+
+        By default, no directories are created.
+
+        """
+
+    def _append_app_name_and_version(self, *base: str) -> str:
+        params = list(base[1:])
+        if self.appname:
+            params.append(self.appname)
+            if self.version:
+                params.append(self.version)
+        path = os.path.join(base[0], *params)  # noqa: PTH118
+        self._optionally_create_directory(path)
+        return path
+
+    def _optionally_create_directory(self, path: str) -> None:
+        if self.ensure_exists:
+            Path(path).mkdir(parents=True, exist_ok=True)
+
+    def _first_item_as_path_if_multipath(self, directory: str) -> Path:
+        if self.multipath:
+            # If multipath is True, the first path is returned.
+            directory = directory.partition(os.pathsep)[0]
+        return Path(directory)
+
+    @property
+    @abstractmethod
+    def user_data_dir(self) -> str:
+        """:return: data directory tied to the user"""
+
+    @property
+    @abstractmethod
+    def site_data_dir(self) -> str:
+        """:return: data directory shared by users"""
+
+    @property
+    @abstractmethod
+    def user_config_dir(self) -> str:
+        """:return: config directory tied to the user"""
+
+    @property
+    @abstractmethod
+    def site_config_dir(self) -> str:
+        """:return: config directory shared by the users"""
+
+    @property
+    @abstractmethod
+    def user_cache_dir(self) -> str:
+        """:return: cache directory tied to the user"""
+
+    @property
+    @abstractmethod
+    def site_cache_dir(self) -> str:
+        """:return: cache directory shared by users"""
+
+    @property
+    @abstractmethod
+    def user_state_dir(self) -> str:
+        """:return: state directory tied to the user"""
+
+    @property
+    @abstractmethod
+    def user_log_dir(self) -> str:
+        """:return: log directory tied to the user"""
+
+    @property
+    @abstractmethod
+    def user_documents_dir(self) -> str:
+        """:return: documents directory tied to the user"""
+
+    @property
+    @abstractmethod
+    def user_downloads_dir(self) -> str:
+        """:return: downloads directory tied to the user"""
+
+    @property
+    @abstractmethod
+    def user_pictures_dir(self) -> str:
+        """:return: pictures directory tied to the user"""
+
+    @property
+    @abstractmethod
+    def user_videos_dir(self) -> str:
+        """:return: videos directory tied to the user"""
+
+    @property
+    @abstractmethod
+    def user_music_dir(self) -> str:
+        """:return: music directory tied to the user"""
+
+    @property
+    @abstractmethod
+    def user_desktop_dir(self) -> str:
+        """:return: desktop directory tied to the user"""
+
+    @property
+    @abstractmethod
+    def user_runtime_dir(self) -> str:
+        """:return: runtime directory tied to the user"""
+
+    @property
+    @abstractmethod
+    def site_runtime_dir(self) -> str:
+        """:return: runtime directory shared by users"""
+
+    @property
+    def user_data_path(self) -> Path:
+        """:return: data path tied to the user"""
+        return Path(self.user_data_dir)
+
+    @property
+    def site_data_path(self) -> Path:
+        """:return: data path shared by users"""
+        return Path(self.site_data_dir)
+
+    @property
+    def user_config_path(self) -> Path:
+        """:return: config path tied to the user"""
+        return Path(self.user_config_dir)
+
+    @property
+    def site_config_path(self) -> Path:
+        """:return: config path shared by the users"""
+        return Path(self.site_config_dir)
+
+    @property
+    def user_cache_path(self) -> Path:
+        """:return: cache path tied to the user"""
+        return Path(self.user_cache_dir)
+
+    @property
+    def site_cache_path(self) -> Path:
+        """:return: cache path shared by users"""
+        return Path(self.site_cache_dir)
+
+    @property
+    def user_state_path(self) -> Path:
+        """:return: state path tied to the user"""
+        return Path(self.user_state_dir)
+
+    @property
+    def user_log_path(self) -> Path:
+        """:return: log path tied to the user"""
+        return Path(self.user_log_dir)
+
+    @property
+    def user_documents_path(self) -> Path:
+        """:return: documents a path tied to the user"""
+        return Path(self.user_documents_dir)
+
+    @property
+    def user_downloads_path(self) -> Path:
+        """:return: downloads path tied to the user"""
+        return Path(self.user_downloads_dir)
+
+    @property
+    def user_pictures_path(self) -> Path:
+        """:return: pictures path tied to the user"""
+        return Path(self.user_pictures_dir)
+
+    @property
+    def user_videos_path(self) -> Path:
+        """:return: videos path tied to the user"""
+        return Path(self.user_videos_dir)
+
+    @property
+    def user_music_path(self) -> Path:
+        """:return: music path tied to the user"""
+        return Path(self.user_music_dir)
+
+    @property
+    def user_desktop_path(self) -> Path:
+        """:return: desktop path tied to the user"""
+        return Path(self.user_desktop_dir)
+
+    @property
+    def user_runtime_path(self) -> Path:
+        """:return: runtime path tied to the user"""
+        return Path(self.user_runtime_dir)
+
+    @property
+    def site_runtime_path(self) -> Path:
+        """:return: runtime path shared by users"""
+        return Path(self.site_runtime_dir)
+
+    def iter_config_dirs(self) -> Iterator[str]:
+        """:yield: all user and site configuration directories."""
+        yield self.user_config_dir
+        yield self.site_config_dir
+
+    def iter_data_dirs(self) -> Iterator[str]:
+        """:yield: all user and site data directories."""
+        yield self.user_data_dir
+        yield self.site_data_dir
+
+    def iter_cache_dirs(self) -> Iterator[str]:
+        """:yield: all user and site cache directories."""
+        yield self.user_cache_dir
+        yield self.site_cache_dir
+
+    def iter_runtime_dirs(self) -> Iterator[str]:
+        """:yield: all user and site runtime directories."""
+        yield self.user_runtime_dir
+        yield self.site_runtime_dir
+
+    def iter_config_paths(self) -> Iterator[Path]:
+        """:yield: all user and site configuration paths."""
+        for path in self.iter_config_dirs():
+            yield Path(path)
+
+    def iter_data_paths(self) -> Iterator[Path]:
+        """:yield: all user and site data paths."""
+        for path in self.iter_data_dirs():
+            yield Path(path)
+
+    def iter_cache_paths(self) -> Iterator[Path]:
+        """:yield: all user and site cache paths."""
+        for path in self.iter_cache_dirs():
+            yield Path(path)
+
+    def iter_runtime_paths(self) -> Iterator[Path]:
+        """:yield: all user and site runtime paths."""
+        for path in self.iter_runtime_dirs():
+            yield Path(path)
+ """
+requests.api
+~~~~~~~~~~~~
+
+This module implements the Requests API.
+
+:copyright: (c) 2012 by Kenneth Reitz.
+:license: Apache2, see LICENSE for more details.
+"""
+
+from . import sessions
+
+
+def request(method, url, **kwargs):
+    """Constructs and sends a :class:`Request <Request>`.
+
+    :param method: method for the new :class:`Request` object: ``GET``, ``OPTIONS``, ``HEAD``, ``POST``, ``PUT``, ``PATCH``, or ``DELETE``.
+    :param url: URL for the new :class:`Request` object.
+    :param params: (optional) Dictionary, list of tuples or bytes to send
+        in the query string for the :class:`Request`.
+    :param data: (optional) Dictionary, list of tuples, bytes, or file-like
+        object to send in the body of the :class:`Request`.
+    :param json: (optional) A JSON serializable Python object to send in the body of the :class:`Request`.
+    :param headers: (optional) Dictionary of HTTP Headers to send with the :class:`Request`.
+    :param cookies: (optional) Dict or CookieJar object to send with the :class:`Request`.
+    :param files: (optional) Dictionary of ``'name': file-like-objects`` (or ``{'name': file-tuple}``) for multipart encoding upload.
+        ``file-tuple`` can be a 2-tuple ``('filename', fileobj)``, 3-tuple ``('filename', fileobj, 'content_type')``
+        or a 4-tuple ``('filename', fileobj, 'content_type', custom_headers)``, where ``'content_type'`` is a string
+        defining the content type of the given file and ``custom_headers`` a dict-like object containing additional headers
+        to add for the file.
+    :param auth: (optional) Auth tuple to enable Basic/Digest/Custom HTTP Auth.
+    :param timeout: (optional) How many seconds to wait for the server to send data
+        before giving up, as a float, or a :ref:`(connect timeout, read
+        timeout) <timeouts>` tuple.
+    :type timeout: float or tuple
+    :param allow_redirects: (optional) Boolean. Enable/disable GET/OPTIONS/POST/PUT/PATCH/DELETE/HEAD redirection. Defaults to ``True``.
+    :type allow_redirects: bool
+    :param proxies: (optional) Dictionary mapping protocol to the URL of the proxy.
+    :param verify: (optional) Either a boolean, in which case it controls whether we verify
+            the server's TLS certificate, or a string, in which case it must be a path
+            to a CA bundle to use. Defaults to ``True``.
+    :param stream: (optional) if ``False``, the response content will be immediately downloaded.
+    :param cert: (optional) if String, path to ssl client cert file (.pem). If Tuple, ('cert', 'key') pair.
+    :return: :class:`Response <Response>` object
+    :rtype: requests.Response
+
+    Usage::
+
+      >>> import requests
+      >>> req = requests.request('GET', 'https://httpbin.org/get')
+      >>> req
+      <Response [200]>
+    """
+
+    # By using the 'with' statement we are sure the session is closed, thus we
+    # avoid leaving sockets open which can trigger a ResourceWarning in some
+    # cases, and look like a memory leak in others.
+    with sessions.Session() as session:
+        return session.request(method=method, url=url, **kwargs)
+
+
+def get(url, params=None, **kwargs):
+    r"""Sends a GET request.
+
+    :param url: URL for the new :class:`Request` object.
+    :param params: (optional) Dictionary, list of tuples or bytes to send
+        in the query string for the :class:`Request`.
+    :param \*\*kwargs: Optional arguments that ``request`` takes.
+    :return: :class:`Response <Response>` object
+    :rtype: requests.Response
+    """
+
+    return request("get", url, params=params, **kwargs)
+
+
+def options(url, **kwargs):
+    r"""Sends an OPTIONS request.
+
+    :param url: URL for the new :class:`Request` object.
+    :param \*\*kwargs: Optional arguments that ``request`` takes.
+    :return: :class:`Response <Response>` object
+    :rtype: requests.Response
+    """
+
+    return request("options", url, **kwargs)
+
+
+def head(url, **kwargs):
+    r"""Sends a HEAD request.
+
+    :param url: URL for the new :class:`Request` object.
+    :param \*\*kwargs: Optional arguments that ``request`` takes. If
+        `allow_redirects` is not provided, it will be set to `False` (as
+        opposed to the default :meth:`request` behavior).
+    :return: :class:`Response <Response>` object
+    :rtype: requests.Response
+    """
+
+    kwargs.setdefault("allow_redirects", False)
+    return request("head", url, **kwargs)
+
+
+def post(url, data=None, json=None, **kwargs):
+    r"""Sends a POST request.
+
+    :param url: URL for the new :class:`Request` object.
+    :param data: (optional) Dictionary, list of tuples, bytes, or file-like
+        object to send in the body of the :class:`Request`.
+    :param json: (optional) A JSON serializable Python object to send in the body of the :class:`Request`.
+    :param \*\*kwargs: Optional arguments that ``request`` takes.
+    :return: :class:`Response <Response>` object
+    :rtype: requests.Response
+    """
+
+    return request("post", url, data=data, json=json, **kwargs)
+
+
+def put(url, data=None, **kwargs):
+    r"""Sends a PUT request.
+
+    :param url: URL for the new :class:`Request` object.
+    :param data: (optional) Dictionary, list of tuples, bytes, or file-like
+        object to send in the body of the :class:`Request`.
+    :param json: (optional) A JSON serializable Python object to send in the body of the :class:`Request`.
+    :param \*\*kwargs: Optional arguments that ``request`` takes.
+    :return: :class:`Response <Response>` object
+    :rtype: requests.Response
+    """
+
+    return request("put", url, data=data, **kwargs)
+
+
+def patch(url, data=None, **kwargs):
+    r"""Sends a PATCH request.
+
+    :param url: URL for the new :class:`Request` object.
+    :param data: (optional) Dictionary, list of tuples, bytes, or file-like
+        object to send in the body of the :class:`Request`.
+    :param json: (optional) A JSON serializable Python object to send in the body of the :class:`Request`.
+    :param \*\*kwargs: Optional arguments that ``request`` takes.
+    :return: :class:`Response <Response>` object
+    :rtype: requests.Response
+    """
+
+    return request("patch", url, data=data, **kwargs)
+
+
+def delete(url, **kwargs):
+    r"""Sends a DELETE request.
+
+    :param url: URL for the new :class:`Request` object.
+    :param \*\*kwargs: Optional arguments that ``request`` takes.
+    :return: :class:`Response <Response>` object
+    :rtype: requests.Response
+    """
+
+    return request("delete", url, **kwargs)
+
